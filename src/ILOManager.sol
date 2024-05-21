@@ -64,16 +64,10 @@ contract ILOManager is
     /// @dev The ID of the next pool that is used for the first time. Skips 0
     uint80 private _nextPoolId = 1;
 
-    /// @dev The address of the token descriptor contract, which handles generating token URIs for position tokens
-    address private immutable _tokenDescriptor;
-
     constructor(
         address _factory,
-        address _WETH9,
-        address _tokenDescriptor_
-    ) ERC721Permit('Uniswap V3 Positions NFT-V1', 'UNI-V3-POS', '1') PeripheryImmutableState(_factory, _WETH9) {
-        _tokenDescriptor = _tokenDescriptor_;
-    }
+        address _WETH9
+    ) ERC721Permit('KRYSTAL ILOManager V1', 'KYRSTAL-ILO-V1', '1') PeripheryImmutableState(_factory, _WETH9) {}
 
     /// @inheritdoc IILOManager
     function positions(uint256 tokenId)
