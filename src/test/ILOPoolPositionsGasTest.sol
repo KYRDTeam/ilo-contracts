@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
 
-import '../interfaces/IILOManager.sol';
+import '../interfaces/IILOPool.sol';
 
-contract ILOManagerPositionsGasTest {
-    IILOManager immutable nonfungiblePositionManager;
+contract ILOPoolPositionsGasTest {
+    IILOPool immutable nonfungiblePositionManager;
 
-    constructor(IILOManager _nonfungiblePositionManager) {
+    constructor(IILOPool _nonfungiblePositionManager) {
         nonfungiblePositionManager = _nonfungiblePositionManager;
     }
 

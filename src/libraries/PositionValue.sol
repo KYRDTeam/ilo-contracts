@@ -5,22 +5,22 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import '@uniswap/v3-core/contracts/libraries/FixedPoint128.sol';
 import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import '@uniswap/v3-core/contracts/libraries/Tick.sol';
-import '../interfaces/IILOManager.sol';
+import '../interfaces/IILOPool.sol';
 import './LiquidityAmounts.sol';
 import './PoolAddress.sol';
 import './PositionKey.sol';
 
-/// @title Returns information about the token value held in a Uniswap V3 NFT
+/// @title Returns information about the token value held in a NFT
 library PositionValue {
     /// @notice Returns the total amounts of token0 and token1, i.e. the sum of fees and principal
     /// that a given nonfungible position manager token is worth
-    /// @param positionManager The Uniswap V3 ILOManager
+    /// @param positionManager The ILOPool
     /// @param tokenId The tokenId of the token for which to get the total value
     /// @param sqrtRatioX96 The square root price X96 for which to calculate the principal amounts
     /// @return amount0 The total amount of token0 including principal and fees
     /// @return amount1 The total amount of token1 including principal and fees
     function total(
-        IILOManager positionManager,
+        IILOPool positionManager,
         uint256 tokenId,
         uint160 sqrtRatioX96
     ) internal view returns (uint256 amount0, uint256 amount1) {
@@ -31,17 +31,17 @@ library PositionValue {
 
     /// @notice Calculates the principal (currently acting as liquidity) owed to the token owner in the event
     /// that the position is burned
-    /// @param positionManager The Uniswap V3 ILOManager
+    /// @param positionManager The ILOPool
     /// @param tokenId The tokenId of the token for which to get the total principal owed
     /// @param sqrtRatioX96 The square root price X96 for which to calculate the principal amounts
     /// @return amount0 The principal amount of token0
     /// @return amount1 The principal amount of token1
     function principal(
-        IILOManager positionManager,
+        IILOPool positionManager,
         uint256 tokenId,
         uint160 sqrtRatioX96
     ) internal view returns (uint256 amount0, uint256 amount1) {
-        (, , , , , int24 tickLower, int24 tickUpper, uint128 liquidity, , , , ) = positionManager.positions(tokenId);
+        ( , , , int24 tickLower, int24 tickUpper, uint128 liquidity, , , , ) = positionManager.positions(tokenId);
 
         return
             LiquidityAmounts.getAmountsForLiquidity(
@@ -66,18 +66,16 @@ library PositionValue {
     }
 
     /// @notice Calculates the total fees owed to the token owner
-    /// @param positionManager The Uniswap V3 ILOManager
+    /// @param positionManager The ILOPool
     /// @param tokenId The tokenId of the token for which to get the total fees owed
     /// @return amount0 The amount of fees owed in token0
     /// @return amount1 The amount of fees owed in token1
-    function fees(IILOManager positionManager, uint256 tokenId)
+    function fees(IILOPool positionManager, uint256 tokenId)
         internal
         view
         returns (uint256 amount0, uint256 amount1)
     {
         (
-            ,
-            ,
             address token0,
             address token1,
             uint24 fee,
@@ -108,7 +106,7 @@ library PositionValue {
             );
     }
 
-    function _fees(IILOManager positionManager, FeeParams memory feeParams)
+    function _fees(IILOPool positionManager, FeeParams memory feeParams)
         private
         view
         returns (uint256 amount0, uint256 amount1)

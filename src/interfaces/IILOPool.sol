@@ -6,7 +6,6 @@ import '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
 import '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
 
 import './IPoolInitializer.sol';
-import './IERC721Permit.sol';
 import './IPeripheryPayments.sol';
 import './IPeripheryImmutableState.sol';
 import '../libraries/PoolAddress.sol';
@@ -14,13 +13,12 @@ import '../libraries/PoolAddress.sol';
 /// @title Non-fungible token for positions
 /// @notice Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 /// and authorized.
-interface IILOManager is
+interface IILOPool is
     IPoolInitializer,
     IPeripheryPayments,
     IPeripheryImmutableState,
     IERC721Metadata,
-    IERC721Enumerable,
-    IERC721Permit
+    IERC721Enumerable
 {
     /// @notice Emitted when liquidity is increased for a position NFT
     /// @dev Also emitted when a token is minted
@@ -46,8 +44,6 @@ interface IILOManager is
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
-    /// @return nonce The nonce for permits
-    /// @return operator The address that is approved for spending
     /// @return token0 The address of the token0 for a specific pool
     /// @return token1 The address of the token1 for a specific pool
     /// @return fee The fee associated with the pool
@@ -62,8 +58,6 @@ interface IILOManager is
         external
         view
         returns (
-            uint96 nonce,
-            address operator,
             address token0,
             address token1,
             uint24 fee,
