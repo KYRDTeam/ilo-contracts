@@ -84,7 +84,6 @@ contract ILOPool is
 
         _cachedUniV3PoolAddress = params.uniV3Pool;
         MANAGER = IILOManager(msg.sender);
-        ADMIN = _project.admin;
         TICK_LOWER = params.tickLower;
         TICK_UPPER = params.tickUpper;
 

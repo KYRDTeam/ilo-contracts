@@ -46,7 +46,7 @@ contract ILOManager is IILOManager, Ownable {
         uint160 initialPoolPriceX96,
         uint64 launchTime,
         uint8 investorShares,  // percentage of user shares
-        LinearVest[] calldata projectVestConfigs
+        ProjectVestConfig[] calldata projectVestConfigs
     ) external override returns(address uniV3PoolAddress) {
 
         _validateSharesPercentage(investorShares, projectVestConfigs);
@@ -100,7 +100,7 @@ contract ILOManager is IILOManager, Ownable {
         uint64 launchTime,
         uint64 refundDeadline,
         uint8 investorShares,  // percentage of user shares
-        LinearVest[] calldata projectVestConfigs
+        ProjectVestConfig[] calldata projectVestConfigs
     ) internal {
         Project storage _project = _cachedProject[uniV3PoolAddress];
         require(_project.uniV3PoolAddress == address(0), "project already initialized");
@@ -124,13 +124,24 @@ contract ILOManager is IILOManager, Ownable {
         _cachedProject[uniV3PoolAddress] = _project;
     }
 
-    function _validateSharesPercentage(uint8 investorShares, LinearVest[] calldata projectVestConfigs) internal pure {
+    function _validateSharesPercentage(uint16 investorShares, ProjectVestConfig[] calldata projectVestConfigs) internal pure {
         require(investorShares <= BPS);
-        uint8 totalShares = investorShares;
+        uint16 totalShares = investorShares;
         uint256 configLength = projectVestConfigs.length;
         for (uint256 index = 0; index < configLength; index++) {
             require(BPS - totalShares >= projectVestConfigs[index].shares);
+            _validateVestSchedule(projectVestConfigs[index].vestSchedule);
             totalShares += projectVestConfigs[index].shares;
+        }
+    }
+
+    function _validateVestSchedule(LinearVest[] memory vestSchedule) internal pure {
+        require(vestSchedule.length > 0);
+        uint16 totalShares;
+        uint256 vestScheduleLength = vestSchedule.length;
+        for (uint256 index = 0; index < vestScheduleLength; index++) {
+            require(BPS - totalShares >= vestSchedule[index].percentage);
+            totalShares += vestSchedule[index].percentage;
         }
     }
 

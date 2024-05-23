@@ -9,9 +9,11 @@ interface IILOManager is IILOConfig {
 
     event ProjectCreated(address indexed uniV3PoolAddress, Project project);
 
-    struct ProjectVest {
+    struct ProjectVestConfig {
+        uint8 shares; // BPS shares
         string name;
-        uint8 shares; // percentage
+        address recipients;
+        LinearVest[] vestSchedule;
     }
 
     struct Project {
@@ -22,9 +24,9 @@ interface IILOManager is IILOConfig {
         uint160 initialPoolPriceX96;
         uint64 launchTime;
         uint64 refundDeadline;
-        uint8 investorShares;  // percentage of user shares
-        LinearVest[] projectVestConfigs;
-        
+        uint8 investorShares;  // BPS shares
+        ProjectVestConfig[] projectVestConfigs;
+
         // cached info
         address uniV3PoolAddress; // considered as project id
         PoolAddress.PoolKey _cachedPoolKey;
@@ -37,9 +39,8 @@ interface IILOManager is IILOConfig {
         uint24 fee,
         uint160 initialPoolPriceX96,
         uint64 launchTime,
-        uint64 refundDeadline,
-        uint8 investorShares,  // percentage of user shares
-        LinearVest[] calldata projectVestConfigs
+        uint8 investorShares,  // BPS shares
+        ProjectVestConfig[] calldata projectVestConfigs
     ) external returns(address uniV3PoolAddress);
 
     function initILOPool(InitPoolParams calldata params) external;
