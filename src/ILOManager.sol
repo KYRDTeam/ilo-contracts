@@ -124,12 +124,12 @@ contract ILOManager is IILOManager, Ownable {
     }
 
     function _validateSharesPercentage(uint8 investorShares, LinearVest[] calldata projectVestConfigs) internal pure {
-        require(investorShares <= 100);
+        require(investorShares <= BPS);
         uint8 totalShares = investorShares;
         uint256 configLength = projectVestConfigs.length;
         for (uint256 index = 0; index < configLength; index++) {
-            require(100 - totalShares >= projectVestConfigs[index].percentage);
-            totalShares += projectVestConfigs[index].percentage;
+            require(BPS - totalShares >= projectVestConfigs[index].shares);
+            totalShares += projectVestConfigs[index].shares;
         }
     }
 
