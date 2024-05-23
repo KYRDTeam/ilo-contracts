@@ -13,7 +13,7 @@ import '@openzeppelin/contracts/proxy/Clones.sol';
 contract ILOManager is IILOManager, Ownable {
 
     event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
-
+    event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
     uint16 constant BPS = 10000;
     uint16 PLATFORM_FEE;
     address ILO_POOL_IMPLEMENTATION;
@@ -147,5 +147,6 @@ contract ILOManager is IILOManager, Ownable {
         require(msg.sender == _project.admin);
         _project.admin = admin;
         _cachedProject[uniV3Pool] = _project;
+        emit ProjectAdminChanged(uniV3Pool, msg.sender, _project.admin);
     }
 }
