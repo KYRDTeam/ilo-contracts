@@ -14,6 +14,8 @@ contract ILOManager is IILOManager, Ownable {
 
     event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
     event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
+
+    uint64 private DEFAULT_DEADLINE_OFFSET = 7 * 24 * 60 * 60; // 7 days
     uint16 constant BPS = 10000;
     uint16 PLATFORM_FEE;
     address ILO_POOL_IMPLEMENTATION;
@@ -43,13 +45,12 @@ contract ILOManager is IILOManager, Ownable {
         uint24 fee,
         uint160 initialPoolPriceX96,
         uint64 launchTime,
-        uint64 refundDeadline,
         uint8 investorShares,  // percentage of user shares
         LinearVest[] calldata projectVestConfigs
     ) external override returns(address uniV3PoolAddress) {
 
         _validateSharesPercentage(investorShares, projectVestConfigs);
-        require(launchTime < refundDeadline, "invalid launch time");
+        uint64 refundDeadline = launchTime + DEFAULT_DEADLINE_OFFSET;
 
         PoolAddress.PoolKey memory poolKey = PoolAddress.getPoolKey(saleToken, raiseToken, fee);
         uniV3PoolAddress = _initUniV3PoolIfNecessary(poolKey, initialPoolPriceX96);
@@ -102,7 +103,7 @@ contract ILOManager is IILOManager, Ownable {
         LinearVest[] calldata projectVestConfigs
     ) internal {
         Project storage _project = _cachedProject[uniV3PoolAddress];
-        require(_project.uniV3PoolAddress != address(0), "project already initialized");
+        require(_project.uniV3PoolAddress == address(0), "project already initialized");
 
         uint256 projectVestConfigsLength = projectVestConfigs.length;
         for (uint256 index = 0; index < projectVestConfigsLength; index++) {
@@ -148,5 +149,17 @@ contract ILOManager is IILOManager, Ownable {
         _project.admin = admin;
         _cachedProject[uniV3Pool] = _project;
         emit ProjectAdminChanged(uniV3Pool, msg.sender, _project.admin);
+    }
+
+    function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external onlyOwner() {
+        DEFAULT_DEADLINE_OFFSET = defaultDeadlineOffset;
+        // TODO: emit event when the defaultDeadlineOffset changes
+    }
+
+    function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external onlyOwner() {
+        Project storage _project = _cachedProject[uniV3Pool];
+        _project.refundDeadline = refundDeadline;
+        _cachedProject[uniV3Pool] = _project;
+        // TODO: emit event when the refundDeadline changes
     }
 }

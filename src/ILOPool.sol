@@ -54,7 +54,6 @@ contract ILOPool is
     uint16 PLATFORM_FEE; // BPS 10000
 
     IILOManager MANAGER;
-    address ADMIN;
     int24 TICK_LOWER;
     int24 TICK_UPPER;
 
