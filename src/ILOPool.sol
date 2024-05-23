@@ -9,6 +9,7 @@ import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 
 import './interfaces/IILOPool.sol';
+import './interfaces/IILOManager.sol';
 import './libraries/PositionKey.sol';
 import './libraries/PoolAddress.sol';
 import './base/LiquidityManagement.sol';
@@ -48,18 +49,61 @@ contract ILOPool is
         uint128 tokensOwed1;
     }
 
+    uint16 constant BPS = 10000;
+    bool private _initialized;
+    uint16 PLATFORM_FEE; // BPS 10000
+
+    IILOManager MANAGER;
+    address ADMIN;
+    int24 TICK_LOWER;
+    int24 TICK_UPPER;
+
+    uint256 hardCap; // total amount of raise tokens
+    uint256 softCap; // minimum amount of raise token needed for launch pool
+    uint256 maxCapPerUser; // TODO: user tiers
+    uint64 start;
+    uint64 end;
+    LinearVest[] investorVestConfigs;
+
+    PoolAddress.PoolKey private _cachedPoolKey;
+    address private _cachedUniV3PoolAddress;
+
     /// @dev The token ID position data
     mapping(uint256 => Position) private _positions;
 
     /// @dev The ID of the next token that will be minted. Skips 0
     uint176 private _nextId = 1;
 
-    PoolAddress.PoolKey cachedPoolKey;
-
     constructor(
         address _factory,
         address _WETH9
     ) ERC721('KRYSTAL ILOPool V1', 'KYRSTAL-ILO-V1') PeripheryImmutableState(_factory, _WETH9) {}
+
+    function initialize(InitPoolParams calldata params) external override {
+        require(!_initialized);
+        IILOManager.Project memory _project = MANAGER.project(params.uniV3Pool);
+
+        _cachedUniV3PoolAddress = params.uniV3Pool;
+        MANAGER = IILOManager(msg.sender);
+        ADMIN = _project.admin;
+        TICK_LOWER = params.tickLower;
+        TICK_UPPER = params.tickUpper;
+
+        _cachedPoolKey = _project._cachedPoolKey;
+        PLATFORM_FEE = _project.platformFee;
+        hardCap = params.hardCap;
+        softCap = params.softCap;
+        maxCapPerUser = params.maxCapPerUser;
+        start = params.start;
+        end = params.end;
+        
+        uint256 vestConfigLength = params.investorVestConfigs.length;
+        for (uint256 index = 0; index < vestConfigLength; index++) {
+            investorVestConfigs.push(params.investorVestConfigs[index]);
+        }
+
+        _initialized = true;
+    }
 
     /// @inheritdoc IILOPool
     function positions(uint256 tokenId)
@@ -129,9 +173,9 @@ contract ILOPool is
         (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
 
         _positions[tokenId] = Position({
-            token0: cachedPoolKey.token0,
-            token1: cachedPoolKey.token1,
-            fee: cachedPoolKey.fee,
+            token0: _cachedPoolKey.token0,
+            token1: _cachedPoolKey.token1,
+            fee: _cachedPoolKey.fee,
             tickLower: params.tickLower,
             tickUpper: params.tickUpper,
             liquidity: liquidity,
@@ -166,9 +210,9 @@ contract ILOPool is
         IUniswapV3Pool pool;
         (liquidity, amount0, amount1, pool) = addLiquidity(
             AddLiquidityParams({
-                token0: cachedPoolKey.token0,
-                token1: cachedPoolKey.token1,
-                fee: cachedPoolKey.fee,
+                token0: _cachedPoolKey.token0,
+                token1: _cachedPoolKey.token1,
+                fee: _cachedPoolKey.fee,
                 tickLower: position.tickLower,
                 tickUpper: position.tickUpper,
                 amount0Desired: params.amount0Desired,
@@ -221,7 +265,7 @@ contract ILOPool is
         uint128 positionLiquidity = position.liquidity;
         require(positionLiquidity >= params.liquidity);
 
-        IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, cachedPoolKey));
+        IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, _cachedPoolKey));
         (amount0, amount1) = pool.burn(position.tickLower, position.tickUpper, params.liquidity);
 
         require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
@@ -271,7 +315,7 @@ contract ILOPool is
 
         Position storage position = _positions[params.tokenId];
 
-        IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, cachedPoolKey));
+        IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, _cachedPoolKey));
 
         (uint128 tokensOwed0, uint128 tokensOwed1) = (position.tokensOwed0, position.tokensOwed1);
 

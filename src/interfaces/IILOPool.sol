@@ -5,6 +5,7 @@ pragma abicoder v2;
 import '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
 import '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
 
+import './IILOConfig.sol';
 import './IPoolInitializer.sol';
 import './IPeripheryPayments.sol';
 import './IPeripheryImmutableState.sol';
@@ -14,6 +15,7 @@ import '../libraries/PoolAddress.sol';
 /// @notice Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 /// and authorized.
 interface IILOPool is
+    IILOConfig,
     IPoolInitializer,
     IPeripheryPayments,
     IPeripheryImmutableState,
@@ -171,4 +173,6 @@ interface IILOPool is
     /// must be collected first.
     /// @param tokenId The ID of the token that is being burned
     function burn(uint256 tokenId) external payable;
+
+    function initialize(InitPoolParams calldata initPoolParams) external;
 }
