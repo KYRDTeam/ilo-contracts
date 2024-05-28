@@ -338,8 +338,9 @@ contract ILOPool is
         IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
         for (uint256 index = 0; index < _project.projectVestConfigs.length; index++) {
             uint256 tokenId;
-            _mint(_project.projectVestConfigs[index].recipient, (tokenId = _nextId++));
-            uint128 liquidityShares = uint128(FullMath.mulDiv(liquidity, _project.projectVestConfigs[index].shares, BPS));
+            IILOManager.ProjectVestConfig memory projectConfig = _project.projectVestConfigs[index];
+            _mint(projectConfig.recipient, (tokenId = _nextId++));
+            uint128 liquidityShares = uint128(FullMath.mulDiv(liquidity, projectConfig.shares, BPS));
 
             Position storage _position = _positions[tokenId];
             _position.liquidity = liquidityShares;
@@ -352,7 +353,15 @@ contract ILOPool is
 
             _position.tokensOwed0 = uint128(amount0);
             _position.tokensOwed1 = uint128(amount1);
-            // todo: assign vesting
+
+            
+            _updateVestingLiquidity(tokenId, liquidityShares);
+
+            // assign vesting schedule
+            LinearVest[] storage schedule = _positionVests[tokenId].schedule;
+            for (uint256 i = 0; i < projectConfig.vestSchedule.length; i++) {
+                schedule.push(projectConfig.vestSchedule[i]);
+            }
         }
     }
 
