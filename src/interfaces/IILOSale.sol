@@ -8,6 +8,7 @@ interface IILOSale {
         address recipient;
     }
 
+    /// @notice this function is for investor buying ILO
     function buy(BuyParams calldata params) external returns (
             uint256 tokenId,
             uint128 liquidity,

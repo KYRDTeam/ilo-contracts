@@ -39,6 +39,15 @@ contract ILOManager is IILOManager, Ownable {
         _;
     }
 
+    /// @notice init project with details
+    /// @param saleToken the sale token
+    /// @param raiseToken the raise token
+    /// @param fee uniswap v3 fee tier
+    /// @param initialPoolPriceX96 uniswap sqrtPriceX96 for initialize pool
+    /// @param launchTime time for lauch all liquidity. Only one launch time for all ilo pools
+    /// @param investorShares number of liquidity shares after investor invest into ilo pool interm of BPS = 10000
+    /// @param projectVestConfigs config for all other shares and vest
+    /// @return uniV3PoolAddress address of uniswap v3 pool. We use this address as project id
     function initProject (
         address saleToken,
         address raiseToken,
@@ -62,6 +71,9 @@ contract ILOManager is IILOManager, Ownable {
         return _cachedProject[uniV3PoolAddress];
     }
 
+    /// @notice this function init an `ILO Pool` which will be used for sale and vest. One project can init many ILO Pool
+    /// @notice only project admin can use this function
+    /// @param params the parameters for init project
     function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool) {
         require(ILO_POOL_IMPLEMENTATION != address(0), "no pool implementation!");
 
@@ -147,15 +159,18 @@ contract ILOManager is IILOManager, Ownable {
         }
     }
 
+    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setPlatformFee(uint16 _platformFee) external onlyOwner() {
         PLATFORM_FEE = _platformFee;
     }
 
+    /// @notice new ilo implementation for clone
     function setILOPoolImplementation(address iloPoolImplementation) external onlyOwner() {
         emit PoolImplementationChanged(ILO_POOL_IMPLEMENTATION, iloPoolImplementation);
         ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
     }
 
+    /// @notice transfer admin of project
     function transferAdminProject(address admin, address uniV3Pool) external {
         Project storage _project = _cachedProject[uniV3Pool];
         require(msg.sender == _project.admin);
@@ -163,6 +178,7 @@ contract ILOManager is IILOManager, Ownable {
         emit ProjectAdminChanged(uniV3Pool, msg.sender, _project.admin);
     }
 
+    /// @notice set time offset for refund if project not launch
     function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external onlyOwner() {
         DEFAULT_DEADLINE_OFFSET = defaultDeadlineOffset;
         // TODO: emit event when the defaultDeadlineOffset changes
