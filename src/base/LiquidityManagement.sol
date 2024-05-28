@@ -11,11 +11,11 @@ import '../libraries/CallbackValidation.sol';
 import '../libraries/LiquidityAmounts.sol';
 
 import './PeripheryPayments.sol';
-import './PeripheryImmutableState.sol';
+import './ILOPoolImmutableState.sol';
 
 /// @title Liquidity management functions
 /// @notice Internal functions for safely managing liquidity in Uniswap V3
-abstract contract LiquidityManagement is IUniswapV3MintCallback, PeripheryImmutableState, PeripheryPayments {
+abstract contract LiquidityManagement is IUniswapV3MintCallback, ILOPoolImmutableState, PeripheryPayments {
     struct MintCallbackData {
         PoolAddress.PoolKey poolKey;
         address payer;

@@ -4,11 +4,11 @@ pragma solidity =0.7.6;
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 
-import './PeripheryImmutableState.sol';
+import './ILOPoolImmutableState.sol';
 import '../interfaces/IPoolInitializer.sol';
 
 /// @title Creates and initializes V3 Pools
-abstract contract PoolInitializer is IPoolInitializer, PeripheryImmutableState {
+abstract contract PoolInitializer is IPoolInitializer, ILOPoolImmutableState {
     /// @inheritdoc IPoolInitializer
     function createAndInitializePoolIfNecessary(
         address token0,

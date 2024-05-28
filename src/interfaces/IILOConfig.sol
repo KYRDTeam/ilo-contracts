@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 interface IILOConfig {
     struct LinearVest {
-        uint8 percentage; // vesting percentage in total liquidity (in BPS)
+        uint16 percentage; // vesting percentage in total liquidity (in BPS)
         uint64 start;
         uint64 end;
     }

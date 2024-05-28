@@ -45,7 +45,7 @@ contract ILOManager is IILOManager, Ownable {
         uint24 fee,
         uint160 initialPoolPriceX96,
         uint64 launchTime,
-        uint8 investorShares,  // percentage of user shares
+        uint16 investorShares,  // percentage of user shares
         ProjectVestConfig[] calldata projectVestConfigs
     ) external override returns(address uniV3PoolAddress) {
 
@@ -65,6 +65,10 @@ contract ILOManager is IILOManager, Ownable {
     function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool) {
         require(ILO_POOL_IMPLEMENTATION != address(0), "no pool implementation!");
 
+        // validate time for sale start and end compared to launch time
+        Project storage _project = _cachedProject[params.uniV3Pool];
+        require(_project.uniV3PoolAddress != address(0), "project not initialized");
+        require(params.start < params.end && params.end < _project.launchTime, "invalid time configs");
         // this salt make sure that pool address can not be represented in any other chains
         bytes32 salt = keccak256(abi.encodePacked(
             ChainId.get(),
@@ -99,7 +103,7 @@ contract ILOManager is IILOManager, Ownable {
         uint160 initialPoolPriceX96,
         uint64 launchTime,
         uint64 refundDeadline,
-        uint8 investorShares,  // percentage of user shares
+        uint16 investorShares,
         ProjectVestConfig[] calldata projectVestConfigs
     ) internal {
         Project storage _project = _cachedProject[uniV3PoolAddress];
@@ -120,8 +124,6 @@ contract ILOManager is IILOManager, Ownable {
         _project.refundDeadline = refundDeadline;
         _project.investorShares = investorShares;
         _project.uniV3PoolAddress = uniV3PoolAddress;
-
-        _cachedProject[uniV3PoolAddress] = _project;
     }
 
     function _validateSharesPercentage(uint16 investorShares, ProjectVestConfig[] calldata projectVestConfigs) internal pure {
@@ -158,7 +160,6 @@ contract ILOManager is IILOManager, Ownable {
         Project storage _project = _cachedProject[uniV3Pool];
         require(msg.sender == _project.admin);
         _project.admin = admin;
-        _cachedProject[uniV3Pool] = _project;
         emit ProjectAdminChanged(uniV3Pool, msg.sender, _project.admin);
     }
 
@@ -170,7 +171,6 @@ contract ILOManager is IILOManager, Ownable {
     function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external onlyOwner() {
         Project storage _project = _cachedProject[uniV3Pool];
         _project.refundDeadline = refundDeadline;
-        _cachedProject[uniV3Pool] = _project;
         // TODO: emit event when the refundDeadline changes
     }
 }
