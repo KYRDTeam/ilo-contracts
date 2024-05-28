@@ -11,6 +11,7 @@ import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import './interfaces/IILOPool.sol';
 import './libraries/PositionKey.sol';
 import './base/ILOSale.sol';
+import './base/ILOVest.sol';
 import './base/LiquidityManagement.sol';
 import './base/ILOPoolImmutableState.sol';
 import './base/Initializable.sol';
@@ -24,6 +25,7 @@ contract ILOPool is
     ERC721,
     IILOPool,
     ILOSale,
+    ILOVest,
     Initializable,
     Multicall,
     ILOPoolImmutableState,
@@ -49,7 +51,7 @@ contract ILOPool is
     mapping(uint256 => Position) private _positions;
 
     /// @dev The ID of the next token that will be minted. Skips 0
-    uint176 private _nextId = 1;
+    uint256 private _nextId = 1;
     uint256 totalRaised;
     constructor(
         address _factory,
@@ -163,7 +165,8 @@ contract ILOPool is
         _position.tokensOwed0 += uint128(amountAdded0);
         _position.tokensOwed1 += uint128(amountAdded1);
 
-        // todo: assign vesting
+        _updateVestingLiquidity(tokenId, liquidityDelta);
+        _assignVestingSchedule(tokenId, investorVestConfigs);
     }
 
 
@@ -183,6 +186,7 @@ contract ILOPool is
         returns (uint256 amount0, uint256 amount1)
     {
         require(params.liquidity > 0);
+        require(params.liquidity + _positionVests[params.tokenId].claimedLiquidity <= _unlockedLiquidity(params.tokenId));
         Position storage position = _positions[params.tokenId];
 
         uint128 positionLiquidity = position.liquidity;
@@ -333,7 +337,7 @@ contract ILOPool is
 
         IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
         for (uint256 index = 0; index < _project.projectVestConfigs.length; index++) {
-            uint176 tokenId;
+            uint256 tokenId;
             _mint(_project.projectVestConfigs[index].recipient, (tokenId = _nextId++));
             uint128 liquidityShares = uint128(FullMath.mulDiv(liquidity, _project.projectVestConfigs[index].shares, BPS));
 
@@ -373,5 +377,22 @@ contract ILOPool is
                     raiseAmount,
                     true
                 );
+    }
+
+    function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 unlockedLiquidity) {
+        PositionVest storage _positionVest = _positionVests[tokenId];
+        unlockedLiquidity = uint128(FullMath.mulDiv(
+                _positionVest.totalLiquidity,
+                _unlockedSharesBPS(_positionVest.schedule), 
+                BPS
+            ));
+    }
+
+    function _assignVestingSchedule(uint256 nftId, LinearVest[] storage vestingSchedule) internal {
+        _positionVests[nftId].schedule = vestingSchedule;
+    }
+
+    function _updateVestingLiquidity(uint256 nftId, uint128 liquidity) internal {
+        _positionVests[nftId].totalLiquidity = liquidity;
     }
 }
