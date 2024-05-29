@@ -18,12 +18,14 @@ import './base/Initializable.sol';
 import './base/Multicall.sol';
 import './base/PeripheryValidation.sol';
 import './base/PoolInitializer.sol';
+import "./base/ILOWhitelist.sol";
 
 /// @title NFT positions
 /// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
 contract ILOPool is
     ERC721,
     IILOPool,
+    ILOWhitelist,
     ILOSale,
     ILOVest,
     Initializable,
@@ -128,7 +130,9 @@ contract ILOPool is
 
     /// @inheritdoc ILOSale
     function buy(BuyParams calldata params)
-        external override duringSale()
+        external override 
+        duringSale()
+        onlyWhitelisted(params.recipient)
         returns (
             uint256 tokenId,
             uint128 liquidityDelta,
@@ -182,6 +186,7 @@ contract ILOPool is
         payable
         override
         isAuthorizedForToken(params.tokenId)
+        afterSale()
         checkDeadline(params.deadline)
         returns (uint256 amount0, uint256 amount1)
     {
