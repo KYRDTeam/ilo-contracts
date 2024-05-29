@@ -5,12 +5,13 @@ pragma abicoder v2;
 import "./interfaces/IILOManager.sol";
 import "./interfaces/IILOPool.sol";
 import "./libraries/ChainId.sol";
+import './base/Initializable.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import '@openzeppelin/contracts/proxy/Clones.sol';
 
-contract ILOManager is IILOManager, Ownable {
+contract ILOManager is IILOManager, Ownable, Initializable {
 
     event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
     event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
@@ -18,18 +19,24 @@ contract ILOManager is IILOManager, Ownable {
     uint64 private DEFAULT_DEADLINE_OFFSET = 7 * 24 * 60 * 60; // 7 days
     uint16 constant BPS = 10000;
     uint16 PLATFORM_FEE;
+    uint16 PERFORMANCE_FEE;
+    address FEE_TAKER;
     address ILO_POOL_IMPLEMENTATION;
     address private _uniV3Factory;
 
     mapping(address => Project) private _cachedProject; // map uniV3Pool => project (aka projectId => project)
     mapping(address => address[]) private _initializedILOPools; // map uniV3Pool => list of initialized ilo pools
 
-    constructor(
-        address initialOwner, 
+    function initialize(
+        address initialOwner,
+        address _feeTaker,
         address uniV3Factory, 
-        uint16 platformFee
-    ) {
+        uint16 platformFee,
+        uint16 performanceFee
+    ) external whenNotInitialized() {
         PLATFORM_FEE = platformFee;
+        PERFORMANCE_FEE = performanceFee;
+        FEE_TAKER = _feeTaker;
         transferOwnership(initialOwner);
         _uniV3Factory = uniV3Factory;
     }
@@ -162,6 +169,20 @@ contract ILOManager is IILOManager, Ownable {
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setPlatformFee(uint16 _platformFee) external onlyOwner() {
         PLATFORM_FEE = _platformFee;
+    }
+
+    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
+    function setPerformanceFee(uint16 _performanceFee) external onlyOwner() {
+        PERFORMANCE_FEE = _performanceFee;
+    }
+
+    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
+    function setFeeTaker(address _feeTaker) external override onlyOwner() {
+        FEE_TAKER = _feeTaker;
+    }
+
+    function feeTaker() external view override returns(address _feeTaker) {
+        return FEE_TAKER;
     }
 
     /// @notice new ilo implementation for clone

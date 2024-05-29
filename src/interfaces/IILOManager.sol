@@ -31,6 +31,7 @@ interface IILOManager is IILOConfig {
         address uniV3PoolAddress; // considered as project id
         PoolAddress.PoolKey _cachedPoolKey;
         uint16 platformFee; // BPS 10000
+        uint16 performanceFee; // BPS 10000
     }
 
     function initProject(
@@ -46,4 +47,9 @@ interface IILOManager is IILOConfig {
     function initILOPool(InitPoolParams calldata params) external;
 
     function project(address uniV3PoolAddress) external view returns (Project memory);
+
+    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
+    function setFeeTaker(address _feeTaker) external;
+
+    function feeTaker() external returns(address _feeTaker);
 }
