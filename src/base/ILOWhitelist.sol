@@ -8,7 +8,7 @@ abstract contract ILOWhitelist {
     event SetWhitelist(address indexed user, bool isWhitelist);
 
     modifier onlyWhitelisted(address user) {
-        require(_whitelisted.contains(user));
+        require(EnumerableSet.contains(_whitelisted, user));
         _;
     }
 
@@ -16,14 +16,14 @@ abstract contract ILOWhitelist {
     
     /// @notice check if the address is whitelisted
     function isWhitelisted(address user) external view returns (bool) {
-        return _whitelisted.contains(user);
+        return EnumerableSet.contains(_whitelisted, user);
     }
 
     function setWhitelist(address user) external {
         _setWhitelist(user);
     }
 
-    function _removeWhitelist(address user) internal {
+    function removeWhitelist(address user) external {
         _removeWhitelist(user);
     }
 
@@ -40,12 +40,12 @@ abstract contract ILOWhitelist {
     }
 
     function _removeWhitelist(address user) internal {
-        _whitelisted.remove(user);
+        EnumerableSet.remove(_whitelisted, user);
         emit SetWhitelist(user, false);
     }
 
     function _setWhitelist(address user) internal {
-        _whitelisted.set(user);
+        EnumerableSet.add(_whitelisted, user);
         emit SetWhitelist(user, true);
     }
 }
