@@ -23,6 +23,7 @@ abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
     uint160 SQRT_RATIO_LOWER_X96;
     uint160 SQRT_RATIO_UPPER_X96;
     uint16 PLATFORM_FEE; // BPS 10000
+    uint16 PERFORMANCE_FEE; // BPS 10000
     uint16 INVESTOR_SHARES; // BPS 10000
     PoolAddress.PoolKey private _cachedPoolKey;
     address private _cachedUniV3PoolAddress;

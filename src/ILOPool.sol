@@ -35,6 +35,8 @@ contract ILOPool is
     LiquidityManagement,
     PeripheryValidation
 {
+    event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
+
     // details about the uniswap position
     struct Position {
         // the liquidity of the position
@@ -42,9 +44,9 @@ contract ILOPool is
         // the fee growth of the aggregate position as of the last action on the individual position
         uint256 feeGrowthInside0LastX128;
         uint256 feeGrowthInside1LastX128;
-        // how many uncollected tokens are owed to the position, as of the last computation
-        uint128 tokensOwed0;
-        uint128 tokensOwed1;
+        
+        // the raise amount of position
+        uint256 raiseAmount;
     }
 
     LinearVest[] investorVestConfigs;
@@ -75,6 +77,7 @@ contract ILOPool is
         SQRT_RATIO_LOWER_X96 = TickMath.getSqrtRatioAtTick(TICK_LOWER);
         SQRT_RATIO_UPPER_X96 = TickMath.getSqrtRatioAtTick(TICK_UPPER);
         PLATFORM_FEE = _project.platformFee;
+        PERFORMANCE_FEE = _project.performanceFee;
         INVESTOR_SHARES = _project.investorShares;
 
         // initialize sale
@@ -108,9 +111,7 @@ contract ILOPool is
             int24 tickUpper,
             uint128 liquidity,
             uint256 feeGrowthInside0LastX128,
-            uint256 feeGrowthInside1LastX128,
-            uint128 tokensOwed0,
-            uint128 tokensOwed1
+            uint256 feeGrowthInside1LastX128
         )
     {
         Position memory position = _positions[tokenId];
@@ -122,9 +123,7 @@ contract ILOPool is
             TICK_UPPER,
             position.liquidity,
             position.feeGrowthInside0LastX128,
-            position.feeGrowthInside1LastX128,
-            position.tokensOwed0,
-            position.tokensOwed1
+            position.feeGrowthInside1LastX128
         );
     }
 
@@ -142,21 +141,22 @@ contract ILOPool is
     {
         totalRaised += params.raiseAmount;
         require(totalRaised <= saleInfo.hardCap);
+        require(totalSold() <= saleInfo.maxSaleAmount);
+
         if (balanceOf(params.recipient) == 0) {
             _mint(params.recipient, (tokenId = _nextId++));
         } else {
             tokenId = tokenOfOwnerByIndex(params.recipient, 1);
         }
+
         Position storage _position = _positions[tokenId];
+        require(_position.raiseAmount + params.raiseAmount <= saleInfo.maxCapPerUser);
+
         if (RAISE_TOKEN == _poolKey().token0) {
-            require(_position.tokensOwed0 + params.raiseAmount <= saleInfo.maxCapPerUser);
             liquidityDelta = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, params.raiseAmount);
         } else {
-            require(_position.tokensOwed1 + params.raiseAmount <= saleInfo.maxCapPerUser);
             liquidityDelta = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, params.raiseAmount);
         }
-
-        require(totalSold() <= saleInfo.maxSaleAmount);
 
         liquidityDelta = uint128(FullMath.mulDiv(liquidityDelta, INVESTOR_SHARES, BPS));
         _position.liquidity += liquidityDelta;
@@ -166,143 +166,87 @@ contract ILOPool is
             SQRT_RATIO_UPPER_X96,
             liquidityDelta
         );
-        _position.tokensOwed0 += uint128(amountAdded0);
-        _position.tokensOwed1 += uint128(amountAdded1);
 
         _updateVestingLiquidity(tokenId, liquidityDelta);
         _assignVestingSchedule(tokenId, investorVestConfigs);
     }
-
-
 
     modifier isAuthorizedForToken(uint256 tokenId) {
         require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
         _;
     }
 
-    /// @inheritdoc IILOPool
-    function decreaseLiquidity(DecreaseLiquidityParams calldata params)
+    function claim(uint256 tokenId)
         external
         payable
         override
-        isAuthorizedForToken(params.tokenId)
+        isAuthorizedForToken(tokenId)
         afterSale()
-        checkDeadline(params.deadline)
         returns (uint256 amount0, uint256 amount1)
     {
-        require(params.liquidity > 0);
-        require(params.liquidity + _positionVests[params.tokenId].claimedLiquidity <= _unlockedLiquidity(params.tokenId));
-        Position storage position = _positions[params.tokenId];
-
-        uint128 positionLiquidity = position.liquidity;
-        require(positionLiquidity >= params.liquidity);
-
+        uint128 unlockedLiquidity = _unlockedLiquidity(tokenId);
         IUniswapV3Pool pool = IUniswapV3Pool(_uniV3PoolAddress());
-        (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, params.liquidity);
+        {
+            Position storage position = _positions[tokenId];
 
-        require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
+            uint128 positionLiquidity = position.liquidity;
+            require(positionLiquidity >= unlockedLiquidity);
 
-        bytes32 positionKey = PositionKey.compute(address(this), TICK_LOWER, TICK_UPPER);
-        // this is now updated to the current transaction
-        (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+            (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, unlockedLiquidity);
 
-        position.tokensOwed0 +=
-            uint128(amount0) +
-            uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                    positionLiquidity,
-                    FixedPoint128.Q128
-                )
-            );
-        position.tokensOwed1 +=
-            uint128(amount1) +
-            uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                    positionLiquidity,
-                    FixedPoint128.Q128
-                )
-            );
+            (amount0, amount1) = _deductFees(amount0, amount1, PLATFORM_FEE);
+            bytes32 positionKey = PositionKey.compute(address(this), TICK_LOWER, TICK_UPPER);
 
-        position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
-        position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
-        // subtraction is safe because we checked positionLiquidity is gte params.liquidity
-        position.liquidity = positionLiquidity - params.liquidity;
+            (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+            uint256 fees0 = FullMath.mulDiv(
+                                feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
+                                positionLiquidity,
+                                FixedPoint128.Q128
+                            );
+            
+            uint256 fees1 = FullMath.mulDiv(
+                                feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
+                                positionLiquidity,
+                                FixedPoint128.Q128
+                            );
+            (fees0, fees1) = _deductFees(fees0, fees1, PERFORMANCE_FEE);
 
-        emit DecreaseLiquidity(params.tokenId, params.liquidity, amount0, amount1);
-    }
-
-    /// @inheritdoc IILOPool
-    function collect(CollectParams calldata params)
-        external
-        payable
-        override
-        isAuthorizedForToken(params.tokenId)
-        returns (uint256 amount0, uint256 amount1)
-    {
-        require(params.amount0Max > 0 || params.amount1Max > 0);
-        // allow collecting to the nft position manager address with address 0
-        address recipient = params.recipient == address(0) ? address(this) : params.recipient;
-
-        Position storage position = _positions[params.tokenId];
-
-        IUniswapV3Pool pool = IUniswapV3Pool(PoolAddress.computeAddress(factory, _poolKey()));
-
-        (uint128 tokensOwed0, uint128 tokensOwed1) = (position.tokensOwed0, position.tokensOwed1);
-
-        // trigger an update of the position fees owed and fee growth snapshots if it has any liquidity
-        if (position.liquidity > 0) {
-            pool.burn(TICK_LOWER, TICK_UPPER, 0);
-            (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) =
-                pool.positions(PositionKey.compute(address(this), TICK_LOWER, TICK_UPPER));
-
-            tokensOwed0 += uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                    position.liquidity,
-                    FixedPoint128.Q128
-                )
-            );
-            tokensOwed1 += uint128(
-                FullMath.mulDiv(
-                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                    position.liquidity,
-                    FixedPoint128.Q128
-                )
-            );
+            amount0 += fees0;
+            amount1 += fees1;
 
             position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
             position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+
+            // subtraction is safe because we checked positionLiquidity is gte unlockedLiquidity
+            position.liquidity = positionLiquidity - unlockedLiquidity;
+            emit DecreaseLiquidity(tokenId, unlockedLiquidity, amount0, amount1);
+
         }
-
-        // compute the arguments to give to the pool#collect method
-        (uint128 amount0Collect, uint128 amount1Collect) =
-            (
-                params.amount0Max > tokensOwed0 ? tokensOwed0 : params.amount0Max,
-                params.amount1Max > tokensOwed1 ? tokensOwed1 : params.amount1Max
-            );
-
-        // the actual amounts collected are returned
-        (amount0, amount1) = pool.collect(
-            recipient,
+        (uint128 amountCollected0, uint128 amountCollected1) = pool.collect(
+            address(this),
             TICK_LOWER,
             TICK_UPPER,
-            amount0Collect,
-            amount1Collect
+            type(uint128).max,
+            type(uint128).max
         );
+        emit Collect(tokenId, address(this), amountCollected0, amountCollected1);
 
-        // sometimes there will be a few less wei than expected due to rounding down in core, but we just subtract the full amount expected
-        // instead of the actual amount so we can burn the token
-        (position.tokensOwed0, position.tokensOwed1) = (tokensOwed0 - amount0Collect, tokensOwed1 - amount1Collect);
+        TransferHelper.safeTransfer(_poolKey().token0, msg.sender, amount0);
+        TransferHelper.safeTransfer(_poolKey().token1, msg.sender, amount1);
 
-        emit Collect(params.tokenId, recipient, amount0Collect, amount1Collect);
+        emit Claim(msg.sender, unlockedLiquidity, amount0, amount1);
+
+        // transfer fee
+        address feeTaker = MANAGER.feeTaker();
+        TransferHelper.safeTransfer(_poolKey().token0, feeTaker, amountCollected0-amount0);
+        TransferHelper.safeTransfer(_poolKey().token1, feeTaker, amountCollected1-amount1);
+
     }
 
     /// @inheritdoc IILOPool
     function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
         Position storage position = _positions[tokenId];
-        require(position.liquidity == 0 && position.tokensOwed0 == 0 && position.tokensOwed1 == 0, 'Not cleared');
+        require(position.liquidity == 0, 'Not cleared');
         delete _positions[tokenId];
         _burn(tokenId);
     }
@@ -349,16 +293,6 @@ contract ILOPool is
 
             Position storage _position = _positions[tokenId];
             _position.liquidity = liquidityShares;
-            (uint256 amount0, uint256 amount1) = LiquidityAmounts.getAmountsForLiquidity(
-                SQRT_RATIO_X96,
-                SQRT_RATIO_LOWER_X96,
-                SQRT_RATIO_UPPER_X96,
-                liquidityShares
-            );
-
-            _position.tokensOwed0 = uint128(amount0);
-            _position.tokensOwed1 = uint128(amount1);
-
             
             _updateVestingLiquidity(tokenId, liquidityShares);
 
@@ -408,5 +342,14 @@ contract ILOPool is
 
     function _updateVestingLiquidity(uint256 nftId, uint128 liquidity) internal {
         _positionVests[nftId].totalLiquidity = liquidity;
+    }
+
+    function _deductFees(uint256 amount0, uint256 amount1, uint16 feeBPS) internal pure 
+        returns (
+            uint256 amount0Left, 
+            uint256 amount1Left
+        ) {
+        amount0Left = amount0 - FullMath.mulDiv(amount0, feeBPS, BPS);
+        amount1Left = amount1 - FullMath.mulDiv(amount1, feeBPS, BPS);
     }
 }
