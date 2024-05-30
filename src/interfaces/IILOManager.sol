@@ -52,4 +52,17 @@ interface IILOManager is IILOConfig {
     function setFeeTaker(address _feeTaker) external;
 
     function feeTaker() external returns(address _feeTaker);
+
+    function UNIV3_FACTORY() external returns(address);
+    function WETH9() external returns(address);
+
+    function initialize(
+        address initialOwner,
+        address _feeTaker,
+        address uniV3Factory,
+        address weth9,
+        uint16 platformFee,
+        uint16 performanceFee
+    ) external;
+
 }

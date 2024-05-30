@@ -9,9 +9,9 @@ import '../interfaces/IILOManager.sol';
 /// @notice Immutable state used by periphery contracts
 abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
     /// @inheritdoc IILOPoolImmutableState
-    address public immutable override factory;
+    address public override factory;
     /// @inheritdoc IILOPoolImmutableState
-    address public immutable override WETH9;
+    address public override WETH9;
 
     IILOManager MANAGER;
     address RAISE_TOKEN;
@@ -27,11 +27,6 @@ abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
     uint16 INVESTOR_SHARES; // BPS 10000
     PoolAddress.PoolKey private _cachedPoolKey;
     address private _cachedUniV3PoolAddress;
-
-    constructor(address _factory, address _WETH9) {
-        factory = _factory;
-        WETH9 = _WETH9;
-    }
 
     function _cachePoolKey(PoolAddress.PoolKey memory poolKey) internal {
         _cachedPoolKey = poolKey;

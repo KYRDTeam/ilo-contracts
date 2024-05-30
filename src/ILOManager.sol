@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT 
+// SPDX-License-Identifier: BSL-1.1
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
@@ -16,13 +16,15 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
     event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
 
+    address public override UNIV3_FACTORY;
+    address public override WETH9;
+
     uint64 private DEFAULT_DEADLINE_OFFSET = 7 * 24 * 60 * 60; // 7 days
     uint16 constant BPS = 10000;
     uint16 PLATFORM_FEE;
     uint16 PERFORMANCE_FEE;
     address FEE_TAKER;
     address ILO_POOL_IMPLEMENTATION;
-    address private _uniV3Factory;
 
     mapping(address => Project) private _cachedProject; // map uniV3Pool => project (aka projectId => project)
     mapping(address => address[]) private _initializedILOPools; // map uniV3Pool => list of initialized ilo pools
@@ -30,15 +32,17 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     function initialize(
         address initialOwner,
         address _feeTaker,
-        address uniV3Factory, 
+        address uniV3Factory,
+        address weth9,
         uint16 platformFee,
         uint16 performanceFee
-    ) external whenNotInitialized() {
+    ) external override whenNotInitialized() {
         PLATFORM_FEE = platformFee;
         PERFORMANCE_FEE = performanceFee;
         FEE_TAKER = _feeTaker;
         transferOwnership(initialOwner);
-        _uniV3Factory = uniV3Factory;
+        UNIV3_FACTORY = uniV3Factory;
+        WETH9 = weth9;
     }
 
     modifier onlyProjectAdmin(address uniV3Pool) {
@@ -63,7 +67,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         uint64 launchTime,
         uint16 investorShares,  // percentage of user shares
         ProjectVestConfig[] calldata projectVestConfigs
-    ) external override returns(address uniV3PoolAddress) {
+    ) external override afterInitialize() returns(address uniV3PoolAddress) {
 
         _validateSharesPercentage(investorShares, projectVestConfigs);
         uint64 refundDeadline = launchTime + DEFAULT_DEADLINE_OFFSET;
@@ -100,9 +104,9 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     function _initUniV3PoolIfNecessary(PoolAddress.PoolKey memory poolKey, uint160 sqrtPriceX96) internal returns (address pool) {
-        pool = IUniswapV3Factory(_uniV3Factory).getPool(poolKey.token0, poolKey.token1, poolKey.fee);
+        pool = IUniswapV3Factory(UNIV3_FACTORY).getPool(poolKey.token0, poolKey.token1, poolKey.fee);
         if (pool == address(0)) {
-            pool = IUniswapV3Factory(_uniV3Factory).createPool(poolKey.token0, poolKey.token1, poolKey.fee);
+            pool = IUniswapV3Factory(UNIV3_FACTORY).createPool(poolKey.token0, poolKey.token1, poolKey.fee);
             IUniswapV3Pool(pool).initialize(sqrtPriceX96);
         } else {
             (uint160 sqrtPriceX96Existing, , , , , , ) = IUniswapV3Pool(pool).slot0();

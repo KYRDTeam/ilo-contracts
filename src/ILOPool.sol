@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: GPL-2.0-or-later
+// SPDX-License-Identifier: BSL-1.1
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
@@ -57,17 +57,23 @@ contract ILOPool is
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId = 1;
     uint256 totalRaised;
-    constructor(
-        address _factory,
-        address _WETH9
-    ) ERC721('KRYSTAL ILOPool V1', 'KYRSTAL-ILO-V1') ILOPoolImmutableState(_factory, _WETH9) {}
+    constructor() ERC721('KYRSTAL ILOPool V1', 'KYRSTAL-ILO-V1') {}
+
+    function name() public view override(ERC721, IERC721Metadata) returns (string memory) {
+        return 'KYRSTAL ILOPool V1';
+    }
+
+    function symbol() public view override(ERC721, IERC721Metadata) returns (string memory) {
+        return 'KYRSTAL-ILO-V1';
+    }
 
     function initialize(InitPoolParams calldata params) external override whenNotInitialized() {
-        
         // initialize imutable state
         MANAGER = IILOManager(msg.sender);
         IILOManager.Project memory _project = MANAGER.project(params.uniV3Pool);
 
+        factory = MANAGER.UNIV3_FACTORY();
+        WETH9 = MANAGER.WETH9();
         RAISE_TOKEN = _project.raiseToken;
         SALE_TOKEN = _project.saleToken;
         _cacheUniV3PoolAddress(params.uniV3Pool);

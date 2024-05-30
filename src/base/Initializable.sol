@@ -9,4 +9,8 @@ abstract contract Initializable {
         _;
         _initialized = true;
     }
+    modifier afterInitialize() {
+        require(_initialized);
+        _;
+    }
 }
