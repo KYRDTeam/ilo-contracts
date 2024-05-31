@@ -17,7 +17,6 @@ import './base/ILOPoolImmutableState.sol';
 import './base/Initializable.sol';
 import './base/Multicall.sol';
 import './base/PeripheryValidation.sol';
-import './base/PoolInitializer.sol';
 import "./base/ILOWhitelist.sol";
 
 /// @title NFT positions
@@ -31,7 +30,6 @@ contract ILOPool is
     Initializable,
     Multicall,
     ILOPoolImmutableState,
-    PoolInitializer,
     LiquidityManagement,
     PeripheryValidation
 {
@@ -59,11 +57,11 @@ contract ILOPool is
     uint256 totalRaised;
     constructor() ERC721('KYRSTAL ILOPool V1', 'KYRSTAL-ILO-V1') {}
 
-    function name() public view override(ERC721, IERC721Metadata) returns (string memory) {
+    function name() public pure override(ERC721, IERC721Metadata) returns (string memory) {
         return 'KYRSTAL ILOPool V1';
     }
 
-    function symbol() public view override(ERC721, IERC721Metadata) returns (string memory) {
+    function symbol() public pure override(ERC721, IERC721Metadata) returns (string memory) {
         return 'KYRSTAL-ILO-V1';
     }
 
@@ -72,7 +70,6 @@ contract ILOPool is
         MANAGER = IILOManager(msg.sender);
         IILOManager.Project memory _project = MANAGER.project(params.uniV3Pool);
 
-        factory = MANAGER.UNIV3_FACTORY();
         WETH9 = MANAGER.WETH9();
         RAISE_TOKEN = _project.raiseToken;
         SALE_TOKEN = _project.saleToken;
@@ -276,13 +273,8 @@ contract ILOPool is
                 amount1Desired = totalRaised;
                 amount1Min = totalRaised;
             }
-            (liquidity,,,) = addLiquidity(AddLiquidityParams({
-                token0: _poolKey().token0,
-                token1: _poolKey().token1,
-                fee: _poolKey().fee,
-                recipient: address(this),
-                tickLower: TICK_LOWER,
-                tickUpper: TICK_UPPER,
+            (liquidity,,) = addLiquidity(AddLiquidityParams({
+                pool: IUniswapV3Pool(_uniV3PoolAddress()),
                 amount0Desired: amount0Desired,
                 amount1Desired: amount1Desired,
                 amount0Min: amount0Min,
