@@ -44,7 +44,7 @@ interface IILOManager is IILOConfig {
         ProjectVestConfig[] calldata projectVestConfigs
     ) external returns(address uniV3PoolAddress);
 
-    function initILOPool(InitPoolParams calldata params) external;
+    function initILOPool(InitPoolParams calldata params) external returns(address iloPoolAddress);
 
     function project(address uniV3PoolAddress) external view returns (Project memory);
 
@@ -65,4 +65,6 @@ interface IILOManager is IILOConfig {
         uint16 performanceFee
     ) external;
 
+    /// @notice launch all projects
+    function launch(address uniV3PoolAddress) external;
 }

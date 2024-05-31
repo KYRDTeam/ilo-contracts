@@ -1,11 +1,25 @@
 # ILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/1de4d92cce6f0722e8736db455733703c706f30f/src/ILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/ILOManager.sol)
 
 **Inherits:**
-[IILOManager](/src/interfaces/IILOManager.sol/interface.IILOManager.md), Ownable
+[IILOManager](/src/interfaces/IILOManager.sol/interface.IILOManager.md), Ownable, [Initializable](/src/base/Initializable.sol/abstract.Initializable.md)
 
 
 ## State Variables
+### UNIV3_FACTORY
+
+```solidity
+address public override UNIV3_FACTORY;
+```
+
+
+### WETH9
+
+```solidity
+address public override WETH9;
+```
+
+
 ### DEFAULT_DEADLINE_OFFSET
 
 ```solidity
@@ -27,17 +41,24 @@ uint16 PLATFORM_FEE;
 ```
 
 
+### PERFORMANCE_FEE
+
+```solidity
+uint16 PERFORMANCE_FEE;
+```
+
+
+### FEE_TAKER
+
+```solidity
+address FEE_TAKER;
+```
+
+
 ### ILO_POOL_IMPLEMENTATION
 
 ```solidity
 address ILO_POOL_IMPLEMENTATION;
-```
-
-
-### _uniV3Factory
-
-```solidity
-address private _uniV3Factory;
 ```
 
 
@@ -56,11 +77,18 @@ mapping(address => address[]) private _initializedILOPools;
 
 
 ## Functions
-### constructor
+### initialize
 
 
 ```solidity
-constructor(address initialOwner, address uniV3Factory, uint16 platformFee);
+function initialize(
+    address initialOwner,
+    address _feeTaker,
+    address uniV3Factory,
+    address weth9,
+    uint16 platformFee,
+    uint16 performanceFee
+) external override whenNotInitialized;
 ```
 
 ### onlyProjectAdmin
@@ -84,7 +112,7 @@ function initProject(
     uint64 launchTime,
     uint16 investorShares,
     ProjectVestConfig[] calldata projectVestConfigs
-) external override returns (address uniV3PoolAddress);
+) external override afterInitialize returns (address uniV3PoolAddress);
 ```
 **Parameters**
 
@@ -120,7 +148,11 @@ only project admin can use this function
 
 
 ```solidity
-function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool);
+function initILOPool(InitPoolParams calldata params)
+    external
+    override
+    onlyProjectAdmin(params.uniV3Pool)
+    returns (address iloPoolAddress);
 ```
 **Parameters**
 
@@ -180,6 +212,31 @@ set platform fee for decrease liquidity. Platform fee is imutable among all proj
 function setPlatformFee(uint16 _platformFee) external onlyOwner;
 ```
 
+### setPerformanceFee
+
+set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
+
+
+```solidity
+function setPerformanceFee(uint16 _performanceFee) external onlyOwner;
+```
+
+### setFeeTaker
+
+set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
+
+
+```solidity
+function setFeeTaker(address _feeTaker) external override onlyOwner;
+```
+
+### feeTaker
+
+
+```solidity
+function feeTaker() external view override returns (address _feeTaker);
+```
+
 ### setILOPoolImplementation
 
 new ilo implementation for clone
@@ -212,6 +269,15 @@ function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external onlyOwn
 
 ```solidity
 function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external onlyOwner;
+```
+
+### launch
+
+launch all projects
+
+
+```solidity
+function launch(address uniV3PoolAddress) external override;
 ```
 
 ## Events

@@ -1,5 +1,5 @@
 # IILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/1de4d92cce6f0722e8736db455733703c706f30f/src/interfaces/IILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/interfaces/IILOManager.sol)
 
 **Inherits:**
 [IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md)
@@ -25,7 +25,7 @@ function initProject(
 
 
 ```solidity
-function initILOPool(InitPoolParams calldata params) external;
+function initILOPool(InitPoolParams calldata params) external returns (address iloPoolAddress);
 ```
 
 ### project
@@ -33,6 +33,59 @@ function initILOPool(InitPoolParams calldata params) external;
 
 ```solidity
 function project(address uniV3PoolAddress) external view returns (Project memory);
+```
+
+### setFeeTaker
+
+set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
+
+
+```solidity
+function setFeeTaker(address _feeTaker) external;
+```
+
+### feeTaker
+
+
+```solidity
+function feeTaker() external returns (address _feeTaker);
+```
+
+### UNIV3_FACTORY
+
+
+```solidity
+function UNIV3_FACTORY() external returns (address);
+```
+
+### WETH9
+
+
+```solidity
+function WETH9() external returns (address);
+```
+
+### initialize
+
+
+```solidity
+function initialize(
+    address initialOwner,
+    address _feeTaker,
+    address uniV3Factory,
+    address weth9,
+    uint16 platformFee,
+    uint16 performanceFee
+) external;
+```
+
+### launch
+
+launch all projects
+
+
+```solidity
+function launch(address uniV3PoolAddress) external;
 ```
 
 ## Events
@@ -70,6 +123,7 @@ struct Project {
     address uniV3PoolAddress;
     PoolAddress.PoolKey _cachedPoolKey;
     uint16 platformFee;
+    uint16 performanceFee;
 }
 ```
 

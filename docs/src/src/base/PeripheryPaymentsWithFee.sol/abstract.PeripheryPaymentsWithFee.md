@@ -1,5 +1,5 @@
 # PeripheryPaymentsWithFee
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/1de4d92cce6f0722e8736db455733703c706f30f/src/base/PeripheryPaymentsWithFee.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/base/PeripheryPaymentsWithFee.sol)
 
 **Inherits:**
 [PeripheryPayments](/src/base/PeripheryPayments.sol/abstract.PeripheryPayments.md), [IPeripheryPaymentsWithFee](/src/interfaces/IPeripheryPaymentsWithFee.sol/interface.IPeripheryPaymentsWithFee.md)

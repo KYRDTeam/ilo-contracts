@@ -85,7 +85,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     /// @notice this function init an `ILO Pool` which will be used for sale and vest. One project can init many ILO Pool
     /// @notice only project admin can use this function
     /// @param params the parameters for init project
-    function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool) {
+    function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool) returns (address iloPoolAddress) {
         require(ILO_POOL_IMPLEMENTATION != address(0), "no pool implementation!");
 
         // validate time for sale start and end compared to launch time
@@ -98,7 +98,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             params.uniV3Pool,
             _initializedILOPools[params.uniV3Pool].length
         ));
-        address iloPoolAddress = Clones.cloneDeterministic(ILO_POOL_IMPLEMENTATION, salt);
+        iloPoolAddress = Clones.cloneDeterministic(ILO_POOL_IMPLEMENTATION, salt);
         IILOPool(iloPoolAddress).initialize(params);
         _initializedILOPools[params.uniV3Pool].push(iloPoolAddress);
     }
@@ -213,5 +213,14 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         Project storage _project = _cachedProject[uniV3Pool];
         _project.refundDeadline = refundDeadline;
         // TODO: emit event when the refundDeadline changes
+    }
+
+    /// @inheritdoc IILOManager
+    function launch(address uniV3PoolAddress) external override {
+        require(block.timestamp > _cachedProject[uniV3PoolAddress].launchTime);
+        address[] memory initializedPools = _initializedILOPools[uniV3PoolAddress];
+        for (uint256 i = 0; i < initializedPools.length; i++) {
+            IILOPool(initializedPools[i]).launch();
+        }
     }
 }
