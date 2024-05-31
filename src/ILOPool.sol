@@ -55,16 +55,16 @@ contract ILOPool is
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId = 1;
     uint256 totalRaised;
-    constructor() ERC721('KYRSTAL ILOPool V1', 'KYRSTAL-ILO-V1') {
+    constructor() ERC721('KRYSTAL ILOPool V1', 'KRYSTAL-ILO-V1') {
         _disableInitialize();
     }
 
     function name() public pure override(ERC721, IERC721Metadata) returns (string memory) {
-        return 'KYRSTAL ILOPool V1';
+        return 'KRYSTAL ILOPool V1';
     }
 
     function symbol() public pure override(ERC721, IERC721Metadata) returns (string memory) {
-        return 'KYRSTAL-ILO-V1';
+        return 'KRYSTAL-ILO-V1';
     }
 
     function initialize(InitPoolParams calldata params) external override whenNotInitialized() {
@@ -103,13 +103,13 @@ contract ILOPool is
         }
 
         emit ILOPoolInitialized(
-          params.uniV3Pool,
-          TICK_LOWER,
-          TICK_UPPER,
-          PLATFORM_FEE,
-          PERFORMANCE_FEE,
-          INVESTOR_SHARES,
-          saleInfo
+            params.uniV3Pool,
+            TICK_LOWER,
+            TICK_UPPER,
+            PLATFORM_FEE,
+            PERFORMANCE_FEE,
+            INVESTOR_SHARES,
+            saleInfo
         );
     }
 
@@ -154,26 +154,35 @@ contract ILOPool is
             uint256 amountAdded1
         )
     {
+        // check if raise amount over capacity
+        require(saleInfo.hardCap - totalRaised >= raiseAmount);
         totalRaised += raiseAmount;
-        require(totalRaised <= saleInfo.hardCap);
+
         require(totalSold() <= saleInfo.maxSaleAmount);
 
+        // if investor already have a position, just increase raise amount and liquidity
+        // otherwise, mint new nft for investor and assign vesting schedules
         if (balanceOf(recipient) == 0) {
             _mint(recipient, (tokenId = _nextId++));
+            _assignVestingSchedule(tokenId, investorVestConfigs);
         } else {
             tokenId = tokenOfOwnerByIndex(recipient, 1);
         }
 
         Position storage _position = _positions[tokenId];
-        require(_position.raiseAmount + raiseAmount <= saleInfo.maxCapPerUser);
+        require(raiseAmount <= saleInfo.maxCapPerUser - _position.raiseAmount);
 
+        // get amount of liquidity associated with raise amount
         if (RAISE_TOKEN == _poolKey().token0) {
             liquidityDelta = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, raiseAmount);
         } else {
             liquidityDelta = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, raiseAmount);
         }
 
+        // calculate amount of share liquidity investor recieve by INVESTOR_SHARES config
         liquidityDelta = uint128(FullMath.mulDiv(liquidityDelta, INVESTOR_SHARES, BPS));
+        
+        // increase investor's liquidity
         _position.liquidity += liquidityDelta;
         (amountAdded0, amountAdded1) = LiquidityAmounts.getAmountsForLiquidity(
             SQRT_RATIO_X96,
@@ -182,8 +191,11 @@ contract ILOPool is
             liquidityDelta
         );
 
-        _updateVestingLiquidity(tokenId, liquidityDelta);
-        _assignVestingSchedule(tokenId, investorVestConfigs);
+        // update total liquidity locked for vest and assiging vesing schedules
+        _updateVestingLiquidity(tokenId, _position.liquidity);
+
+        // transfer fund into contract
+        TransferHelper.safeTransferFrom(RAISE_TOKEN, msg.sender, address(this), raiseAmount);
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
@@ -191,6 +203,7 @@ contract ILOPool is
         _;
     }
 
+    /// @inheritdoc IILOPool
     function claim(uint256 tokenId)
         external
         payable
@@ -199,6 +212,7 @@ contract ILOPool is
         afterSale()
         returns (uint256 amount0, uint256 amount1)
     {
+        // calculate amount of unlocked liquidity for the position
         uint128 unlockedLiquidity = _unlockedLiquidity(tokenId);
         IUniswapV3Pool pool = IUniswapV3Pool(_uniV3PoolAddress());
         {
@@ -207,11 +221,15 @@ contract ILOPool is
             uint128 positionLiquidity = position.liquidity;
             require(positionLiquidity >= unlockedLiquidity);
 
+            // get amount of token0 and token1 that pool will return for us
             (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, unlockedLiquidity);
 
+            // get amount of token0 and token1 after deduct platform fee
             (amount0, amount1) = _deductFees(amount0, amount1, PLATFORM_FEE);
+
             bytes32 positionKey = PositionKey.compute(address(this), TICK_LOWER, TICK_UPPER);
 
+            // calculate amount of fees that position generated
             (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
             uint256 fees0 = FullMath.mulDiv(
                                 feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
@@ -224,8 +242,11 @@ contract ILOPool is
                                 positionLiquidity,
                                 FixedPoint128.Q128
                             );
+
+            // amount of fees after deduct performance fee
             (fees0, fees1) = _deductFees(fees0, fees1, PERFORMANCE_FEE);
 
+            // fees is combined with liquidity token amount to return to the user
             amount0 += fees0;
             amount1 += fees1;
 
@@ -237,6 +258,7 @@ contract ILOPool is
             emit DecreaseLiquidity(tokenId, unlockedLiquidity, amount0, amount1);
 
         }
+        // real amount collected from uintswap pool
         (uint128 amountCollected0, uint128 amountCollected1) = pool.collect(
             address(this),
             TICK_LOWER,
@@ -246,16 +268,16 @@ contract ILOPool is
         );
         emit Collect(tokenId, address(this), amountCollected0, amountCollected1);
 
+        // transfer token for user
         TransferHelper.safeTransfer(_poolKey().token0, msg.sender, amount0);
         TransferHelper.safeTransfer(_poolKey().token1, msg.sender, amount1);
 
         emit Claim(msg.sender, unlockedLiquidity, amount0, amount1);
 
-        // transfer fee
         address feeTaker = MANAGER.feeTaker();
+        // transfer fee to fee taker
         TransferHelper.safeTransfer(_poolKey().token0, feeTaker, amountCollected0-amount0);
         TransferHelper.safeTransfer(_poolKey().token1, feeTaker, amountCollected1-amount1);
-
     }
 
     /// @inheritdoc IILOPool
@@ -268,7 +290,9 @@ contract ILOPool is
 
     /// @inheritdoc IILOPool
     function launch() external override afterSale() {
+        // only MANAGER can launch pool
         require(msg.sender == address(MANAGER));
+        // make sure that soft cap requirement match
         require(totalRaised >= saleInfo.softCap);
         uint256 liquidity;
         {
@@ -276,6 +300,8 @@ contract ILOPool is
             uint256 amount1Desired;
             uint256 amount0Min;
             uint256 amount1Min;
+
+            // calculate sale amount of tokens needed for launching pool
             if (_poolKey().token0 == RAISE_TOKEN) {
                 amount0Desired = totalRaised;
                 amount0Min = totalRaised;
@@ -285,6 +311,8 @@ contract ILOPool is
                 amount1Desired = totalRaised;
                 amount1Min = totalRaised;
             }
+
+            // actually deploy liquidity to uniswap pool
             (liquidity,,) = addLiquidity(AddLiquidityParams({
                 pool: IUniswapV3Pool(_uniV3PoolAddress()),
                 amount0Desired: amount0Desired,
@@ -295,9 +323,12 @@ contract ILOPool is
         }
 
         IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
+
+        // assigning vests for the project configuration
         for (uint256 index = 0; index < _project.projectVestConfigs.length; index++) {
             uint256 tokenId;
             IILOManager.ProjectVestConfig memory projectConfig = _project.projectVestConfigs[index];
+            // mint nft for recipient
             _mint(projectConfig.recipient, (tokenId = _nextId++));
             uint128 liquidityShares = uint128(FullMath.mulDiv(liquidity, projectConfig.shares, BPS));
 
@@ -314,10 +345,13 @@ contract ILOPool is
         }
     }
 
+    /// @notice returns amount of sale token that has already been sold
     function totalSold() public view returns (uint256) {
         return _saleAmountNeeded(totalRaised);
     }
 
+    /// @notice return sale token amount needed for the raiseAmount.
+    /// @dev sale token amount is rounded up
     function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256) {
         if (raiseAmount == 0) return 0;
         return _poolKey().token0 == SALE_TOKEN
@@ -337,6 +371,9 @@ contract ILOPool is
                 );
     }
 
+    /// @notice calculate amount of liquidity unlocked for claim
+    /// @param tokenId nft token id of position
+    /// @return unlockedLiquidity amount of unlocked liquidity
     function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 unlockedLiquidity) {
         PositionVest storage _positionVest = _positionVests[tokenId];
         unlockedLiquidity = uint128(FullMath.mulDiv(
@@ -346,14 +383,22 @@ contract ILOPool is
             ));
     }
 
+    /// @notice assign vesting schedule for position
     function _assignVestingSchedule(uint256 nftId, LinearVest[] storage vestingSchedule) internal {
         _positionVests[nftId].schedule = vestingSchedule;
     }
 
+    /// @notice update total liquidity for vesting position
+    /// vesting liquidity of position only changes when investor buy ilo
     function _updateVestingLiquidity(uint256 nftId, uint128 liquidity) internal {
         _positionVests[nftId].totalLiquidity = liquidity;
     }
 
+    /// @notice calculate the amount left after deduct fee
+    /// @param amount0 the amount of token0 before deduct fee
+    /// @param amount1 the amount of token1 before deduct fee
+    /// @return amount0Left the amount of token0 after deduct fee
+    /// @return amount1Left the amount of token1 after deduct fee
     function _deductFees(uint256 amount0, uint256 amount1, uint16 feeBPS) internal pure 
         returns (
             uint256 amount0Left, 

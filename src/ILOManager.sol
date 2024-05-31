@@ -160,20 +160,30 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         uint16 totalShares = investorShares;
         uint256 configLength = projectVestConfigs.length;
         for (uint256 index = 0; index < configLength; index++) {
+            // we need to subtract fist in order to avoid int overflow
             require(BPS - totalShares >= projectVestConfigs[index].shares);
             _validateVestSchedule(projectVestConfigs[index].vestSchedule);
             totalShares += projectVestConfigs[index].shares;
         }
+        // total shares should be exactly equal BPS
+        require(totalShares == BPS);
     }
 
     function _validateVestSchedule(LinearVest[] memory vestSchedule) internal pure {
         require(vestSchedule.length > 0);
         uint16 totalShares;
+        uint64 lastEnd;
         uint256 vestScheduleLength = vestSchedule.length;
         for (uint256 index = 0; index < vestScheduleLength; index++) {
+            // vesting schedule must not overlap
+            require(vestSchedule[index].start > lastEnd);
+            lastEnd = vestSchedule[index].end;
+            // we need to subtract fist in order to avoid int overflow
             require(BPS - totalShares >= vestSchedule[index].percentage);
             totalShares += vestSchedule[index].percentage;
         }
+        // total shares should be exactly equal BPS
+        require(totalShares == BPS);
     }
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
