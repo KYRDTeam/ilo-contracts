@@ -76,6 +76,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         uniV3PoolAddress = _initUniV3PoolIfNecessary(poolKey, initialPoolPriceX96);
         
         _cacheProject(uniV3PoolAddress, saleToken, raiseToken, fee, initialPoolPriceX96, launchTime, refundDeadline, investorShares, projectVestConfigs);
+        emit ProjectCreated(uniV3PoolAddress, _cachedProject[uniV3PoolAddress]);
     }
 
     function project(address uniV3PoolAddress) external override view returns (Project memory) {

@@ -8,7 +8,7 @@ contract ILOManagerScript is CommonScript {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        ILOManager ILOManager = new ILOManager{
+        ILOManager ilo = new ILOManager{
             salt: salt
         }();
 

@@ -6,15 +6,6 @@ pragma abicoder v2;
 import '../interfaces/IILOSale.sol';
 
 abstract contract ILOSale is IILOSale {
-    struct SaleInfo {
-        uint256 hardCap; // total amount of raise tokens
-        uint256 softCap; // minimum amount of raise token needed for launch pool
-        uint256 maxCapPerUser; // TODO: user tiers
-        uint64 start;
-        uint64 end;
-        uint256 maxSaleAmount; // maximum amount of sale tokens
-    }
-
     SaleInfo saleInfo;
 
     /// @inheritdoc IILOSale
