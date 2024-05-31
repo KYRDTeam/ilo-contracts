@@ -3,13 +3,8 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 interface IILOSale {
-    struct BuyParams {
-        uint256 raiseAmount;
-        address recipient;
-    }
-
     /// @notice this function is for investor buying ILO
-    function buy(BuyParams calldata params) external returns (
+    function buy(uint256 raiseAmount, address recipient) external returns (
             uint256 tokenId,
             uint128 liquidity,
             uint256 amountAdded0,

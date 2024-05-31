@@ -134,10 +134,10 @@ contract ILOPool is
     }
 
     /// @inheritdoc ILOSale
-    function buy(BuyParams calldata params)
+    function buy(uint256 raiseAmount, address recipient)
         external override 
         duringSale()
-        onlyWhitelisted(params.recipient)
+        onlyWhitelisted(recipient)
         returns (
             uint256 tokenId,
             uint128 liquidityDelta,
@@ -145,23 +145,23 @@ contract ILOPool is
             uint256 amountAdded1
         )
     {
-        totalRaised += params.raiseAmount;
+        totalRaised += raiseAmount;
         require(totalRaised <= saleInfo.hardCap);
         require(totalSold() <= saleInfo.maxSaleAmount);
 
-        if (balanceOf(params.recipient) == 0) {
-            _mint(params.recipient, (tokenId = _nextId++));
+        if (balanceOf(recipient) == 0) {
+            _mint(recipient, (tokenId = _nextId++));
         } else {
-            tokenId = tokenOfOwnerByIndex(params.recipient, 1);
+            tokenId = tokenOfOwnerByIndex(recipient, 1);
         }
 
         Position storage _position = _positions[tokenId];
-        require(_position.raiseAmount + params.raiseAmount <= saleInfo.maxCapPerUser);
+        require(_position.raiseAmount + raiseAmount <= saleInfo.maxCapPerUser);
 
         if (RAISE_TOKEN == _poolKey().token0) {
-            liquidityDelta = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, params.raiseAmount);
+            liquidityDelta = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, raiseAmount);
         } else {
-            liquidityDelta = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, params.raiseAmount);
+            liquidityDelta = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, raiseAmount);
         }
 
         liquidityDelta = uint128(FullMath.mulDiv(liquidityDelta, INVESTOR_SHARES, BPS));

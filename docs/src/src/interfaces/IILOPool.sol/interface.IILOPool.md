@@ -1,5 +1,5 @@
 # IILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/1de4d92cce6f0722e8736db455733703c706f30f/src/interfaces/IILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/interfaces/IILOPool.sol)
 
 **Inherits:**
 [IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md), [IPoolInitializer](/src/interfaces/IPoolInitializer.sol/interface.IPoolInitializer.md), [IPeripheryPayments](/src/interfaces/IPeripheryPayments.sol/interface.IPeripheryPayments.md), [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md), IERC721Metadata, IERC721Enumerable
@@ -28,9 +28,7 @@ function positions(uint256 tokenId)
         int24 tickUpper,
         uint128 liquidity,
         uint256 feeGrowthInside0LastX128,
-        uint256 feeGrowthInside1LastX128,
-        uint128 tokensOwed0,
-        uint128 tokensOwed1
+        uint256 feeGrowthInside1LastX128
     );
 ```
 **Parameters**
@@ -51,56 +49,16 @@ function positions(uint256 tokenId)
 |`liquidity`|`uint128`|The liquidity of the position|
 |`feeGrowthInside0LastX128`|`uint256`|The fee growth of token0 as of the last action on the individual position|
 |`feeGrowthInside1LastX128`|`uint256`|The fee growth of token1 as of the last action on the individual position|
-|`tokensOwed0`|`uint128`|The uncollected amount of token0 owed to the position as of the last computation|
-|`tokensOwed1`|`uint128`|The uncollected amount of token1 owed to the position as of the last computation|
 
 
-### decreaseLiquidity
+### claim
 
-Decreases the amount of liquidity in a position and accounts it to the position
-
-
-```solidity
-function decreaseLiquidity(DecreaseLiquidityParams calldata params)
-    external
-    payable
-    returns (uint256 amount0, uint256 amount1);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`params`|`DecreaseLiquidityParams`|tokenId The ID of the token for which liquidity is being decreased, amount The amount by which liquidity will be decreased, amount0Min The minimum amount of token0 that should be accounted for the burned liquidity, amount1Min The minimum amount of token1 that should be accounted for the burned liquidity, deadline The time by which the transaction must be included to effect the change|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`amount0`|`uint256`|The amount of token0 accounted to the position's tokens owed|
-|`amount1`|`uint256`|The amount of token1 accounted to the position's tokens owed|
-
-
-### collect
-
-Collects up to a maximum amount of fees owed to a specific position to the recipient
+Returns number of collected tokens associated with a given token ID.
 
 
 ```solidity
-function collect(CollectParams calldata params) external payable returns (uint256 amount0, uint256 amount1);
+function claim(uint256 tokenId) external payable returns (uint256 amount0, uint256 amount1);
 ```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`params`|`CollectParams`|tokenId The ID of the NFT for which tokens are being collected, recipient The account that should receive the tokens, amount0Max The maximum amount of token0 to collect, amount1Max The maximum amount of token1 to collect|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`amount0`|`uint256`|The amount of fees collected in token0|
-|`amount1`|`uint256`|The amount of fees collected in token1|
-
 
 ### burn
 
@@ -187,28 +145,4 @@ event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint2
 |`recipient`|`address`|The address of the account that received the collected tokens|
 |`amount0`|`uint256`|The amount of token0 owed to the position that was collected|
 |`amount1`|`uint256`|The amount of token1 owed to the position that was collected|
-
-## Structs
-### DecreaseLiquidityParams
-
-```solidity
-struct DecreaseLiquidityParams {
-    uint256 tokenId;
-    uint128 liquidity;
-    uint256 amount0Min;
-    uint256 amount1Min;
-    uint256 deadline;
-}
-```
-
-### CollectParams
-
-```solidity
-struct CollectParams {
-    uint256 tokenId;
-    address recipient;
-    uint128 amount0Max;
-    uint128 amount1Max;
-}
-```
 

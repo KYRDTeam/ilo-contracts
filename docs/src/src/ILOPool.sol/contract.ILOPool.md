@@ -1,5 +1,5 @@
 # ILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/1de4d92cce6f0722e8736db455733703c706f30f/src/ILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/ILOPool.sol)
 
 **Inherits:**
 ERC721, [IILOPool](/src/interfaces/IILOPool.sol/interface.IILOPool.md), [ILOWhitelist](/src/base/ILOWhitelist.sol/abstract.ILOWhitelist.md), [ILOSale](/src/base/ILOSale.sol/abstract.ILOSale.md), [ILOVest](/src/base/ILOVest.sol/abstract.ILOVest.md), [Initializable](/src/base/Initializable.sol/abstract.Initializable.md), [Multicall](/src/base/Multicall.sol/abstract.Multicall.md), [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [PoolInitializer](/src/base/PoolInitializer.sol/abstract.PoolInitializer.md), [LiquidityManagement](/src/base/LiquidityManagement.sol/abstract.LiquidityManagement.md), [PeripheryValidation](/src/base/PeripheryValidation.sol/abstract.PeripheryValidation.md)
@@ -45,9 +45,21 @@ uint256 totalRaised;
 
 
 ```solidity
-constructor(address _factory, address _WETH9)
-    ERC721("KRYSTAL ILOPool V1", "KYRSTAL-ILO-V1")
-    ILOPoolImmutableState(_factory, _WETH9);
+constructor() ERC721("KYRSTAL ILOPool V1", "KYRSTAL-ILO-V1");
+```
+
+### name
+
+
+```solidity
+function name() public view override(ERC721, IERC721Metadata) returns (string memory);
+```
+
+### symbol
+
+
+```solidity
+function symbol() public view override(ERC721, IERC721Metadata) returns (string memory);
 ```
 
 ### initialize
@@ -77,9 +89,7 @@ function positions(uint256 tokenId)
         int24 tickUpper,
         uint128 liquidity,
         uint256 feeGrowthInside0LastX128,
-        uint256 feeGrowthInside1LastX128,
-        uint128 tokensOwed0,
-        uint128 tokensOwed1
+        uint256 feeGrowthInside1LastX128
     );
 ```
 **Parameters**
@@ -100,19 +110,17 @@ function positions(uint256 tokenId)
 |`liquidity`|`uint128`|The liquidity of the position|
 |`feeGrowthInside0LastX128`|`uint256`|The fee growth of token0 as of the last action on the individual position|
 |`feeGrowthInside1LastX128`|`uint256`|The fee growth of token1 as of the last action on the individual position|
-|`tokensOwed0`|`uint128`|The uncollected amount of token0 owed to the position as of the last computation|
-|`tokensOwed1`|`uint128`|The uncollected amount of token1 owed to the position as of the last computation|
 
 
 ### buy
 
 
 ```solidity
-function buy(BuyParams calldata params)
+function buy(uint256 raiseAmount, address recipient)
     external
     override
     duringSale
-    onlyWhitelisted(params.recipient)
+    onlyWhitelisted(recipient)
     returns (uint256 tokenId, uint128 liquidityDelta, uint256 amountAdded0, uint256 amountAdded1);
 ```
 
@@ -123,61 +131,18 @@ function buy(BuyParams calldata params)
 modifier isAuthorizedForToken(uint256 tokenId);
 ```
 
-### decreaseLiquidity
-
-Decreases the amount of liquidity in a position and accounts it to the position
+### claim
 
 
 ```solidity
-function decreaseLiquidity(DecreaseLiquidityParams calldata params)
+function claim(uint256 tokenId)
     external
     payable
     override
-    isAuthorizedForToken(params.tokenId)
+    isAuthorizedForToken(tokenId)
     afterSale
-    checkDeadline(params.deadline)
     returns (uint256 amount0, uint256 amount1);
 ```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`params`|`DecreaseLiquidityParams`|tokenId The ID of the token for which liquidity is being decreased, amount The amount by which liquidity will be decreased, amount0Min The minimum amount of token0 that should be accounted for the burned liquidity, amount1Min The minimum amount of token1 that should be accounted for the burned liquidity, deadline The time by which the transaction must be included to effect the change|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`amount0`|`uint256`|The amount of token0 accounted to the position's tokens owed|
-|`amount1`|`uint256`|The amount of token1 accounted to the position's tokens owed|
-
-
-### collect
-
-Collects up to a maximum amount of fees owed to a specific position to the recipient
-
-
-```solidity
-function collect(CollectParams calldata params)
-    external
-    payable
-    override
-    isAuthorizedForToken(params.tokenId)
-    returns (uint256 amount0, uint256 amount1);
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`params`|`CollectParams`|tokenId The ID of the NFT for which tokens are being collected, recipient The account that should receive the tokens, amount0Max The maximum amount of token0 to collect, amount1Max The maximum amount of token1 to collect|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`amount0`|`uint256`|The amount of fees collected in token0|
-|`amount1`|`uint256`|The amount of fees collected in token1|
-
 
 ### burn
 
@@ -237,6 +202,23 @@ function _assignVestingSchedule(uint256 nftId, LinearVest[] storage vestingSched
 function _updateVestingLiquidity(uint256 nftId, uint128 liquidity) internal;
 ```
 
+### _deductFees
+
+
+```solidity
+function _deductFees(uint256 amount0, uint256 amount1, uint16 feeBPS)
+    internal
+    pure
+    returns (uint256 amount0Left, uint256 amount1Left);
+```
+
+## Events
+### Claim
+
+```solidity
+event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
+```
+
 ## Structs
 ### Position
 
@@ -245,8 +227,7 @@ struct Position {
     uint128 liquidity;
     uint256 feeGrowthInside0LastX128;
     uint256 feeGrowthInside1LastX128;
-    uint128 tokensOwed0;
-    uint128 tokensOwed1;
+    uint256 raiseAmount;
 }
 ```
 

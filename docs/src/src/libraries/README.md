@@ -10,7 +10,6 @@
 - [PoolAddress](PoolAddress.sol/library.PoolAddress.md)
 - [PoolTicksCounter](PoolTicksCounter.sol/library.PoolTicksCounter.md)
 - [PositionKey](PositionKey.sol/library.PositionKey.md)
-- [PositionValue](PositionValue.sol/library.PositionValue.md)
 - [SqrtPriceMathPartial](SqrtPriceMathPartial.sol/library.SqrtPriceMathPartial.md)
 - [TokenRatioSortOrder](TokenRatioSortOrder.sol/library.TokenRatioSortOrder.md)
 - [TransferHelper](TransferHelper.sol/library.TransferHelper.md)

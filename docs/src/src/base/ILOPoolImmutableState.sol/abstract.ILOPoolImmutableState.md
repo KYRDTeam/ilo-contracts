@@ -1,5 +1,5 @@
 # ILOPoolImmutableState
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/1de4d92cce6f0722e8736db455733703c706f30f/src/base/ILOPoolImmutableState.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/base/ILOPoolImmutableState.sol)
 
 **Inherits:**
 [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md)
@@ -11,14 +11,14 @@ Immutable state used by periphery contracts
 ### factory
 
 ```solidity
-address public immutable override factory;
+address public override factory;
 ```
 
 
 ### WETH9
 
 ```solidity
-address public immutable override WETH9;
+address public override WETH9;
 ```
 
 
@@ -92,6 +92,13 @@ uint16 PLATFORM_FEE;
 ```
 
 
+### PERFORMANCE_FEE
+
+```solidity
+uint16 PERFORMANCE_FEE;
+```
+
+
 ### INVESTOR_SHARES
 
 ```solidity
@@ -114,13 +121,6 @@ address private _cachedUniV3PoolAddress;
 
 
 ## Functions
-### constructor
-
-
-```solidity
-constructor(address _factory, address _WETH9);
-```
-
 ### _cachePoolKey
 
 
