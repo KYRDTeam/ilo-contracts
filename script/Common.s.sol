@@ -51,11 +51,7 @@ abstract contract CommonScript is Script {
             salt,
             keccak256(
                 abi.encodePacked(
-                    type(ILOPool).creationCode,
-                    abi.encode(
-                        uniV3Factory,
-                        weth9
-                    )
+                    type(ILOPool).creationCode
                 )
             ),
             factory
