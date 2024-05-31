@@ -6,7 +6,6 @@ import '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
 import '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
 
 import './IILOConfig.sol';
-import './IPoolInitializer.sol';
 import './IPeripheryPayments.sol';
 import './IILOPoolImmutableState.sol';
 import '../libraries/PoolAddress.sol';
@@ -16,7 +15,6 @@ import '../libraries/PoolAddress.sol';
 /// and authorized.
 interface IILOPool is
     IILOConfig,
-    IPoolInitializer,
     IPeripheryPayments,
     IILOPoolImmutableState,
     IERC721Metadata,
