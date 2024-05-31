@@ -9,6 +9,7 @@ import './IILOConfig.sol';
 import './IPoolInitializer.sol';
 import './IPeripheryPayments.sol';
 import './IILOPoolImmutableState.sol';
+import './IILOSale.sol';
 import '../libraries/PoolAddress.sol';
 
 /// @title Non-fungible token for positions
@@ -42,6 +43,8 @@ interface IILOPool is
     /// @param amount0 The amount of token0 owed to the position that was collected
     /// @param amount1 The amount of token1 owed to the position that was collected
     event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
+
+    event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, uint16 platformFee, uint16 performanceFee, uint16 investorShares, IILOSale.SaleInfo saleInfo);
 
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.

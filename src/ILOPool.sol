@@ -102,6 +102,16 @@ contract ILOPool is
         for (uint256 index = 0; index < vestConfigLength; index++) {
             investorVestConfigs.push(params.investorVestConfigs[index]);
         }
+
+        emit ILOPoolInitialized(
+          params.uniV3Pool,
+          TICK_LOWER,
+          TICK_UPPER,
+          PLATFORM_FEE,
+          PERFORMANCE_FEE,
+          INVESTOR_SHARES,
+          saleInfo
+        );
     }
 
     /// @inheritdoc IILOPool
