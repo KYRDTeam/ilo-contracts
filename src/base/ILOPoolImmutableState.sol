@@ -9,8 +9,6 @@ import '../interfaces/IILOManager.sol';
 /// @notice Immutable state used by periphery contracts
 abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
     /// @inheritdoc IILOPoolImmutableState
-    address public override factory;
-    /// @inheritdoc IILOPoolImmutableState
     address public override WETH9;
 
     IILOManager MANAGER;

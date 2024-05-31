@@ -8,7 +8,7 @@ contract ILOPoolScript is CommonScript {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         vm.startBroadcast(deployerPrivateKey);
 
-        ILOPool ILOPool = new ILOPool{
+        ILOPool iloPool = new ILOPool{
             salt: salt
         }();
 
