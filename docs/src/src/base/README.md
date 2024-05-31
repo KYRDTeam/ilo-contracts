@@ -12,4 +12,3 @@
 - [PeripheryPayments](PeripheryPayments.sol/abstract.PeripheryPayments.md)
 - [PeripheryPaymentsWithFee](PeripheryPaymentsWithFee.sol/abstract.PeripheryPaymentsWithFee.md)
 - [PeripheryValidation](PeripheryValidation.sol/abstract.PeripheryValidation.md)
-- [PoolInitializer](PoolInitializer.sol/abstract.PoolInitializer.md)

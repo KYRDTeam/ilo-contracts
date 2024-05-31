@@ -1,5 +1,5 @@
 # ILOSale
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/base/ILOSale.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/c821b671bb5c9be46c122173f3f384ce7950f2da/src/base/ILOSale.sol)
 
 **Inherits:**
 [IILOSale](/src/interfaces/IILOSale.sol/interface.IILOSale.md)
@@ -46,19 +46,5 @@ modifier afterSale();
 
 ```solidity
 modifier duringSale();
-```
-
-## Structs
-### SaleInfo
-
-```solidity
-struct SaleInfo {
-    uint256 hardCap;
-    uint256 softCap;
-    uint256 maxCapPerUser;
-    uint64 start;
-    uint64 end;
-    uint256 maxSaleAmount;
-}
 ```
 
