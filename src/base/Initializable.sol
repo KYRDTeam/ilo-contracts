@@ -4,6 +4,9 @@ pragma solidity =0.7.6;
 
 abstract contract Initializable {
     bool private _initialized;
+    function _disableInitialize() internal {
+        _initialized = true;
+    }
     modifier whenNotInitialized() {
         require(!_initialized);
         _;

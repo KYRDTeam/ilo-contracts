@@ -55,7 +55,9 @@ contract ILOPool is
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId = 1;
     uint256 totalRaised;
-    constructor() ERC721('KYRSTAL ILOPool V1', 'KYRSTAL-ILO-V1') {}
+    constructor() ERC721('KYRSTAL ILOPool V1', 'KYRSTAL-ILO-V1') {
+        _disableInitialize();
+    }
 
     function name() public pure override(ERC721, IERC721Metadata) returns (string memory) {
         return 'KYRSTAL ILOPool V1';
