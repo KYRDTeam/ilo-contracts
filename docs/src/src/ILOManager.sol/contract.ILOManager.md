@@ -1,5 +1,5 @@
 # ILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/ILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/c821b671bb5c9be46c122173f3f384ce7950f2da/src/ILOManager.sol)
 
 **Inherits:**
 [IILOManager](/src/interfaces/IILOManager.sol/interface.IILOManager.md), Ownable, [Initializable](/src/base/Initializable.sol/abstract.Initializable.md)
@@ -77,6 +77,15 @@ mapping(address => address[]) private _initializedILOPools;
 
 
 ## Functions
+### constructor
+
+*since deploy via deployer so we need to claim ownership*
+
+
+```solidity
+constructor() public;
+```
+
 ### initialize
 
 

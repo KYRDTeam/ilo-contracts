@@ -1,8 +1,8 @@
 # ILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/ILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/c821b671bb5c9be46c122173f3f384ce7950f2da/src/ILOPool.sol)
 
 **Inherits:**
-ERC721, [IILOPool](/src/interfaces/IILOPool.sol/interface.IILOPool.md), [ILOWhitelist](/src/base/ILOWhitelist.sol/abstract.ILOWhitelist.md), [ILOSale](/src/base/ILOSale.sol/abstract.ILOSale.md), [ILOVest](/src/base/ILOVest.sol/abstract.ILOVest.md), [Initializable](/src/base/Initializable.sol/abstract.Initializable.md), [Multicall](/src/base/Multicall.sol/abstract.Multicall.md), [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [PoolInitializer](/src/base/PoolInitializer.sol/abstract.PoolInitializer.md), [LiquidityManagement](/src/base/LiquidityManagement.sol/abstract.LiquidityManagement.md), [PeripheryValidation](/src/base/PeripheryValidation.sol/abstract.PeripheryValidation.md)
+ERC721, [IILOPool](/src/interfaces/IILOPool.sol/interface.IILOPool.md), [ILOWhitelist](/src/base/ILOWhitelist.sol/abstract.ILOWhitelist.md), [ILOSale](/src/base/ILOSale.sol/abstract.ILOSale.md), [ILOVest](/src/base/ILOVest.sol/abstract.ILOVest.md), [Initializable](/src/base/Initializable.sol/abstract.Initializable.md), [Multicall](/src/base/Multicall.sol/abstract.Multicall.md), [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [LiquidityManagement](/src/base/LiquidityManagement.sol/abstract.LiquidityManagement.md), [PeripheryValidation](/src/base/PeripheryValidation.sol/abstract.PeripheryValidation.md)
 
 Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
 
@@ -45,21 +45,21 @@ uint256 totalRaised;
 
 
 ```solidity
-constructor() ERC721("KYRSTAL ILOPool V1", "KYRSTAL-ILO-V1");
+constructor() ERC721("KRYSTAL ILOPool V1", "KRYSTAL-ILO-V1");
 ```
 
 ### name
 
 
 ```solidity
-function name() public view override(ERC721, IERC721Metadata) returns (string memory);
+function name() public pure override(ERC721, IERC721Metadata) returns (string memory);
 ```
 
 ### symbol
 
 
 ```solidity
-function symbol() public view override(ERC721, IERC721Metadata) returns (string memory);
+function symbol() public pure override(ERC721, IERC721Metadata) returns (string memory);
 ```
 
 ### initialize
@@ -133,6 +133,8 @@ modifier isAuthorizedForToken(uint256 tokenId);
 
 ### claim
 
+Returns number of collected tokens associated with a given token ID.
+
 
 ```solidity
 function claim(uint256 tokenId)
@@ -169,12 +171,18 @@ function launch() external override afterSale;
 
 ### totalSold
 
+returns amount of sale token that has already been sold
+
 
 ```solidity
 function totalSold() public view returns (uint256);
 ```
 
 ### _saleAmountNeeded
+
+return sale token amount needed for the raiseAmount.
+
+*sale token amount is rounded up*
 
 
 ```solidity
@@ -183,12 +191,28 @@ function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256);
 
 ### _unlockedLiquidity
 
+calculate amount of liquidity unlocked for claim
+
 
 ```solidity
 function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 unlockedLiquidity);
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`tokenId`|`uint256`|nft token id of position|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`unlockedLiquidity`|`uint128`|amount of unlocked liquidity|
+
 
 ### _assignVestingSchedule
+
+assign vesting schedule for position
 
 
 ```solidity
@@ -197,12 +221,17 @@ function _assignVestingSchedule(uint256 nftId, LinearVest[] storage vestingSched
 
 ### _updateVestingLiquidity
 
+update total liquidity for vesting position
+vesting liquidity of position only changes when investor buy ilo
+
 
 ```solidity
 function _updateVestingLiquidity(uint256 nftId, uint128 liquidity) internal;
 ```
 
 ### _deductFees
+
+calculate the amount left after deduct fee
 
 
 ```solidity
@@ -211,6 +240,21 @@ function _deductFees(uint256 amount0, uint256 amount1, uint16 feeBPS)
     pure
     returns (uint256 amount0Left, uint256 amount1Left);
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount0`|`uint256`|the amount of token0 before deduct fee|
+|`amount1`|`uint256`|the amount of token1 before deduct fee|
+|`feeBPS`|`uint16`||
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount0Left`|`uint256`|the amount of token0 after deduct fee|
+|`amount1Left`|`uint256`|the amount of token1 after deduct fee|
+
 
 ## Events
 ### Claim

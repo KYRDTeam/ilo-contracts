@@ -1,8 +1,8 @@
 # IILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/interfaces/IILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/c821b671bb5c9be46c122173f3f384ce7950f2da/src/interfaces/IILOPool.sol)
 
 **Inherits:**
-[IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md), [IPoolInitializer](/src/interfaces/IPoolInitializer.sol/interface.IPoolInitializer.md), [IPeripheryPayments](/src/interfaces/IPeripheryPayments.sol/interface.IPeripheryPayments.md), [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md), IERC721Metadata, IERC721Enumerable
+[IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md), [IPeripheryPayments](/src/interfaces/IPeripheryPayments.sol/interface.IPeripheryPayments.md), [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md), IERC721Metadata, IERC721Enumerable
 
 Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 and authorized.
@@ -145,4 +145,18 @@ event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint2
 |`recipient`|`address`|The address of the account that received the collected tokens|
 |`amount0`|`uint256`|The amount of token0 owed to the position that was collected|
 |`amount1`|`uint256`|The amount of token1 owed to the position that was collected|
+
+### ILOPoolInitialized
+
+```solidity
+event ILOPoolInitialized(
+    address indexed univ3Pool,
+    int32 tickLower,
+    int32 tickUpper,
+    uint16 platformFee,
+    uint16 performanceFee,
+    uint16 investorShares,
+    IILOSale.SaleInfo saleInfo
+);
+```
 

@@ -1,5 +1,5 @@
 # IERC1271
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/a3fc4c57db039cc1b79c7925531b021576d1b1a7/src/interfaces/external/IERC1271.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/c821b671bb5c9be46c122173f3f384ce7950f2da/src/interfaces/external/IERC1271.sol)
 
 Interface that verifies provided signature for the data
 

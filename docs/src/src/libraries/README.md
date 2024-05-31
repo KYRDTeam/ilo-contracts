@@ -2,7 +2,6 @@
 
 # Contents
 - [BytesLib](BytesLib.sol/library.BytesLib.md)
-- [CallbackValidation](CallbackValidation.sol/library.CallbackValidation.md)
 - [ChainId](ChainId.sol/library.ChainId.md)
 - [HexStrings](HexStrings.sol/library.HexStrings.md)
 - [LiquidityAmounts](LiquidityAmounts.sol/library.LiquidityAmounts.md)

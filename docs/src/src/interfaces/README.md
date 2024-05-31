@@ -10,5 +10,4 @@
 - [IMulticall](IMulticall.sol/interface.IMulticall.md)
 - [IPeripheryPayments](IPeripheryPayments.sol/interface.IPeripheryPayments.md)
 - [IPeripheryPaymentsWithFee](IPeripheryPaymentsWithFee.sol/interface.IPeripheryPaymentsWithFee.md)
-- [IPoolInitializer](IPoolInitializer.sol/interface.IPoolInitializer.md)
 - [ITickLens](ITickLens.sol/interface.ITickLens.md)
