@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: MIT 
+// SPDX-License-Identifier: BUSL-1.1 
 
 pragma solidity =0.7.6;
 
@@ -8,13 +8,18 @@ import '../interfaces/IILOConfig.sol';
 abstract contract ILOVest is IILOConfig {
     struct PositionVest {
         uint128 totalLiquidity;
-        uint128 claimedLiquidity;
         LinearVest[] schedule;
     }
 
     mapping(uint256=>PositionVest) _positionVests;
 
     function _unlockedLiquidity(uint256 tokenId) internal view virtual returns (uint128 unlockedLiquidity);
+
+    function _claimableLiquidity(uint256 tokenId) internal view returns (uint128 claimableLiquidity) {
+        uint128 claimedLiquidity = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
+        uint128 unlockedLiquidity = _unlockedLiquidity(tokenId);
+        return claimedLiquidity < unlockedLiquidity ? unlockedLiquidity - claimedLiquidity : 0;
+    }
 
     /// @notice return number of sharesBPS unlocked upto now
     function _unlockedSharesBPS(LinearVest[] storage vestingSchedule) internal view returns (uint16 unlockedSharesBPS) {

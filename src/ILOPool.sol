@@ -1,4 +1,4 @@
-// SPDX-License-Identifier: BSL-1.1
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
@@ -46,6 +46,12 @@ contract ILOPool is
         // the raise amount of position
         uint256 raiseAmount;
     }
+
+    /// @dev when lauch successfully we can not refund anymore
+    bool private _launchSucceeded;
+
+    /// @dev when refund triggered, we can not launch anymore
+    bool private _refundTriggered;
 
     LinearVest[] investorVestConfigs;
 
@@ -290,6 +296,8 @@ contract ILOPool is
 
     /// @inheritdoc IILOPool
     function launch() external override afterSale() {
+        // when refund triggered, we can not launch pool anymore
+        require(_refundTriggered);
         // only MANAGER can launch pool
         require(msg.sender == address(MANAGER));
         // make sure that soft cap requirement match
@@ -343,6 +351,30 @@ contract ILOPool is
                 schedule.push(projectConfig.vestSchedule[i]);
             }
         }
+
+        _launchSucceeded = true;
+    }
+
+    /// @notice sending token to this contract using `safeTransferFrom` method
+    /// means that asking for refund and burn current token.
+    function onERC721Received(address, address from, uint256 tokenId, bytes calldata data) external {
+        _claimRefund(tokenId);
+    }
+
+    function _claimRefund(uint256 tokenId) internal {
+        if (!_refundTriggered) {
+            // if ilo pool is lauch sucessfully, we can not refund anymore
+            require(!_launchSucceeded);
+            IILOManager.Project _project = MANAGER.project(_uniV3PoolAddress());
+            require(block.timestamp >= _project.refundDeadline);
+            _refundTriggered = true;
+        }
+        Position storage _position = positions(tokenId);
+        TransferHelper.safeTransfer(RAISE_TOKEN, msg.sender, _position.raiseAmount);
+
+        delete _positions[tokenId];
+        delete _positionVests[tokenId];
+        _burn(tokenId);
     }
 
     /// @notice returns amount of sale token that has already been sold
@@ -369,10 +401,6 @@ contract ILOPool is
                     raiseAmount,
                     true
                 );
-    }
-
-    function _claimableLiquidity(uint256 tokenId) internal view returns (uint128 claimableLiquidity) {
-        return _unlockedLiquidity(tokenId) - (_positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity);
     }
 
     /// @notice calculate amount of liquidity unlocked for claim
