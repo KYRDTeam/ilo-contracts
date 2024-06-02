@@ -213,16 +213,16 @@ contract ILOPool is
         returns (uint256 amount0, uint256 amount1)
     {
         // calculate amount of unlocked liquidity for the position
-        uint128 unlockedLiquidity = _unlockedLiquidity(tokenId);
+        uint128 claimableLiquidity = _claimableLiquidity(tokenId);
         IUniswapV3Pool pool = IUniswapV3Pool(_uniV3PoolAddress());
         {
             Position storage position = _positions[tokenId];
 
             uint128 positionLiquidity = position.liquidity;
-            require(positionLiquidity >= unlockedLiquidity);
+            require(positionLiquidity >= claimableLiquidity);
 
             // get amount of token0 and token1 that pool will return for us
-            (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, unlockedLiquidity);
+            (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, claimableLiquidity);
 
             // get amount of token0 and token1 after deduct platform fee
             (amount0, amount1) = _deductFees(amount0, amount1, PLATFORM_FEE);
@@ -253,9 +253,9 @@ contract ILOPool is
             position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
             position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
 
-            // subtraction is safe because we checked positionLiquidity is gte unlockedLiquidity
-            position.liquidity = positionLiquidity - unlockedLiquidity;
-            emit DecreaseLiquidity(tokenId, unlockedLiquidity, amount0, amount1);
+            // subtraction is safe because we checked positionLiquidity is gte claimableLiquidity
+            position.liquidity = positionLiquidity - claimableLiquidity;
+            emit DecreaseLiquidity(tokenId, claimableLiquidity, amount0, amount1);
 
         }
         // real amount collected from uintswap pool
@@ -272,7 +272,7 @@ contract ILOPool is
         TransferHelper.safeTransfer(_poolKey().token0, msg.sender, amount0);
         TransferHelper.safeTransfer(_poolKey().token1, msg.sender, amount1);
 
-        emit Claim(msg.sender, unlockedLiquidity, amount0, amount1);
+        emit Claim(msg.sender, claimableLiquidity, amount0, amount1);
 
         address feeTaker = MANAGER.feeTaker();
         // transfer fee to fee taker
@@ -369,6 +369,10 @@ contract ILOPool is
                     raiseAmount,
                     true
                 );
+    }
+
+    function _claimableLiquidity(uint256 tokenId) internal view returns (uint128 claimableLiquidity) {
+        return _positionVests[tokenId].totalLiquidity - _unlockedLiquidity(tokenId);
     }
 
     /// @notice calculate amount of liquidity unlocked for claim
