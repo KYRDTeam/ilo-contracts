@@ -372,7 +372,7 @@ contract ILOPool is
     }
 
     function _claimableLiquidity(uint256 tokenId) internal view returns (uint128 claimableLiquidity) {
-        return _positionVests[tokenId].totalLiquidity - _unlockedLiquidity(tokenId);
+        return _unlockedLiquidity(tokenId) - (_positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity);
     }
 
     /// @notice calculate amount of liquidity unlocked for claim
