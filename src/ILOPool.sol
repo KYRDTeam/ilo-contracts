@@ -363,16 +363,12 @@ contract ILOPool is
         }
 
         // transfer back leftover sale token to project admin
-        uint256 leftoverSaleToken = IERC20(SALE_TOKEN).balanceOf(address(this));
-        if (leftoverSaleToken > 0) {
-            TransferHelper.safeTransfer(SALE_TOKEN, _project.admin, leftoverSaleToken);
-        }
+        _refundProject(_project.admin);
 
         _launchSucceeded = true;
     }
 
-    function claimRefund(uint256 tokenId) external isAuthorizedForToken(tokenId) {
-        // first time refund is triggered
+    modifier refundable() {
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
             require(!_launchSucceeded);
@@ -380,13 +376,13 @@ contract ILOPool is
             require(block.timestamp >= _project.refundDeadline);
 
             // transfer back sale token to project admin on the first time refund is triggered
-            uint256 saleTokenAmount = IERC20(SALE_TOKEN).balanceOf(address(this));
-            if (saleTokenAmount > 0) {
-                TransferHelper.safeTransfer(SALE_TOKEN, _project.admin, saleTokenAmount);
-            }
+            _refundProject(_project.admin);
             _refundTriggered = true;
         }
+        _;
+    }
 
+    function claimRefund(uint256 tokenId) external refundable() isAuthorizedForToken(tokenId) {
         uint256 refundAmount = _positions[tokenId].raiseAmount;
 
         delete _positions[tokenId];
@@ -394,6 +390,18 @@ contract ILOPool is
         _burn(tokenId);
 
         TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), refundAmount);
+    }
+
+    function claimRefund() refundable() {
+        IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
+        require(msg.sender == _project.admin);
+    }
+
+    function _refundProject(address projectAdmin) internal {
+        uint256 saleTokenAmount = IERC20(SALE_TOKEN).balanceOf(address(this));
+        if (saleTokenAmount > 0) {
+            TransferHelper.safeTransfer(SALE_TOKEN, projectAdmin, saleTokenAmount);
+        }
     }
 
     /// @notice returns amount of sale token that has already been sold
