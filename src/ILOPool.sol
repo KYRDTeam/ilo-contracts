@@ -362,7 +362,7 @@ contract ILOPool is
         _launchSucceeded = true;
     }
 
-    function claimRefund(uint256 tokenId) external isAuthorizedForToken(msg.sender) {
+    function claimRefund(uint256 tokenId) external isAuthorizedForToken(tokenId) {
         // first time refund is triggered
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
@@ -384,7 +384,7 @@ contract ILOPool is
         delete _positionVests[tokenId];
         _burn(tokenId);
 
-        TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), raiseAmount);
+        TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), refundAmount);
     }
 
     /// @notice returns amount of sale token that has already been sold
