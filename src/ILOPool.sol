@@ -353,25 +353,37 @@ contract ILOPool is
             }
         }
 
+        // transfer back leftover sale token to project admin
+        uint256 leftoverSaleToken = IERC20(SALE_TOKEN).balanceOf(address(this));
+        if (leftoverSaleToken > 0) {
+            TransferHelper.safeTransfer(SALE_TOKEN, _project.admin, leftoverSaleToken);
+        }
+
         _launchSucceeded = true;
     }
 
     /// @notice sending token to this contract using `safeTransferFrom` method
     /// means that asking for refund and burn current token.
-    function onERC721Received(address, address from, uint256 tokenId, bytes calldata data) external {
+    function onERC721Received(address, address , uint256 tokenId, bytes calldata ) external {
         _claimRefund(tokenId);
     }
 
-    function _claimRefund(uint256 tokenId) internal {
+    function _claimRefund(uint256 tokenId) internal isAuthorizedForToken(tokenId) {
+        // first time refund is triggered
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
             require(!_launchSucceeded);
-            IILOManager.Project _project = MANAGER.project(_uniV3PoolAddress());
+            IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
             require(block.timestamp >= _project.refundDeadline);
+
+            // transfer back sale token to project admin on the first time refund is triggered
+            uint256 saleTokenAmount = IERC20(SALE_TOKEN).balanceOf(address(this));
+            if (saleTokenAmount > 0) {
+                TransferHelper.safeTransfer(SALE_TOKEN, _project.admin, saleTokenAmount);
+            }
             _refundTriggered = true;
         }
-        Position storage _position = positions(tokenId);
-        TransferHelper.safeTransfer(RAISE_TOKEN, msg.sender, _position.raiseAmount);
+        TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), _positions[tokenId].raiseAmount);
 
         delete _positions[tokenId];
         delete _positionVests[tokenId];
@@ -439,5 +451,11 @@ contract ILOPool is
         ) {
         amount0Left = amount0 - FullMath.mulDiv(amount0, feeBPS, BPS);
         amount1Left = amount1 - FullMath.mulDiv(amount1, feeBPS, BPS);
+    }
+
+    function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128 claimableLiquidity) {
+        uint128 claimedLiquidity = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
+        uint128 unlockedLiquidity = _unlockedLiquidity(tokenId);
+        return claimedLiquidity < unlockedLiquidity ? unlockedLiquidity - claimedLiquidity : 0;
     }
 }

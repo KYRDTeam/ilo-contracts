@@ -15,11 +15,7 @@ abstract contract ILOVest is IILOConfig {
 
     function _unlockedLiquidity(uint256 tokenId) internal view virtual returns (uint128 unlockedLiquidity);
 
-    function _claimableLiquidity(uint256 tokenId) internal view returns (uint128 claimableLiquidity) {
-        uint128 claimedLiquidity = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
-        uint128 unlockedLiquidity = _unlockedLiquidity(tokenId);
-        return claimedLiquidity < unlockedLiquidity ? unlockedLiquidity - claimedLiquidity : 0;
-    }
+    function _claimableLiquidity(uint256 tokenId) internal view virtual returns (uint128 claimableLiquidity);
 
     /// @notice return number of sharesBPS unlocked upto now
     function _unlockedSharesBPS(LinearVest[] storage vestingSchedule) internal view returns (uint16 unlockedSharesBPS) {
