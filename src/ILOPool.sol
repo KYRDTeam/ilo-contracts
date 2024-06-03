@@ -298,7 +298,7 @@ contract ILOPool is
     function launch() external override afterSale() {
         require(!_launchSucceeded);
         // when refund triggered, we can not launch pool anymore
-        require(_refundTriggered);
+        require(!_refundTriggered);
         // only MANAGER can launch pool
         require(msg.sender == address(MANAGER));
         // make sure that soft cap requirement match
