@@ -149,7 +149,7 @@ contract ILOPool is
     }
 
     /// @inheritdoc ILOSale
-    function buy(address payer, uint256 raiseAmount, address recipient)
+    function buy(uint256 raiseAmount, address recipient)
         external override 
         duringSale()
         onlyWhitelisted(recipient)
@@ -201,7 +201,7 @@ contract ILOPool is
         _updateVestingLiquidity(tokenId, _position.liquidity);
 
         // transfer fund into contract
-        TransferHelper.safeTransferFrom(RAISE_TOKEN, payer, address(this), raiseAmount);
+        TransferHelper.safeTransferFrom(RAISE_TOKEN, msg.sender, address(this), raiseAmount);
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {

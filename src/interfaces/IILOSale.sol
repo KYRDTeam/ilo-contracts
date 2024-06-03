@@ -13,7 +13,7 @@ interface IILOSale {
     }
 
     /// @notice this function is for investor buying ILO
-    function buy(address payer, uint256 raiseAmount, address recipient) external returns (
+    function buy(uint256 raiseAmount, address recipient) external returns (
             uint256 tokenId,
             uint128 liquidity,
             uint256 amountAdded0,

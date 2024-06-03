@@ -9,7 +9,7 @@ abstract contract ILOSale is IILOSale {
     SaleInfo saleInfo;
 
     /// @inheritdoc IILOSale
-    function buy(address payer, uint256 raiseAmount, address recipient) external virtual override returns (
+    function buy(uint256 raiseAmount, address recipient) external virtual override returns (
             uint256 tokenId,
             uint128 liquidity,
             uint256 amountAdded0,
