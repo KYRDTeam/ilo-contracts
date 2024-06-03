@@ -18,6 +18,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
     event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
     event ProjectLaunch(address indexed uniV3PoolAddress);
+    event ProjectRefund(address indexed project, uint256 refundAmount);
 
     address public override UNIV3_FACTORY;
     address public override WETH9;
@@ -229,5 +230,14 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         }
 
         emit ProjectLaunch(uniV3PoolAddress);
+    }
+
+    /// @inheritdoc IILOManager
+    function claimRefund(address uniV3PoolAddress) external override onlyProjectAdmin(uniV3PoolAddress) returns(uint256 totalRefundAmount) {
+        require(_cachedProject[uniV3PoolAddress].refundDeadline < block.timestamp);
+        address[] memory initializedPools = _initializedILOPools[uniV3PoolAddress];
+        for (uint256 i = 0; i < initializedPools.length; i++) {
+            totalRefundAmount += IILOPool(initializedPools[i]).claimProjectRefund(_cachedProject[uniV3PoolAddress].admin);
+        }
     }
 }
