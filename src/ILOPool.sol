@@ -296,6 +296,7 @@ contract ILOPool is
 
     /// @inheritdoc IILOPool
     function launch() external override afterSale() {
+        require(!_launchSucceeded);
         // when refund triggered, we can not launch pool anymore
         require(_refundTriggered);
         // only MANAGER can launch pool
