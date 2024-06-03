@@ -149,7 +149,7 @@ contract ILOPool is
     }
 
     /// @inheritdoc ILOSale
-    function buy(uint256 raiseAmount, address recipient)
+    function buy(address payer, uint256 raiseAmount, address recipient)
         external override 
         duringSale()
         onlyWhitelisted(recipient)
@@ -201,7 +201,7 @@ contract ILOPool is
         _updateVestingLiquidity(tokenId, _position.liquidity);
 
         // transfer fund into contract
-        TransferHelper.safeTransferFrom(RAISE_TOKEN, msg.sender, address(this), raiseAmount);
+        TransferHelper.safeTransferFrom(RAISE_TOKEN, payer, address(this), raiseAmount);
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
@@ -275,10 +275,10 @@ contract ILOPool is
         emit Collect(tokenId, address(this), amountCollected0, amountCollected1);
 
         // transfer token for user
-        TransferHelper.safeTransfer(_poolKey().token0, msg.sender, amount0);
-        TransferHelper.safeTransfer(_poolKey().token1, msg.sender, amount1);
+        TransferHelper.safeTransfer(_poolKey().token0, ownerOf(tokenId), amount0);
+        TransferHelper.safeTransfer(_poolKey().token1, ownerOf(tokenId), amount1);
 
-        emit Claim(msg.sender, claimableLiquidity, amount0, amount1);
+        emit Claim(ownerOf(tokenId), claimableLiquidity, amount0, amount1);
 
         address feeTaker = MANAGER.feeTaker();
         // transfer fee to fee taker
@@ -362,13 +362,7 @@ contract ILOPool is
         _launchSucceeded = true;
     }
 
-    /// @notice sending token to this contract using `safeTransferFrom` method
-    /// means that asking for refund and burn current token.
-    function onERC721Received(address, address , uint256 tokenId, bytes calldata ) external {
-        _claimRefund(tokenId);
-    }
-
-    function _claimRefund(uint256 tokenId) internal isAuthorizedForToken(tokenId) {
+    function claimRefund(uint256 tokenId) external isAuthorizedForToken(msg.sender) {
         // first time refund is triggered
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
@@ -383,11 +377,14 @@ contract ILOPool is
             }
             _refundTriggered = true;
         }
-        TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), _positions[tokenId].raiseAmount);
+
+        uint256 refundAmount = _positions[tokenId].raiseAmount;
 
         delete _positions[tokenId];
         delete _positionVests[tokenId];
         _burn(tokenId);
+
+        TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), raiseAmount);
     }
 
     /// @notice returns amount of sale token that has already been sold
