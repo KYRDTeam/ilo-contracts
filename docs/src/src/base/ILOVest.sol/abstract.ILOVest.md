@@ -1,5 +1,5 @@
 # ILOVest
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/c821b671bb5c9be46c122173f3f384ce7950f2da/src/base/ILOVest.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/319686becad627d36fa714d2345ca75a5a55cab1/src/base/ILOVest.sol)
 
 **Inherits:**
 [IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md)
@@ -21,6 +21,13 @@ mapping(uint256 => PositionVest) _positionVests;
 function _unlockedLiquidity(uint256 tokenId) internal view virtual returns (uint128 unlockedLiquidity);
 ```
 
+### _claimableLiquidity
+
+
+```solidity
+function _claimableLiquidity(uint256 tokenId) internal view virtual returns (uint128 claimableLiquidity);
+```
+
 ### _unlockedSharesBPS
 
 return number of sharesBPS unlocked upto now
@@ -36,7 +43,6 @@ function _unlockedSharesBPS(LinearVest[] storage vestingSchedule) internal view 
 ```solidity
 struct PositionVest {
     uint128 totalLiquidity;
-    uint128 claimedLiquidity;
     LinearVest[] schedule;
 }
 ```

@@ -58,7 +58,7 @@ function initILOPool(InitPoolParams calldata params) external override onlyProje
 ## For investors:
 [Buy ILO](docs/src/src/ILOPool.sol/contract.ILOPool.md#buy)
 ```solidity
-function buy(uint256 raiseAmount, address recipient)
+function buy(address payer, uint256 raiseAmount, address recipient)
     external override 
     duringSale()
     onlyWhitelisted(params.recipient)

@@ -1,5 +1,5 @@
 # IERC20PermitAllowed
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/c821b671bb5c9be46c122173f3f384ce7950f2da/src/interfaces/external/IERC20PermitAllowed.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/319686becad627d36fa714d2345ca75a5a55cab1/src/interfaces/external/IERC20PermitAllowed.sol)
 
 Interface used by DAI/CHAI for permit
 

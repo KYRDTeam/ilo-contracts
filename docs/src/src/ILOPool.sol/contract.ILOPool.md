@@ -1,5 +1,5 @@
 # ILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/c821b671bb5c9be46c122173f3f384ce7950f2da/src/ILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/319686becad627d36fa714d2345ca75a5a55cab1/src/ILOPool.sol)
 
 **Inherits:**
 ERC721, [IILOPool](/src/interfaces/IILOPool.sol/interface.IILOPool.md), [ILOWhitelist](/src/base/ILOWhitelist.sol/abstract.ILOWhitelist.md), [ILOSale](/src/base/ILOSale.sol/abstract.ILOSale.md), [ILOVest](/src/base/ILOVest.sol/abstract.ILOVest.md), [Initializable](/src/base/Initializable.sol/abstract.Initializable.md), [Multicall](/src/base/Multicall.sol/abstract.Multicall.md), [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [LiquidityManagement](/src/base/LiquidityManagement.sol/abstract.LiquidityManagement.md), [PeripheryValidation](/src/base/PeripheryValidation.sol/abstract.PeripheryValidation.md)
@@ -8,6 +8,24 @@ Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
 
 
 ## State Variables
+### _launchSucceeded
+*when lauch successfully we can not refund anymore*
+
+
+```solidity
+bool private _launchSucceeded;
+```
+
+
+### _refundTriggered
+*when refund triggered, we can not launch anymore*
+
+
+```solidity
+bool private _refundTriggered;
+```
+
+
 ### investorVestConfigs
 
 ```solidity
@@ -116,7 +134,7 @@ function positions(uint256 tokenId)
 
 
 ```solidity
-function buy(uint256 raiseAmount, address recipient)
+function buy(address payer, uint256 raiseAmount, address recipient)
     external
     override
     duringSale
@@ -167,6 +185,13 @@ function burn(uint256 tokenId) external payable override isAuthorizedForToken(to
 
 ```solidity
 function launch() external override afterSale;
+```
+
+### claimRefund
+
+
+```solidity
+function claimRefund(uint256 tokenId) external isAuthorizedForToken(tokenId);
 ```
 
 ### totalSold
@@ -255,6 +280,13 @@ function _deductFees(uint256 amount0, uint256 amount1, uint16 feeBPS)
 |`amount0Left`|`uint256`|the amount of token0 after deduct fee|
 |`amount1Left`|`uint256`|the amount of token1 after deduct fee|
 
+
+### _claimableLiquidity
+
+
+```solidity
+function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128 claimableLiquidity);
+```
 
 ## Events
 ### Claim
