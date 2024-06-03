@@ -1,5 +1,5 @@
 # ILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/da7613c22bad547ebd26a45d76010fc3957237e9/src/ILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/efdd1e09c11736c5cee1dacbdd6c598f078eeaec/src/ILOPool.sol)
 
 **Inherits:**
 ERC721, [IILOPool](/src/interfaces/IILOPool.sol/interface.IILOPool.md), [ILOWhitelist](/src/base/ILOWhitelist.sol/abstract.ILOWhitelist.md), [ILOSale](/src/base/ILOSale.sol/abstract.ILOSale.md), [ILOVest](/src/base/ILOVest.sol/abstract.ILOVest.md), [Initializable](/src/base/Initializable.sol/abstract.Initializable.md), [Multicall](/src/base/Multicall.sol/abstract.Multicall.md), [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [LiquidityManagement](/src/base/LiquidityManagement.sol/abstract.LiquidityManagement.md), [PeripheryValidation](/src/base/PeripheryValidation.sol/abstract.PeripheryValidation.md)
@@ -160,7 +160,6 @@ function claim(uint256 tokenId)
     payable
     override
     isAuthorizedForToken(tokenId)
-    afterSale
     returns (uint256 amount0, uint256 amount1);
 ```
 
@@ -220,7 +219,7 @@ calculate amount of liquidity unlocked for claim
 
 
 ```solidity
-function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 unlockedLiquidity);
+function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 liquidityUnlocked);
 ```
 **Parameters**
 
@@ -232,7 +231,7 @@ function _unlockedLiquidity(uint256 tokenId) internal view override returns (uin
 
 |Name|Type|Description|
 |----|----|-----------|
-|`unlockedLiquidity`|`uint128`|amount of unlocked liquidity|
+|`liquidityUnlocked`|`uint128`|amount of unlocked liquidity|
 
 
 ### _assignVestingSchedule
@@ -281,11 +280,32 @@ function _deductFees(uint256 amount0, uint256 amount1, uint16 feeBPS)
 |`amount1Left`|`uint256`|the amount of token1 after deduct fee|
 
 
+### unlockedLiquidity
+
+
+```solidity
+function unlockedLiquidity(uint256 tokenId) external view returns (uint128);
+```
+
+### claimableLiquidity
+
+
+```solidity
+function claimableLiquidity(uint256 tokenId) external view returns (uint128);
+```
+
+### claimedLiquidity
+
+
+```solidity
+function claimedLiquidity(uint256 tokenId) external view returns (uint128);
+```
+
 ### _claimableLiquidity
 
 
 ```solidity
-function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128 claimableLiquidity);
+function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128);
 ```
 
 ## Events
@@ -293,6 +313,18 @@ function _claimableLiquidity(uint256 tokenId) internal view override returns (ui
 
 ```solidity
 event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
+```
+
+### Buy
+
+```solidity
+event Buy(address indexed investor, uint256 raiseAmount, uint128 liquidity);
+```
+
+### PoolLaunch
+
+```solidity
+event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
 ```
 
 ## Structs

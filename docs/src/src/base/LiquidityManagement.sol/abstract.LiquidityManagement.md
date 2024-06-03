@@ -1,5 +1,5 @@
 # LiquidityManagement
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/da7613c22bad547ebd26a45d76010fc3957237e9/src/base/LiquidityManagement.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/efdd1e09c11736c5cee1dacbdd6c598f078eeaec/src/base/LiquidityManagement.sol)
 
 **Inherits:**
 IUniswapV3MintCallback, [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [PeripheryPayments](/src/base/PeripheryPayments.sol/abstract.PeripheryPayments.md)

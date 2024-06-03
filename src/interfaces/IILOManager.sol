@@ -34,15 +34,27 @@ interface IILOManager is IILOConfig {
         uint16 performanceFee; // BPS 10000
     }
 
-    function initProject(
-        address saleToken,
-        address raiseToken,
-        uint24 fee,
-        uint160 initialPoolPriceX96,
-        uint64 launchTime,
-        uint16 investorShares,  // BPS shares
-        ProjectVestConfig[] calldata projectVestConfigs
-    ) external returns(address uniV3PoolAddress);
+    struct InitProjectParams {
+        // the sale token
+        address saleToken;
+        // the raise token
+        address raiseToken;
+        // uniswap v3 fee tier
+        uint24 fee;
+        // uniswap sqrtPriceX96 for initialize pool
+        uint160 initialPoolPriceX96;
+        // time for lauch all liquidity. Only one launch time for all ilo pools
+        uint64 launchTime;
+        // number of liquidity shares after investor invest into ilo pool interm of BPS = 10000
+        uint16 investorShares;  // BPS shares
+        // config for all other shares and vest
+        ProjectVestConfig[] projectVestConfigs;
+    }
+
+    /// @notice init project with details
+    /// @param params the parameters to initialize the project
+    /// @return uniV3PoolAddress address of uniswap v3 pool. We use this address as project id
+    function initProject(InitProjectParams calldata params) external returns(address uniV3PoolAddress);
 
     function initILOPool(InitPoolParams calldata params) external returns(address iloPoolAddress);
 

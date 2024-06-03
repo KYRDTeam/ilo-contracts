@@ -1,5 +1,5 @@
 # ILOSale
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/da7613c22bad547ebd26a45d76010fc3957237e9/src/base/ILOSale.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/efdd1e09c11736c5cee1dacbdd6c598f078eeaec/src/base/ILOSale.sol)
 
 **Inherits:**
 [IILOSale](/src/interfaces/IILOSale.sol/interface.IILOSale.md)

@@ -1,5 +1,5 @@
 # ILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/da7613c22bad547ebd26a45d76010fc3957237e9/src/ILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/efdd1e09c11736c5cee1dacbdd6c598f078eeaec/src/ILOManager.sol)
 
 **Inherits:**
 [IILOManager](/src/interfaces/IILOManager.sol/interface.IILOManager.md), Ownable, [Initializable](/src/base/Initializable.sol/abstract.Initializable.md)
@@ -113,27 +113,17 @@ init project with details
 
 
 ```solidity
-function initProject(
-    address saleToken,
-    address raiseToken,
-    uint24 fee,
-    uint160 initialPoolPriceX96,
-    uint64 launchTime,
-    uint16 investorShares,
-    ProjectVestConfig[] calldata projectVestConfigs
-) external override afterInitialize returns (address uniV3PoolAddress);
+function initProject(InitProjectParams calldata params)
+    external
+    override
+    afterInitialize
+    returns (address uniV3PoolAddress);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`saleToken`|`address`|the sale token|
-|`raiseToken`|`address`|the raise token|
-|`fee`|`uint24`|uniswap v3 fee tier|
-|`initialPoolPriceX96`|`uint160`|uniswap sqrtPriceX96 for initialize pool|
-|`launchTime`|`uint64`|time for lauch all liquidity. Only one launch time for all ilo pools|
-|`investorShares`|`uint16`|number of liquidity shares after investor invest into ilo pool interm of BPS = 10000|
-|`projectVestConfigs`|`ProjectVestConfig[]`|config for all other shares and vest|
+|`params`|`InitProjectParams`|the parameters to initialize the project|
 
 **Returns**
 
@@ -300,5 +290,23 @@ event PoolImplementationChanged(address indexed oldPoolImplementation, address i
 
 ```solidity
 event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
+```
+
+### DefaultDeadlineOffsetChanged
+
+```solidity
+event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
+```
+
+### RefundDeadlineChanged
+
+```solidity
+event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
+```
+
+### ProjectLaunch
+
+```solidity
+event ProjectLaunch(address indexed uniV3PoolAddress);
 ```
 

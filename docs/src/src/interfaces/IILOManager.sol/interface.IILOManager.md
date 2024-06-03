@@ -1,5 +1,5 @@
 # IILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/da7613c22bad547ebd26a45d76010fc3957237e9/src/interfaces/IILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/efdd1e09c11736c5cee1dacbdd6c598f078eeaec/src/interfaces/IILOManager.sol)
 
 **Inherits:**
 [IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md)
@@ -8,18 +8,24 @@
 ## Functions
 ### initProject
 
+init project with details
+
 
 ```solidity
-function initProject(
-    address saleToken,
-    address raiseToken,
-    uint24 fee,
-    uint160 initialPoolPriceX96,
-    uint64 launchTime,
-    uint16 investorShares,
-    ProjectVestConfig[] calldata projectVestConfigs
-) external returns (address uniV3PoolAddress);
+function initProject(InitProjectParams calldata params) external returns (address uniV3PoolAddress);
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`params`|`InitProjectParams`|the parameters to initialize the project|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`uniV3PoolAddress`|`address`|address of uniswap v3 pool. We use this address as project id|
+
 
 ### initILOPool
 
@@ -124,6 +130,20 @@ struct Project {
     PoolAddress.PoolKey _cachedPoolKey;
     uint16 platformFee;
     uint16 performanceFee;
+}
+```
+
+### InitProjectParams
+
+```solidity
+struct InitProjectParams {
+    address saleToken;
+    address raiseToken;
+    uint24 fee;
+    uint160 initialPoolPriceX96;
+    uint64 launchTime;
+    uint16 investorShares;
+    ProjectVestConfig[] projectVestConfigs;
 }
 ```
 

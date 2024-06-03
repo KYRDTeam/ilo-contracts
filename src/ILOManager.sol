@@ -17,6 +17,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
     event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
     event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
+    event ProjectLaunch(address indexed uniV3PoolAddress);
 
     address public override UNIV3_FACTORY;
     address public override WETH9;
@@ -57,32 +58,16 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         _;
     }
 
-    /// @notice init project with details
-    /// @param saleToken the sale token
-    /// @param raiseToken the raise token
-    /// @param fee uniswap v3 fee tier
-    /// @param initialPoolPriceX96 uniswap sqrtPriceX96 for initialize pool
-    /// @param launchTime time for lauch all liquidity. Only one launch time for all ilo pools
-    /// @param investorShares number of liquidity shares after investor invest into ilo pool interm of BPS = 10000
-    /// @param projectVestConfigs config for all other shares and vest
-    /// @return uniV3PoolAddress address of uniswap v3 pool. We use this address as project id
-    function initProject (
-        address saleToken,
-        address raiseToken,
-        uint24 fee,
-        uint160 initialPoolPriceX96,
-        uint64 launchTime,
-        uint16 investorShares,  // percentage of user shares
-        ProjectVestConfig[] calldata projectVestConfigs
-    ) external override afterInitialize() returns(address uniV3PoolAddress) {
+    /// @inheritdoc IILOManager
+    function initProject(InitProjectParams calldata params) external override afterInitialize() returns(address uniV3PoolAddress) {
 
-        _validateSharesPercentage(investorShares, projectVestConfigs);
-        uint64 refundDeadline = launchTime + DEFAULT_DEADLINE_OFFSET;
+        _validateSharesPercentage(params.investorShares, params.projectVestConfigs);
+        uint64 refundDeadline = params.launchTime + DEFAULT_DEADLINE_OFFSET;
 
-        PoolAddress.PoolKey memory poolKey = PoolAddress.getPoolKey(saleToken, raiseToken, fee);
-        uniV3PoolAddress = _initUniV3PoolIfNecessary(poolKey, initialPoolPriceX96);
+        PoolAddress.PoolKey memory poolKey = PoolAddress.getPoolKey(params.saleToken, params.raiseToken, params.fee);
+        uniV3PoolAddress = _initUniV3PoolIfNecessary(poolKey, params.initialPoolPriceX96);
         
-        _cacheProject(uniV3PoolAddress, saleToken, raiseToken, fee, initialPoolPriceX96, launchTime, refundDeadline, investorShares, projectVestConfigs);
+        _cacheProject(uniV3PoolAddress, params.saleToken, params.raiseToken, params.fee, params.initialPoolPriceX96, params.launchTime, refundDeadline, params.investorShares, params.projectVestConfigs);
         emit ProjectCreated(uniV3PoolAddress, _cachedProject[uniV3PoolAddress]);
     }
 
@@ -240,5 +225,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         for (uint256 i = 0; i < initializedPools.length; i++) {
             IILOPool(initializedPools[i]).launch();
         }
+
+        emit ProjectLaunch(uniV3PoolAddress);
     }
 }

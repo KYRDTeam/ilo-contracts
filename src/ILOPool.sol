@@ -35,6 +35,7 @@ contract ILOPool is
 {
     event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
     event Buy(address indexed investor, uint256 raiseAmount, uint128 liquidity);
+    event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
     // details about the uniswap position
     struct Position {
         // the liquidity of the position
@@ -223,16 +224,16 @@ contract ILOPool is
         require(_launchSucceeded);
 
         // calculate amount of unlocked liquidity for the position
-        uint128 liquidity2Claima = _claimableLiquidity(tokenId);
+        uint128 liquidity2Claim = _claimableLiquidity(tokenId);
         IUniswapV3Pool pool = IUniswapV3Pool(_uniV3PoolAddress());
         {
             Position storage position = _positions[tokenId];
 
             uint128 positionLiquidity = position.liquidity;
-            require(positionLiquidity >= liquidity2Claima);
+            require(positionLiquidity >= liquidity2Claim);
 
             // get amount of token0 and token1 that pool will return for us
-            (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, liquidity2Claima);
+            (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, liquidity2Claim);
 
             // get amount of token0 and token1 after deduct platform fee
             (amount0, amount1) = _deductFees(amount0, amount1, PLATFORM_FEE);
@@ -263,9 +264,9 @@ contract ILOPool is
             position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
             position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
 
-            // subtraction is safe because we checked positionLiquidity is gte liquidity2Claima
-            position.liquidity = positionLiquidity - liquidity2Claima;
-            emit DecreaseLiquidity(tokenId, liquidity2Claima, amount0, amount1);
+            // subtraction is safe because we checked positionLiquidity is gte liquidity2Claim
+            position.liquidity = positionLiquidity - liquidity2Claim;
+            emit DecreaseLiquidity(tokenId, liquidity2Claim, amount0, amount1);
 
         }
         // real amount collected from uintswap pool
@@ -282,7 +283,7 @@ contract ILOPool is
         TransferHelper.safeTransfer(_poolKey().token0, ownerOf(tokenId), amount0);
         TransferHelper.safeTransfer(_poolKey().token1, ownerOf(tokenId), amount1);
 
-        emit Claim(ownerOf(tokenId), liquidity2Claima, amount0, amount1);
+        emit Claim(ownerOf(tokenId), liquidity2Claim, amount0, amount1);
 
         address feeTaker = MANAGER.feeTaker();
         // transfer fee to fee taker
@@ -307,12 +308,14 @@ contract ILOPool is
         require(msg.sender == address(MANAGER));
         // make sure that soft cap requirement match
         require(totalRaised >= saleInfo.softCap);
-        uint256 liquidity;
+        uint128 liquidity;
         {
             uint256 amount0Desired;
             uint256 amount1Desired;
             uint256 amount0Min;
             uint256 amount1Min;
+            uint256 token0;
+            uint256 token1;
 
             // calculate sale amount of tokens needed for launching pool
             if (_poolKey().token0 == RAISE_TOKEN) {
@@ -326,13 +329,15 @@ contract ILOPool is
             }
 
             // actually deploy liquidity to uniswap pool
-            (liquidity,,) = addLiquidity(AddLiquidityParams({
+            (liquidity, token0, token1) = addLiquidity(AddLiquidityParams({
                 pool: IUniswapV3Pool(_uniV3PoolAddress()),
                 amount0Desired: amount0Desired,
                 amount1Desired: amount1Desired,
                 amount0Min: amount0Min,
                 amount1Min: amount1Min
             }));
+
+            emit PoolLaunch(_uniV3PoolAddress(), liquidity, token0, token1);
         }
 
         IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
