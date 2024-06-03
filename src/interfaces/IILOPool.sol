@@ -82,5 +82,5 @@ interface IILOPool is
     function launch() external;
 
     /// @notice project admin claim refund sale token
-    function claimProjectRefund(address projectAdmin) external;
+    function claimProjectRefund(address projectAdmin) external returns (uint256 refundAmount);
 }

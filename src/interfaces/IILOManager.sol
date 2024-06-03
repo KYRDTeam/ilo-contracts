@@ -82,5 +82,5 @@ interface IILOManager is IILOConfig {
     function launch(address uniV3PoolAddress) external;
 
     /// @notice claim all projects refund
-    function claimRefund(address uniV3PoolAddress) external;
+    function claimRefund(address uniV3PoolAddress) external returns(uint256 totalRefundAmount);
 }

@@ -398,15 +398,15 @@ contract ILOPool is
     }
 
     /// @inheritdoc IILOPool
-    function claimProjectRefund(address projectAdmin) external override refundable() OnlyManager() {
-        _refundProject(projectAdmin);
+    function claimProjectRefund(address projectAdmin) external override refundable() OnlyManager() returns(uint256 refundAmount) {
+        return _refundProject(projectAdmin);
     }
 
-    function _refundProject(address projectAdmin) internal {
-        uint256 saleTokenAmount = IERC20(SALE_TOKEN).balanceOf(address(this));
-        if (saleTokenAmount > 0) {
-            TransferHelper.safeTransfer(SALE_TOKEN, projectAdmin, saleTokenAmount);
-            emit ProjectRefund(projectAdmin, saleTokenAmount);
+    function _refundProject(address projectAdmin) internal returns (uint256 refundAmount) {
+        refundAmount = IERC20(SALE_TOKEN).balanceOf(address(this));
+        if (refundAmount > 0) {
+            TransferHelper.safeTransfer(SALE_TOKEN, projectAdmin, refundAmount);
+            emit ProjectRefund(projectAdmin, refundAmount);
         }
     }
 
