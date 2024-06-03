@@ -15,6 +15,8 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
     event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
+    event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
+    event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
 
     address public override UNIV3_FACTORY;
     address public override WETH9;
@@ -221,14 +223,14 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @notice set time offset for refund if project not launch
     function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external onlyOwner() {
+        emit DefaultDeadlineOffsetChanged(owner(), DEFAULT_DEADLINE_OFFSET, defaultDeadlineOffset);
         DEFAULT_DEADLINE_OFFSET = defaultDeadlineOffset;
-        // TODO: emit event when the defaultDeadlineOffset changes
     }
 
     function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external onlyOwner() {
         Project storage _project = _cachedProject[uniV3Pool];
+        emit RefundDeadlineChanged(uniV3Pool, _project.refundDeadline, refundDeadline);
         _project.refundDeadline = refundDeadline;
-        // TODO: emit event when the refundDeadline changes
     }
 
     /// @inheritdoc IILOManager

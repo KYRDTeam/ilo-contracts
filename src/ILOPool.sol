@@ -34,7 +34,7 @@ contract ILOPool is
     PeripheryValidation
 {
     event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
-
+    event Buy(address indexed investor, uint256 raiseAmount, uint128 liquidity);
     // details about the uniswap position
     struct Position {
         // the liquidity of the position
@@ -202,6 +202,8 @@ contract ILOPool is
 
         // transfer fund into contract
         TransferHelper.safeTransferFrom(RAISE_TOKEN, msg.sender, address(this), raiseAmount);
+
+        emit Buy(recipient, raiseAmount, liquidityDelta);
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
@@ -215,20 +217,22 @@ contract ILOPool is
         payable
         override
         isAuthorizedForToken(tokenId)
-        afterSale()
         returns (uint256 amount0, uint256 amount1)
     {
+        // only can claim if the launch is successfully
+        require(_launchSucceeded);
+
         // calculate amount of unlocked liquidity for the position
-        uint128 claimableLiquidity = _claimableLiquidity(tokenId);
+        uint128 liquidity2Claima = _claimableLiquidity(tokenId);
         IUniswapV3Pool pool = IUniswapV3Pool(_uniV3PoolAddress());
         {
             Position storage position = _positions[tokenId];
 
             uint128 positionLiquidity = position.liquidity;
-            require(positionLiquidity >= claimableLiquidity);
+            require(positionLiquidity >= liquidity2Claima);
 
             // get amount of token0 and token1 that pool will return for us
-            (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, claimableLiquidity);
+            (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, liquidity2Claima);
 
             // get amount of token0 and token1 after deduct platform fee
             (amount0, amount1) = _deductFees(amount0, amount1, PLATFORM_FEE);
@@ -259,9 +263,9 @@ contract ILOPool is
             position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
             position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
 
-            // subtraction is safe because we checked positionLiquidity is gte claimableLiquidity
-            position.liquidity = positionLiquidity - claimableLiquidity;
-            emit DecreaseLiquidity(tokenId, claimableLiquidity, amount0, amount1);
+            // subtraction is safe because we checked positionLiquidity is gte liquidity2Claima
+            position.liquidity = positionLiquidity - liquidity2Claima;
+            emit DecreaseLiquidity(tokenId, liquidity2Claima, amount0, amount1);
 
         }
         // real amount collected from uintswap pool
@@ -278,7 +282,7 @@ contract ILOPool is
         TransferHelper.safeTransfer(_poolKey().token0, ownerOf(tokenId), amount0);
         TransferHelper.safeTransfer(_poolKey().token1, ownerOf(tokenId), amount1);
 
-        emit Claim(ownerOf(tokenId), claimableLiquidity, amount0, amount1);
+        emit Claim(ownerOf(tokenId), liquidity2Claima, amount0, amount1);
 
         address feeTaker = MANAGER.feeTaker();
         // transfer fee to fee taker
@@ -415,10 +419,10 @@ contract ILOPool is
 
     /// @notice calculate amount of liquidity unlocked for claim
     /// @param tokenId nft token id of position
-    /// @return unlockedLiquidity amount of unlocked liquidity
-    function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 unlockedLiquidity) {
+    /// @return liquidityUnlocked amount of unlocked liquidity
+    function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 liquidityUnlocked) {
         PositionVest storage _positionVest = _positionVests[tokenId];
-        unlockedLiquidity = uint128(FullMath.mulDiv(
+        liquidityUnlocked = uint128(FullMath.mulDiv(
                 _positionVest.totalLiquidity,
                 _unlockedSharesBPS(_positionVest.schedule), 
                 BPS
@@ -450,9 +454,21 @@ contract ILOPool is
         amount1Left = amount1 - FullMath.mulDiv(amount1, feeBPS, BPS);
     }
 
-    function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128 claimableLiquidity) {
-        uint128 claimedLiquidity = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
-        uint128 unlockedLiquidity = _unlockedLiquidity(tokenId);
-        return claimedLiquidity < unlockedLiquidity ? unlockedLiquidity - claimedLiquidity : 0;
+    function unlockedLiquidity(uint256 tokenId) external view returns(uint128) {
+        return _unlockedLiquidity(tokenId);
+    }
+
+    function claimableLiquidity(uint256 tokenId) external view returns(uint128) {
+        return _claimableLiquidity(tokenId);
+    }
+
+    function claimedLiquidity(uint256 tokenId) external view returns(uint128) {
+        return  _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
+    }
+
+    function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128) {
+        uint128 liquidityClaimed = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
+        uint128 liquidityUnlocked = _unlockedLiquidity(tokenId);
+        return liquidityClaimed < liquidityUnlocked ? liquidityUnlocked - liquidityClaimed : 0;
     }
 }
