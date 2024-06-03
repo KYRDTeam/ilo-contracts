@@ -80,4 +80,7 @@ interface IILOPool is
     function initialize(InitPoolParams calldata initPoolParams) external;
 
     function launch() external;
+
+    /// @notice project admin claim refund sale token
+    function claimProjectRefund(address projectAdmin) external;
 }

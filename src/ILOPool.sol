@@ -36,6 +36,9 @@ contract ILOPool is
     event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
     event Buy(address indexed investor, uint256 raiseAmount, uint128 liquidity);
     event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
+    event UserRefund(address indexed user, uint256 raiseTokenAmount);
+    event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
+
     // details about the uniswap position
     struct Position {
         // the liquidity of the position
@@ -299,13 +302,16 @@ contract ILOPool is
         _burn(tokenId);
     }
 
+    modifier OnlyManager() {
+        require(msg.sender == address(MANAGER));
+        _;
+    }
+
     /// @inheritdoc IILOPool
-    function launch() external override afterSale() {
+    function launch() external override afterSale() OnlyManager() {
         require(!_launchSucceeded);
         // when refund triggered, we can not launch pool anymore
         require(!_refundTriggered);
-        // only MANAGER can launch pool
-        require(msg.sender == address(MANAGER));
         // make sure that soft cap requirement match
         require(totalRaised >= saleInfo.softCap);
         uint128 liquidity;
@@ -375,8 +381,6 @@ contract ILOPool is
             IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
             require(block.timestamp >= _project.refundDeadline);
 
-            // transfer back sale token to project admin on the first time refund is triggered
-            _refundProject(_project.admin);
             _refundTriggered = true;
         }
         _;
@@ -390,17 +394,19 @@ contract ILOPool is
         _burn(tokenId);
 
         TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), refundAmount);
+        emit UserRefund(ownerOf(tokenId), refundAmount);
     }
 
-    function claimRefund() refundable() {
-        IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
-        require(msg.sender == _project.admin);
+    /// @inheritdoc IILOPool
+    function claimProjectRefund(address projectAdmin) external override refundable() OnlyManager() {
+        _refundProject(projectAdmin);
     }
 
     function _refundProject(address projectAdmin) internal {
         uint256 saleTokenAmount = IERC20(SALE_TOKEN).balanceOf(address(this));
         if (saleTokenAmount > 0) {
             TransferHelper.safeTransfer(SALE_TOKEN, projectAdmin, saleTokenAmount);
+            emit ProjectRefund(projectAdmin, saleTokenAmount);
         }
     }
 

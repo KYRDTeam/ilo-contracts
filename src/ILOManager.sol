@@ -230,4 +230,13 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
         emit ProjectLaunch(uniV3PoolAddress);
     }
+
+    /// @inheritdoc IILOManager
+    function claimRefund(address uniV3PoolAddress) external override onlyProjectAdmin(uniV3PoolAddress) {
+        require(_cachedProject[uniV3PoolAddress].refundDeadline < block.timestamp);
+        address[] memory initializedPools = _initializedILOPools[uniV3PoolAddress];
+        for (uint256 i = 0; i < initializedPools.length; i++) {
+            IILOPool(initializedPools[i]).claimProjectRefund(_cachedProject[uniV3PoolAddress].admin);
+        }
+    }
 }
