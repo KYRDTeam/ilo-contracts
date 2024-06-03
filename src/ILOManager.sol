@@ -40,6 +40,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     function initialize(
         address initialOwner,
         address _feeTaker,
+        address iloPoolImplementation,
         address uniV3Factory,
         address weth9,
         uint16 platformFee,
@@ -50,6 +51,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         FEE_TAKER = _feeTaker;
         transferOwnership(initialOwner);
         UNIV3_FACTORY = uniV3Factory;
+        ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
         WETH9 = weth9;
     }
 
