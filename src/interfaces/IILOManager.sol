@@ -71,6 +71,7 @@ interface IILOManager is IILOConfig {
     function initialize(
         address initialOwner,
         address _feeTaker,
+        address iloPoolImplementation,
         address uniV3Factory,
         address weth9,
         uint16 platformFee,

@@ -25,14 +25,14 @@ abstract contract IntegrationTestBase is Test {
         vm.selectFork(mainnetFork);
 
         iloManager = new ILOManager();
-        iloManager.initialize(
-                MANAGER_OWNER, 
-                FEE_TAKER,
-                UNIV3_FACTORY, 
-                WETH9, 
-                PLATFORM_FEE,
-                PERFORMANCE_FEE
-            );
+        // iloManager.initialize(
+        //         MANAGER_OWNER, 
+        //         FEE_TAKER,
+        //         UNIV3_FACTORY, 
+        //         WETH9, 
+        //         PLATFORM_FEE,
+        //         PERFORMANCE_FEE
+        //     );
     }
 
     function _writeTokenBalance(address token, address who, uint256 amt) internal {

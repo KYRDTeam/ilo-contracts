@@ -1,5 +1,5 @@
 # IILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/efdd1e09c11736c5cee1dacbdd6c598f078eeaec/src/interfaces/IILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/be1379a5058f6506f3a229427893748ee4e5ab65/src/interfaces/IILOManager.sol)
 
 **Inherits:**
 [IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md)
@@ -78,6 +78,7 @@ function WETH9() external returns (address);
 function initialize(
     address initialOwner,
     address _feeTaker,
+    address iloPoolImplementation,
     address uniV3Factory,
     address weth9,
     uint16 platformFee,
