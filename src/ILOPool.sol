@@ -149,7 +149,7 @@ contract ILOPool is
     }
 
     /// @inheritdoc ILOSale
-    function buy(uint256 raiseAmount, address recipient)
+    function buy(address payer, uint256 raiseAmount, address recipient)
         external override 
         duringSale()
         onlyWhitelisted(recipient)
@@ -201,7 +201,7 @@ contract ILOPool is
         _updateVestingLiquidity(tokenId, _position.liquidity);
 
         // transfer fund into contract
-        TransferHelper.safeTransferFrom(RAISE_TOKEN, msg.sender, address(this), raiseAmount);
+        TransferHelper.safeTransferFrom(RAISE_TOKEN, payer, address(this), raiseAmount);
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
@@ -275,10 +275,10 @@ contract ILOPool is
         emit Collect(tokenId, address(this), amountCollected0, amountCollected1);
 
         // transfer token for user
-        TransferHelper.safeTransfer(_poolKey().token0, msg.sender, amount0);
-        TransferHelper.safeTransfer(_poolKey().token1, msg.sender, amount1);
+        TransferHelper.safeTransfer(_poolKey().token0, ownerOf(tokenId), amount0);
+        TransferHelper.safeTransfer(_poolKey().token1, ownerOf(tokenId), amount1);
 
-        emit Claim(msg.sender, claimableLiquidity, amount0, amount1);
+        emit Claim(ownerOf(tokenId), claimableLiquidity, amount0, amount1);
 
         address feeTaker = MANAGER.feeTaker();
         // transfer fee to fee taker
@@ -298,7 +298,7 @@ contract ILOPool is
     function launch() external override afterSale() {
         require(!_launchSucceeded);
         // when refund triggered, we can not launch pool anymore
-        require(_refundTriggered);
+        require(!_refundTriggered);
         // only MANAGER can launch pool
         require(msg.sender == address(MANAGER));
         // make sure that soft cap requirement match
@@ -353,29 +353,38 @@ contract ILOPool is
             }
         }
 
+        // transfer back leftover sale token to project admin
+        uint256 leftoverSaleToken = IERC20(SALE_TOKEN).balanceOf(address(this));
+        if (leftoverSaleToken > 0) {
+            TransferHelper.safeTransfer(SALE_TOKEN, _project.admin, leftoverSaleToken);
+        }
+
         _launchSucceeded = true;
     }
 
-    /// @notice sending token to this contract using `safeTransferFrom` method
-    /// means that asking for refund and burn current token.
-    function onERC721Received(address, address from, uint256 tokenId, bytes calldata data) external {
-        _claimRefund(tokenId);
-    }
-
-    function _claimRefund(uint256 tokenId) internal {
+    function claimRefund(uint256 tokenId) external isAuthorizedForToken(tokenId) {
+        // first time refund is triggered
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
             require(!_launchSucceeded);
-            IILOManager.Project _project = MANAGER.project(_uniV3PoolAddress());
+            IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
             require(block.timestamp >= _project.refundDeadline);
+
+            // transfer back sale token to project admin on the first time refund is triggered
+            uint256 saleTokenAmount = IERC20(SALE_TOKEN).balanceOf(address(this));
+            if (saleTokenAmount > 0) {
+                TransferHelper.safeTransfer(SALE_TOKEN, _project.admin, saleTokenAmount);
+            }
             _refundTriggered = true;
         }
-        Position storage _position = positions(tokenId);
-        TransferHelper.safeTransfer(RAISE_TOKEN, msg.sender, _position.raiseAmount);
+
+        uint256 refundAmount = _positions[tokenId].raiseAmount;
 
         delete _positions[tokenId];
         delete _positionVests[tokenId];
         _burn(tokenId);
+
+        TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), refundAmount);
     }
 
     /// @notice returns amount of sale token that has already been sold
@@ -439,5 +448,11 @@ contract ILOPool is
         ) {
         amount0Left = amount0 - FullMath.mulDiv(amount0, feeBPS, BPS);
         amount1Left = amount1 - FullMath.mulDiv(amount1, feeBPS, BPS);
+    }
+
+    function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128 claimableLiquidity) {
+        uint128 claimedLiquidity = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
+        uint128 unlockedLiquidity = _unlockedLiquidity(tokenId);
+        return claimedLiquidity < unlockedLiquidity ? unlockedLiquidity - claimedLiquidity : 0;
     }
 }
