@@ -8,6 +8,7 @@ import './IILOConfig.sol';
 interface IILOManager is IILOConfig {
 
     event ProjectCreated(address indexed uniV3PoolAddress, Project project);
+    event ILOPoolCreated(address indexed uniV3PoolAddress, address indexed iloPoolAddress, uint256 index);
 
     struct ProjectVestConfig {
         uint16 shares; // BPS shares
