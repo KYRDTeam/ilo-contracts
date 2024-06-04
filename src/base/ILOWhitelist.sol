@@ -11,7 +11,7 @@ abstract contract ILOWhitelist {
     bool private _openToAll;
 
     modifier onlyWhitelisted(address user) {
-        require(openToAll || EnumerableSet.contains(_whitelisted, user));
+        require(_openToAll || EnumerableSet.contains(_whitelisted, user));
         _;
     }
 
