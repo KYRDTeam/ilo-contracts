@@ -119,7 +119,8 @@ contract ILOPool is
             PLATFORM_FEE,
             PERFORMANCE_FEE,
             INVESTOR_SHARES,
-            saleInfo
+            saleInfo,
+            investorVestConfigs
         );
     }
 
