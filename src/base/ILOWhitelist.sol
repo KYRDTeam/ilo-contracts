@@ -6,14 +6,26 @@ import '@openzeppelin/contracts/utils/EnumerableSet.sol';
 
 abstract contract ILOWhitelist {
     event SetWhitelist(address indexed user, bool isWhitelist);
+    event SetOpenToAll(bool openToAll);
+
+    bool private _openToAll;
 
     modifier onlyWhitelisted(address user) {
-        require(EnumerableSet.contains(_whitelisted, user));
+        require(openToAll || EnumerableSet.contains(_whitelisted, user));
         _;
     }
 
     EnumerableSet.AddressSet private _whitelisted;
     
+    function setOpenToAll(bool openToAll) external {
+        _openToAll = openToAll;
+        emit SetOpenToAll(openToAll);
+    }
+
+    function isOpenToAll() external view returns(bool) {
+        return _openToAll;
+    }
+
     /// @notice check if the address is whitelisted
     function isWhitelisted(address user) external view returns (bool) {
         return EnumerableSet.contains(_whitelisted, user);
