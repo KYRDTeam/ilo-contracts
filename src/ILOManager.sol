@@ -34,7 +34,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     mapping(address => address[]) private _initializedILOPools; // map uniV3Pool => list of initialized ilo pools
 
     /// @dev since deploy via deployer so we need to claim ownership
-    constructor () public {
+    constructor () {
         transferOwnership(tx.origin);
     }
 
