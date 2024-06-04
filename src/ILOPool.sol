@@ -120,7 +120,7 @@ contract ILOPool is
             PERFORMANCE_FEE,
             INVESTOR_SHARES,
             saleInfo,
-            investorVestConfigs
+            params.investorVestConfigs
         );
     }
 
