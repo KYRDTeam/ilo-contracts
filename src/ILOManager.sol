@@ -95,6 +95,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             _initializedILOPools[params.uniV3Pool].length
         ));
         iloPoolAddress = Clones.cloneDeterministic(ILO_POOL_IMPLEMENTATION, salt);
+        emit ILOPoolCreated(_project.uniV3PoolAddress, iloPoolAddress, _initializedILOPools[params.uniV3Pool].length);
         IILOPool(iloPoolAddress).initialize(params);
         _initializedILOPools[params.uniV3Pool].push(iloPoolAddress);
     }
