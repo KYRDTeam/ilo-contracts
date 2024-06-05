@@ -20,6 +20,7 @@ abstract contract IntegrationTestBase is Mock, Test {
     address constant WETH9 = 0xC02aaA39b223FE8D0A0e5C4F27eAD9083C756Cc2; // only for eth chain
     uint16 constant PLATFORM_FEE = 10; // 0.1%
     uint16 constant PERFORMANCE_FEE = 1000; // 10%
+    int24 constant MIN_TICK_500 = -887270;
 
     ILOManager iloManager;
     address projectId;
@@ -60,7 +61,6 @@ abstract contract IntegrationTestBase is Mock, Test {
             );
 
         vm.stopBroadcast();
-        console.log("go here");
 
         hoax(PROJECT_OWNER);
         projectId =  iloManager.initProject(IILOManager.InitProjectParams({
@@ -74,6 +74,25 @@ abstract contract IntegrationTestBase is Mock, Test {
                 })
             );
 
+    }
+
+    function _getInitPoolParams() internal view returns(IILOConfig.InitPoolParams memory) {
+        return IILOConfig.InitPoolParams({
+            uniV3Pool: projectId,
+            tickLower: MIN_TICK_500,
+            tickUpper: -MIN_TICK_500,
+            hardCap: 100000 ether,
+            softCap: 80000 ether,
+            maxCapPerUser: 50000 ether,
+            start: SALE_START,
+            end: SALE_END,
+            investorVestConfigs: _getLinearVesting()
+        });
+    }
+
+    function _initPool(address initializer, IILOConfig.InitPoolParams memory params) internal returns(address iloPoolAddress) {
+        vm.prank(initializer);
+        iloPoolAddress = iloManager.initILOPool(params);
     }
 
     function _writeTokenBalance(address token, address who, uint256 amt) internal {

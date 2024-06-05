@@ -10,10 +10,17 @@ contract ILOManagerTest is IntegrationTestBase {
         _setupBase();
     }
 
-    int24 constant MIN_TICK_500 = -887270;
-
     function testInitPool() external {
-        _initPool(PROJECT_OWNER, _getInitPoolParams());
+        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
+        IILOPool iloPool = IILOPool(_initPool(PROJECT_OWNER, params));
+        assertEq(iloPool.MANAGER(), address(iloManager));
+        assertEq(iloPool.RAISE_TOKEN(), USDT);
+        assertEq(iloPool.SALE_TOKEN(), SALE_TOKEN);
+        assertEq(iloPool.TICK_LOWER(), MIN_TICK_500);
+        assertEq(iloPool.TICK_UPPER(), -MIN_TICK_500);
+        assertEq(uint256(iloPool.PLATFORM_FEE()), 10);
+        assertEq(uint256(iloPool.PERFORMANCE_FEE()), 1000);
+        assertEq(uint256(iloPool.INVESTOR_SHARES()), 2000);
     }
 
     function testInitPoolNotOwner() external {
@@ -57,22 +64,4 @@ contract ILOManagerTest is IntegrationTestBase {
         _initPool(PROJECT_OWNER, params);
     }
 
-    function _getInitPoolParams() internal returns(IILOConfig.InitPoolParams memory) {
-        return IILOConfig.InitPoolParams({
-            uniV3Pool: projectId,
-            tickLower: MIN_TICK_500,
-            tickUpper: -MIN_TICK_500,
-            hardCap: 100000 ether,
-            softCap: 80000 ether,
-            maxCapPerUser: 50000 ether,
-            start: SALE_START,
-            end: SALE_END,
-            investorVestConfigs: _getLinearVesting()
-        });
-    }
-
-    function _initPool(address initializer, IILOConfig.InitPoolParams memory params) internal {
-        vm.prank(initializer);
-        address iloPoolAddress = iloManager.initILOPool(params);
-    }
 }

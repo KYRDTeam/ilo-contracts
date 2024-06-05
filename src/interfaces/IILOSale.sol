@@ -11,7 +11,6 @@ interface IILOSale {
         uint64 end;
         uint256 maxSaleAmount; // maximum amount of sale tokens
     }
-
     /// @notice this function is for investor buying ILO
     function buy(uint256 raiseAmount, address recipient) external returns (
             uint256 tokenId,
@@ -19,4 +18,8 @@ interface IILOSale {
             uint256 amountAdded0,
             uint256 amountAdded1
         );
+
+    /// @notice returns amount of sale token that has already been sold
+    /// @dev sale token amount is rounded up
+    function totalSold() external view returns (uint256);
 }

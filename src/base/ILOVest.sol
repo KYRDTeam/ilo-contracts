@@ -13,7 +13,10 @@ abstract contract ILOVest is IILOConfig {
 
     mapping(uint256=>PositionVest) _positionVests;
 
-    function _unlockedLiquidity(uint256 tokenId) internal view virtual returns (uint128 unlockedLiquidity);
+    /// @notice calculate amount of liquidity unlocked for claim
+    /// @param tokenId nft token id of position
+    /// @return liquidityUnlocked amount of unlocked liquidity
+    function _unlockedLiquidity(uint256 tokenId) internal view virtual returns (uint128 liquidityUnlocked);
 
     function _claimableLiquidity(uint256 tokenId) internal view virtual returns (uint128 claimableLiquidity);
 

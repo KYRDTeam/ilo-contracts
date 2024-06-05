@@ -7,14 +7,6 @@ import '../interfaces/IILOSale.sol';
 
 abstract contract ILOSale is IILOSale {
     SaleInfo saleInfo;
-
-    /// @inheritdoc IILOSale
-    function buy(uint256 raiseAmount, address recipient) external virtual override returns (
-            uint256 tokenId,
-            uint128 liquidity,
-            uint256 amountAdded0,
-            uint256 amountAdded1
-        );
     
     modifier beforeSale {
         require(block.timestamp < saleInfo.start);

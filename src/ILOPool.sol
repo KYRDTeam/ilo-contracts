@@ -9,6 +9,7 @@ import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 
 import './interfaces/IILOPool.sol';
+import './interfaces/IILOManager.sol';
 import './libraries/PositionKey.sol';
 import './base/ILOSale.sol';
 import './base/ILOVest.sol';
@@ -51,7 +52,7 @@ contract ILOPool is
     /// @dev when refund triggered, we can not launch anymore
     bool private _refundTriggered;
 
-    LinearVest[] investorVestConfigs;
+    LinearVest[] private _investorVestConfigs;
 
     /// @dev The token ID position data
     mapping(uint256 => Position) private _positions;
@@ -73,10 +74,10 @@ contract ILOPool is
 
     function initialize(InitPoolParams calldata params) external override whenNotInitialized() {
         // initialize imutable state
-        MANAGER = IILOManager(msg.sender);
-        IILOManager.Project memory _project = MANAGER.project(params.uniV3Pool);
+        MANAGER = msg.sender;
+        IILOManager.Project memory _project = IILOManager(MANAGER).project(params.uniV3Pool);
 
-        WETH9 = MANAGER.WETH9();
+        WETH9 = IILOManager(MANAGER).WETH9();
         RAISE_TOKEN = _project.raiseToken;
         SALE_TOKEN = _project.saleToken;
         _cacheUniV3PoolAddress(params.uniV3Pool);
@@ -103,7 +104,7 @@ contract ILOPool is
         // initialize vesting
         uint256 vestConfigLength = params.investorVestConfigs.length;
         for (uint256 index = 0; index < vestConfigLength; index++) {
-            investorVestConfigs.push(params.investorVestConfigs[index]);
+            _investorVestConfigs.push(params.investorVestConfigs[index]);
         }
 
         emit ILOPoolInitialized(
@@ -147,7 +148,7 @@ contract ILOPool is
         );
     }
 
-    /// @inheritdoc ILOSale
+    /// @inheritdoc IILOSale
     function buy(uint256 raiseAmount, address recipient)
         external override 
         duringSale()
@@ -163,13 +164,13 @@ contract ILOPool is
         require(saleInfo.hardCap - totalRaised >= raiseAmount);
         totalRaised += raiseAmount;
 
-        require(totalSold() <= saleInfo.maxSaleAmount);
+        require(_saleAmountNeeded(totalRaised) <= saleInfo.maxSaleAmount);
 
         // if investor already have a position, just increase raise amount and liquidity
         // otherwise, mint new nft for investor and assign vesting schedules
         if (balanceOf(recipient) == 0) {
             _mint(recipient, (tokenId = _nextId++));
-            _assignVestingSchedule(tokenId, investorVestConfigs);
+            _assignVestingSchedule(tokenId, _investorVestConfigs);
         } else {
             tokenId = tokenOfOwnerByIndex(recipient, 1);
         }
@@ -283,7 +284,7 @@ contract ILOPool is
 
         emit Claim(ownerOf(tokenId), liquidity2Claim, amount0, amount1);
 
-        address feeTaker = MANAGER.feeTaker();
+        address feeTaker = IILOManager(MANAGER).feeTaker();
         // transfer fee to fee taker
         TransferHelper.safeTransfer(_poolKey().token0, feeTaker, amountCollected0-amount0);
         TransferHelper.safeTransfer(_poolKey().token1, feeTaker, amountCollected1-amount1);
@@ -298,7 +299,7 @@ contract ILOPool is
     }
 
     modifier OnlyManager() {
-        require(msg.sender == address(MANAGER));
+        require(msg.sender == MANAGER);
         _;
     }
 
@@ -341,7 +342,7 @@ contract ILOPool is
             emit PoolLaunch(_uniV3PoolAddress(), liquidity, token0, token1);
         }
 
-        IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
+        IILOManager.Project memory _project = IILOManager(MANAGER).project(_uniV3PoolAddress());
 
         // assigning vests for the project configuration
         for (uint256 index = 0; index < _project.projectVestConfigs.length; index++) {
@@ -375,7 +376,7 @@ contract ILOPool is
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
             require(!_launchSucceeded);
-            IILOManager.Project memory _project = MANAGER.project(_uniV3PoolAddress());
+            IILOManager.Project memory _project = IILOManager(MANAGER).project(_uniV3PoolAddress());
             require(block.timestamp >= _project.refundDeadline);
 
             _refundTriggered = true;
@@ -408,8 +409,8 @@ contract ILOPool is
         }
     }
 
-    /// @notice returns amount of sale token that has already been sold
-    function totalSold() public view returns (uint256) {
+    /// @inheritdoc IILOSale
+    function totalSold() external view override returns (uint256) {
         return _saleAmountNeeded(totalRaised);
     }
 
@@ -434,9 +435,7 @@ contract ILOPool is
                 );
     }
 
-    /// @notice calculate amount of liquidity unlocked for claim
-    /// @param tokenId nft token id of position
-    /// @return liquidityUnlocked amount of unlocked liquidity
+    /// @inheritdoc ILOVest
     function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 liquidityUnlocked) {
         PositionVest storage _positionVest = _positionVests[tokenId];
         liquidityUnlocked = uint128(FullMath.mulDiv(
@@ -475,14 +474,17 @@ contract ILOPool is
         return _unlockedLiquidity(tokenId);
     }
 
-    function claimableLiquidity(uint256 tokenId) external view returns(uint128) {
+    /// @inheritdoc IILOVest
+    function claimableLiquidity(uint256 tokenId) external view override returns(uint128) {
         return _claimableLiquidity(tokenId);
     }
 
-    function claimedLiquidity(uint256 tokenId) external view returns(uint128) {
+    /// @inheritdoc IILOVest
+    function claimedLiquidity(uint256 tokenId) external view override returns(uint128) {
         return  _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
     }
 
+    /// @inheritdoc ILOVest
     function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128) {
         uint128 liquidityClaimed = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
         uint128 liquidityUnlocked = _unlockedLiquidity(tokenId);

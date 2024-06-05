@@ -9,6 +9,7 @@ import './IILOConfig.sol';
 import './IPeripheryPayments.sol';
 import './IILOPoolImmutableState.sol';
 import './IILOSale.sol';
+import './IILOVest.sol';
 import '../libraries/PoolAddress.sol';
 
 /// @title Non-fungible token for positions
@@ -16,6 +17,8 @@ import '../libraries/PoolAddress.sol';
 /// and authorized.
 interface IILOPool is
     IILOConfig,
+    IILOVest,
+    IILOSale,
     IPeripheryPayments,
     IILOPoolImmutableState,
     IERC721Metadata,
@@ -44,7 +47,7 @@ interface IILOPool is
     /// @param amount1 The amount of token1 owed to the position that was collected
     event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
 
-    event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, uint16 platformFee, uint16 performanceFee, uint16 investorShares, IILOSale.SaleInfo saleInfo, LinearVest[] investorVestConfigs);
+    event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, uint16 platformFee, uint16 performanceFee, uint16 investorShares, SaleInfo saleInfo, LinearVest[] investorVestConfigs);
 
     event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
     event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount, uint128 liquidity);

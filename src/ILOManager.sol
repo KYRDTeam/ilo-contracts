@@ -125,6 +125,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         }
 
         _project.platformFee = PLATFORM_FEE;
+        _project.performanceFee = PERFORMANCE_FEE;
         _project.admin = msg.sender;
         _project.saleToken = saleToken;
         _project.raiseToken = raiseToken;
