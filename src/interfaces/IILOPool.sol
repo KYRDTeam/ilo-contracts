@@ -9,6 +9,7 @@ import './IILOConfig.sol';
 import './IPeripheryPayments.sol';
 import './IILOPoolImmutableState.sol';
 import './IILOSale.sol';
+import './IILOVest.sol';
 import '../libraries/PoolAddress.sol';
 
 /// @title Non-fungible token for positions
@@ -16,6 +17,8 @@ import '../libraries/PoolAddress.sol';
 /// and authorized.
 interface IILOPool is
     IILOConfig,
+    IILOVest,
+    IILOSale,
     IPeripheryPayments,
     IILOPoolImmutableState,
     IERC721Metadata,
@@ -28,12 +31,14 @@ interface IILOPool is
     /// @param amount0 The amount of token0 that was paid for the increase in liquidity
     /// @param amount1 The amount of token1 that was paid for the increase in liquidity
     event IncreaseLiquidity(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
+
     /// @notice Emitted when liquidity is decreased for a position NFT
     /// @param tokenId The ID of the token for which liquidity was decreased
     /// @param liquidity The amount by which liquidity for the NFT position was decreased
     /// @param amount0 The amount of token0 that was accounted for the decrease in liquidity
     /// @param amount1 The amount of token1 that was accounted for the decrease in liquidity
     event DecreaseLiquidity(uint256 indexed tokenId, uint128 liquidity, uint256 amount0, uint256 amount1);
+
     /// @notice Emitted when tokens are collected for a position NFT
     /// @dev The amounts reported may not be exactly equivalent to the amounts transferred, due to rounding behavior
     /// @param tokenId The ID of the token for which underlying tokens were collected
@@ -42,7 +47,13 @@ interface IILOPool is
     /// @param amount1 The amount of token1 owed to the position that was collected
     event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
 
-    event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, uint16 platformFee, uint16 performanceFee, uint16 investorShares, IILOSale.SaleInfo saleInfo, LinearVest[] investorVestConfigs);
+    event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, uint16 platformFee, uint16 performanceFee, uint16 investorShares, SaleInfo saleInfo, LinearVest[] investorVestConfigs);
+
+    event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
+    event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount, uint128 liquidity);
+    event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
+    event UserRefund(address indexed user, uint256 raiseTokenAmount);
+    event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
 
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
@@ -83,4 +94,7 @@ interface IILOPool is
 
     /// @notice project admin claim refund sale token
     function claimProjectRefund(address projectAdmin) external returns (uint256 refundAmount);
+
+    /// @notice user claim refund when refund conditions are met
+    function claimRefund(uint256 tokenId) external;
 }

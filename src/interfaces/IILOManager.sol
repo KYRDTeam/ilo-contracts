@@ -9,6 +9,12 @@ interface IILOManager is IILOConfig {
 
     event ProjectCreated(address indexed uniV3PoolAddress, Project project);
     event ILOPoolCreated(address indexed uniV3PoolAddress, address indexed iloPoolAddress, uint256 index);
+    event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
+    event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
+    event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
+    event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
+    event ProjectLaunch(address indexed uniV3PoolAddress);
+    event ProjectRefund(address indexed project, uint256 refundAmount);
 
     struct ProjectVestConfig {
         uint16 shares; // BPS shares
@@ -57,6 +63,9 @@ interface IILOManager is IILOConfig {
     /// @return uniV3PoolAddress address of uniswap v3 pool. We use this address as project id
     function initProject(InitProjectParams calldata params) external returns(address uniV3PoolAddress);
 
+    /// @notice this function init an `ILO Pool` which will be used for sale and vest. One project can init many ILO Pool
+    /// @notice only project admin can use this function
+    /// @param params the parameters for init project
     function initILOPool(InitPoolParams calldata params) external returns(address iloPoolAddress);
 
     function project(address uniV3PoolAddress) external view returns (Project memory);

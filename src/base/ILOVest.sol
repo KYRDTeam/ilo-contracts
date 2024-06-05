@@ -13,7 +13,10 @@ abstract contract ILOVest is IILOConfig {
 
     mapping(uint256=>PositionVest) _positionVests;
 
-    function _unlockedLiquidity(uint256 tokenId) internal view virtual returns (uint128 unlockedLiquidity);
+    /// @notice calculate amount of liquidity unlocked for claim
+    /// @param tokenId nft token id of position
+    /// @return liquidityUnlocked amount of unlocked liquidity
+    function _unlockedLiquidity(uint256 tokenId) internal view virtual returns (uint128 liquidityUnlocked);
 
     function _claimableLiquidity(uint256 tokenId) internal view virtual returns (uint128 claimableLiquidity);
 
@@ -23,12 +26,17 @@ abstract contract ILOVest is IILOConfig {
 
             LinearVest storage vest = vestingSchedule[index];
 
+            // if vest is not started, skip this vest and all following vest
+            if (block.timestamp < vest.start) {
+                break;
+            }
+
             // if vest already end, all the shares are unlocked
             // otherwise we calculate percentage of unlocked times and get the unlocked share number
             // all vest after current unlocking vest is ignored
             if (vest.end < block.timestamp) {
                 unlockedSharesBPS += vest.percentage;
-            } else if(vest.start < block.timestamp && block.timestamp < vest.end ) {
+            } else {
                 unlockedSharesBPS += uint16(FullMath.mulDiv(
                     vest.percentage, 
                     block.timestamp - vest.start, 

@@ -6,4 +6,16 @@ pragma solidity >=0.5.0;
 interface IILOPoolImmutableState {
     /// @return Returns the address of WETH9
     function WETH9() external view returns (address);
+
+    function MANAGER() external view returns (address);
+    function RAISE_TOKEN() external view returns (address);
+    function SALE_TOKEN() external view returns (address);
+    function TICK_LOWER() external view returns (int24);
+    function TICK_UPPER() external view returns (int24);
+    function SQRT_RATIO_X96() external view returns (uint160);
+    function SQRT_RATIO_LOWER_X96() external view returns (uint160);
+    function SQRT_RATIO_UPPER_X96() external view returns (uint160);
+    function PLATFORM_FEE() external view returns (uint16);
+    function PERFORMANCE_FEE() external view returns (uint16);
+    function INVESTOR_SHARES() external view returns (uint16);
 }

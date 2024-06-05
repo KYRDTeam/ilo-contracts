@@ -12,14 +12,6 @@ import "@openzeppelin/contracts/access/Ownable.sol";
 import '@openzeppelin/contracts/proxy/Clones.sol';
 
 contract ILOManager is IILOManager, Ownable, Initializable {
-
-    event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
-    event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
-    event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
-    event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
-    event ProjectLaunch(address indexed uniV3PoolAddress);
-    event ProjectRefund(address indexed project, uint256 refundAmount);
-
     address public override UNIV3_FACTORY;
     address public override WETH9;
 
@@ -63,8 +55,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function initProject(InitProjectParams calldata params) external override afterInitialize() returns(address uniV3PoolAddress) {
-
-        _validateSharesPercentage(params.investorShares, params.projectVestConfigs);
+        _validateSharesAndVests(params.launchTime, params.investorShares, params.projectVestConfigs);
         uint64 refundDeadline = params.launchTime + DEFAULT_DEADLINE_OFFSET;
 
         PoolAddress.PoolKey memory poolKey = PoolAddress.getPoolKey(params.saleToken, params.raiseToken, params.fee);
@@ -78,9 +69,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         return _cachedProject[uniV3PoolAddress];
     }
 
-    /// @notice this function init an `ILO Pool` which will be used for sale and vest. One project can init many ILO Pool
-    /// @notice only project admin can use this function
-    /// @param params the parameters for init project
+    /// @inheritdoc IILOManager
     function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool) returns (address iloPoolAddress) {
         require(ILO_POOL_IMPLEMENTATION != address(0), "no pool implementation!");
 
@@ -88,6 +77,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         Project storage _project = _cachedProject[params.uniV3Pool];
         require(_project.uniV3PoolAddress != address(0), "project not initialized");
         require(params.start < params.end && params.end < _project.launchTime, "invalid time configs");
+        _validateVestSchedule(_project.launchTime, params.investorVestConfigs);
         // this salt make sure that pool address can not be represented in any other chains
         bytes32 salt = keccak256(abi.encodePacked(
             ChainId.get(),
@@ -135,6 +125,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         }
 
         _project.platformFee = PLATFORM_FEE;
+        _project.performanceFee = PERFORMANCE_FEE;
         _project.admin = msg.sender;
         _project.saleToken = saleToken;
         _project.raiseToken = raiseToken;
@@ -146,28 +137,29 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         _project.uniV3PoolAddress = uniV3PoolAddress;
     }
 
-    function _validateSharesPercentage(uint16 investorShares, ProjectVestConfig[] calldata projectVestConfigs) internal pure {
+    function _validateSharesAndVests(uint64 launchTime, uint16 investorShares, ProjectVestConfig[] calldata projectVestConfigs) internal pure {
         require(investorShares <= BPS);
         uint16 totalShares = investorShares;
         uint256 configLength = projectVestConfigs.length;
         for (uint256 index = 0; index < configLength; index++) {
             // we need to subtract fist in order to avoid int overflow
             require(BPS - totalShares >= projectVestConfigs[index].shares);
-            _validateVestSchedule(projectVestConfigs[index].vestSchedule);
+            _validateVestSchedule(launchTime, projectVestConfigs[index].vestSchedule);
             totalShares += projectVestConfigs[index].shares;
         }
         // total shares should be exactly equal BPS
         require(totalShares == BPS);
     }
 
-    function _validateVestSchedule(LinearVest[] memory vestSchedule) internal pure {
+    function _validateVestSchedule(uint64 launchTime, LinearVest[] memory vestSchedule) internal pure {
         require(vestSchedule.length > 0);
+        require(vestSchedule[0].start >= launchTime);
         uint16 totalShares;
         uint64 lastEnd;
         uint256 vestScheduleLength = vestSchedule.length;
         for (uint256 index = 0; index < vestScheduleLength; index++) {
             // vesting schedule must not overlap
-            require(vestSchedule[index].start > lastEnd);
+            require(vestSchedule[index].start >= lastEnd);
             lastEnd = vestSchedule[index].end;
             // we need to subtract fist in order to avoid int overflow
             require(BPS - totalShares >= vestSchedule[index].percentage);
