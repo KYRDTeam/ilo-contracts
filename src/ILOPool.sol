@@ -33,12 +33,6 @@ contract ILOPool is
     LiquidityManagement,
     PeripheryValidation
 {
-    event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
-    event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount, uint128 liquidity);
-    event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
-    event UserRefund(address indexed user, uint256 raiseTokenAmount);
-    event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
-
     // details about the uniswap position
     struct Position {
         // the liquidity of the position
@@ -389,7 +383,8 @@ contract ILOPool is
         _;
     }
 
-    function claimRefund(uint256 tokenId) external refundable() isAuthorizedForToken(tokenId) {
+    /// @inheritdoc IILOPool
+    function claimRefund(uint256 tokenId) external override refundable() isAuthorizedForToken(tokenId) {
         uint256 refundAmount = _positions[tokenId].raiseAmount;
 
         delete _positions[tokenId];
