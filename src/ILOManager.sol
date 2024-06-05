@@ -63,7 +63,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function initProject(InitProjectParams calldata params) external override afterInitialize() returns(address uniV3PoolAddress) {
-
         _validateSharesPercentage(params.investorShares, params.projectVestConfigs);
         uint64 refundDeadline = params.launchTime + DEFAULT_DEADLINE_OFFSET;
 
@@ -167,7 +166,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         uint256 vestScheduleLength = vestSchedule.length;
         for (uint256 index = 0; index < vestScheduleLength; index++) {
             // vesting schedule must not overlap
-            require(vestSchedule[index].start > lastEnd);
+            require(vestSchedule[index].start >= lastEnd);
             lastEnd = vestSchedule[index].end;
             // we need to subtract fist in order to avoid int overflow
             require(BPS - totalShares >= vestSchedule[index].percentage);

@@ -10,9 +10,8 @@ contract ILOManagerTest is IntegrationTestBase {
         _setupBase();
     }
 
-    // function testInitProject() external {
-    //     iloManager.initProject(saleToken, raiseToken, fee, initialPoolPriceX96, launchTime, investorShares, projectVestConfigs);
-    // }
+    function testInitProject() external {
+    }
 
     
 }

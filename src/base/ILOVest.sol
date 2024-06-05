@@ -23,12 +23,17 @@ abstract contract ILOVest is IILOConfig {
 
             LinearVest storage vest = vestingSchedule[index];
 
+            // if vest is not started, skip this vest and all following vest
+            if (block.timestamp < vest.start) {
+                break;
+            }
+
             // if vest already end, all the shares are unlocked
             // otherwise we calculate percentage of unlocked times and get the unlocked share number
             // all vest after current unlocking vest is ignored
             if (vest.end < block.timestamp) {
                 unlockedSharesBPS += vest.percentage;
-            } else if(vest.start < block.timestamp && block.timestamp < vest.end ) {
+            } else {
                 unlockedSharesBPS += uint16(FullMath.mulDiv(
                     vest.percentage, 
                     block.timestamp - vest.start, 

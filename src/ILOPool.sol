@@ -34,7 +34,7 @@ contract ILOPool is
     PeripheryValidation
 {
     event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
-    event Buy(address indexed investor, uint256 raiseAmount, uint128 liquidity);
+    event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount, uint128 liquidity);
     event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
     event UserRefund(address indexed user, uint256 raiseTokenAmount);
     event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
@@ -208,7 +208,7 @@ contract ILOPool is
         // transfer fund into contract
         TransferHelper.safeTransferFrom(RAISE_TOKEN, msg.sender, address(this), raiseAmount);
 
-        emit Buy(recipient, raiseAmount, liquidityDelta);
+        emit Buy(recipient, tokenId, raiseAmount, liquidityDelta);
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
@@ -367,6 +367,8 @@ contract ILOPool is
             for (uint256 i = 0; i < projectConfig.vestSchedule.length; i++) {
                 schedule.push(projectConfig.vestSchedule[i]);
             }
+
+            emit Buy(projectConfig.recipient, tokenId, 0, liquidityShares);
         }
 
         // transfer back leftover sale token to project admin
