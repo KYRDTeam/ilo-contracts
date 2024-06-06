@@ -18,7 +18,6 @@ import './base/LiquidityManagement.sol';
 import './base/ILOPoolImmutableState.sol';
 import './base/Initializable.sol';
 import './base/Multicall.sol';
-import './base/PeripheryValidation.sol';
 import "./base/ILOWhitelist.sol";
 
 import "forge-std/console.sol";
@@ -34,8 +33,7 @@ contract ILOPool is
     Initializable,
     Multicall,
     ILOPoolImmutableState,
-    LiquidityManagement,
-    PeripheryValidation
+    LiquidityManagement
 {
 
     /// @dev when lauch successfully we can not refund anymore

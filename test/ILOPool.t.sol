@@ -40,6 +40,13 @@ contract ILOPoolTest is IntegrationTestBase {
         IILOPool(iloPool).buy(0, INVESTOR);
     }
 
+    function testBuyTooMuch() external {
+        vm.prank(PROJECT_OWNER);
+        IILOWhitelist(iloPool).setWhitelist(INVESTOR);
+        vm.expectRevert();
+        IILOPool(iloPool).buy(70000 ether, INVESTOR);
+    }
+
     function testBuyBeforeSale() external {
         _prepairBuy();
         vm.expectRevert();
@@ -90,7 +97,7 @@ contract ILOPoolTest is IntegrationTestBase {
         IILOPool(iloPool).launch();
     }
 
-    function testLaunch() external {
+    function _launch() internal {
         _prepairBuyFor(INVESTOR);
         _buyFor(INVESTOR, SALE_START+1, 50000 ether);
         _prepairBuyFor(INVESTOR_2);
@@ -110,11 +117,38 @@ contract ILOPoolTest is IntegrationTestBase {
         assertEq(IILOPool(iloPool).balanceOf(LIQUIDITY_RECIPIENT), 1);
     }
 
+    function testRefundAfterLaunch() external {
+        _launch();
+        uint256 tokenId = IILOPool(iloPool).tokenOfOwnerByIndex(INVESTOR, 0);
+        vm.expectRevert();
+        vm.warp(LAUNCH_START + 86400*7 + 1);
+        vm.prank(INVESTOR);
+        IILOPool(iloPool).claimRefund(tokenId);
+    }
+
+    function testLaunchAfterRefund() external {
+        _prepairBuyFor(INVESTOR);
+        _buyFor(INVESTOR, SALE_START+1, 50000 ether);
+        _prepairBuyFor(INVESTOR_2);
+        _buyFor(INVESTOR_2, SALE_START+1, 40000 ether);
+        _writeTokenBalance(SALE_TOKEN, iloPool, 95000 * 4 ether);
+
+        vm.startPrank(INVESTOR);
+        vm.warp(LAUNCH_START + 86400*7 + 1);
+        IILOPool(iloPool).claimRefund(IILOPool(iloPool).tokenOfOwnerByIndex(INVESTOR, 0));
+        vm.stopPrank();
+
+        vm.warp(LAUNCH_START + 86400*7 + 1);
+        vm.prank(address(iloManager));
+        vm.expectRevert();
+        IILOPool(iloPool).launch();
+    }
+
     function testRefundBeforeRefundDeadline() external {
         _prepairBuy();
         (uint256 tokenId,,,) = _buy(SALE_START+1, 0.1 ether);
-        vm.prank(INVESTOR);
 
+        vm.prank(INVESTOR);
         vm.warp(LAUNCH_START + 86400*7 - 1);
         vm.expectRevert();
         IILOPool(iloPool).claimRefund(tokenId);
