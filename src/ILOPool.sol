@@ -116,26 +116,17 @@ contract ILOPool is
         view
         override
         returns (
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickLower,
-            int24 tickUpper,
             uint128 liquidity,
+            uint256 raiseAmount,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128
         )
     {
-        Position memory position = _positions[tokenId];
         return (
-            _cachedPoolKey.token0,
-            _cachedPoolKey.token1,
-            _cachedPoolKey.fee,
-            TICK_LOWER,
-            TICK_UPPER,
-            position.liquidity,
-            position.feeGrowthInside0LastX128,
-            position.feeGrowthInside1LastX128
+            _positions[tokenId].liquidity,
+            _positions[tokenId].raiseAmount,
+            _positions[tokenId].feeGrowthInside0LastX128,
+            _positions[tokenId].feeGrowthInside1LastX128
         );
     }
 
@@ -378,8 +369,8 @@ contract ILOPool is
         delete _positionVests[tokenId];
         _burn(tokenId);
 
-        TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), refundAmount);
-        emit UserRefund(ownerOf(tokenId), tokenId,refundAmount);
+        TransferHelper.safeTransfer(RAISE_TOKEN, tokenOwner, refundAmount);
+        emit UserRefund(tokenOwner, tokenId,refundAmount);
     }
 
     /// @inheritdoc IILOPool
