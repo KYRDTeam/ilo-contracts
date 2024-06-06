@@ -23,9 +23,10 @@ contract Mock {
     address constant LIQUIDITY_RECIPIENT = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65; // anvil#5
     address constant PROJECT_OWNER = 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc; // anvil#6
     address constant INVESTOR = 0x976EA74026E726554dB657fA54763abd0C3a0aa9; // anvil#7
+    address constant INVESTOR_2 = 0x976eA74026E726554Db657fA54763abd0C3a0Aa8; // anvil#7
 
-    address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
-    address SALE_TOKEN;
+    address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48; // token0
+    address SALE_TOKEN; // token1
 
     uint64 constant SALE_START = 1717434000; // Mon Jun 03 2024 17:00:00 GMT+0000
     uint64 constant SALE_END = 1717520400; // Tue Jun 04 2024 17:00:00 GMT+0000
@@ -41,7 +42,7 @@ contract Mock {
             saleToken: SALE_TOKEN, 
             raiseToken: USDC,
             fee: 500,
-            initialPoolPriceX96: 39614081257132168796771975168, 
+            initialPoolPriceX96: 158456325028528675187087900672, 
             launchTime: LAUNCH_START, // Wed Jun 05 2024 17:00:00 GMT+0000
             investorShares: 2000, // 20%
             projectVestConfigs: _getProjectVestConfig()

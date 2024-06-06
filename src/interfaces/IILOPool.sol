@@ -55,6 +55,18 @@ interface IILOPool is
     event UserRefund(address indexed user, uint256 raiseTokenAmount);
     event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
 
+    // details about the uniswap position
+    struct Position {
+        // the liquidity of the position
+        uint128 liquidity;
+        // the fee growth of the aggregate position as of the last action on the individual position
+        uint256 feeGrowthInside0LastX128;
+        uint256 feeGrowthInside1LastX128;
+        
+        // the raise amount of position
+        uint256 raiseAmount;
+    }
+
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
@@ -82,11 +94,6 @@ interface IILOPool is
 
     /// @notice Returns number of collected tokens associated with a given token ID.
     function claim(uint256 tokenId) external payable returns (uint256 amount0, uint256 amount1);
-
-    /// @notice Burns a token ID, which deletes it from the NFT contract. The token must have 0 liquidity and all tokens
-    /// must be collected first.
-    /// @param tokenId The ID of the token that is being burned
-    function burn(uint256 tokenId) external payable;
 
     function initialize(InitPoolParams calldata initPoolParams) external;
 

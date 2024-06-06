@@ -135,28 +135,4 @@ library LiquidityAmounts {
             amount1 = getAmount1ForLiquidity(sqrtRatioAX96, sqrtRatioBX96, liquidity);
         }
     }
-
-    function getInrangeAmount0ForAmount1(
-        uint160 sqrtRatioX96,
-        uint160 sqrtRatioAX96,
-        uint160 sqrtRatioBX96,
-        uint256 amount1,
-        bool roundUp
-    ) internal pure returns (uint256) {
-        if (sqrtRatioAX96 > sqrtRatioBX96) (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
-        uint128 liquidity1 = getLiquidityForAmount1(sqrtRatioAX96, sqrtRatioX96, amount1);
-        return SqrtPriceMath.getAmount0Delta(sqrtRatioX96, sqrtRatioBX96, liquidity1, roundUp);
-    }
-
-    function getInrangeAmount1ForAmount0(
-        uint160 sqrtRatioX96,
-        uint160 sqrtRatioAX96,
-        uint160 sqrtRatioBX96,
-        uint256 amount0,
-        bool roundUp
-    ) internal pure returns (uint256) {
-        if (sqrtRatioAX96 > sqrtRatioBX96) (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
-        uint128 liquidity0 = getLiquidityForAmount0(sqrtRatioX96, sqrtRatioBX96, amount0);
-        return SqrtPriceMath.getAmount1Delta(sqrtRatioAX96, sqrtRatioX96, liquidity0, roundUp);
-    }
 }

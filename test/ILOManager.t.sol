@@ -64,4 +64,19 @@ contract ILOManagerTest is IntegrationTestBase {
         _initPool(PROJECT_OWNER, params);
     }
 
+    function testLaunchBeforeLaunchStart() external {
+        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
+        _initPool(PROJECT_OWNER, params);
+        vm.warp(LAUNCH_START-1);
+        vm.expectRevert();
+        iloManager.launch(projectId);
+    }
+
+    function testLaunchWhenPoolLaunchRevert() external {
+        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
+        _initPool(PROJECT_OWNER, params);
+        vm.warp(LAUNCH_START+1);
+        vm.expectRevert();
+        iloManager.launch(projectId);
+    }
 }

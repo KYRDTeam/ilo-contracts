@@ -135,6 +135,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         _project.refundDeadline = refundDeadline;
         _project.investorShares = investorShares;
         _project.uniV3PoolAddress = uniV3PoolAddress;
+        _project._cachedPoolKey = PoolAddress.getPoolKey(saleToken, raiseToken, fee);
     }
 
     function _validateSharesAndVests(uint64 launchTime, uint16 investorShares, ProjectVestConfig[] calldata projectVestConfigs) internal pure {
@@ -218,6 +219,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     function launch(address uniV3PoolAddress) external override {
         require(block.timestamp > _cachedProject[uniV3PoolAddress].launchTime);
         address[] memory initializedPools = _initializedILOPools[uniV3PoolAddress];
+        require(initializedPools.length > 0);
         for (uint256 i = 0; i < initializedPools.length; i++) {
             IILOPool(initializedPools[i]).launch();
         }

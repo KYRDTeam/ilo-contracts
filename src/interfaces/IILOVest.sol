@@ -8,4 +8,6 @@ interface IILOVest {
 
     /// @notice return claimed liquidity associated with tokenId
     function claimedLiquidity(uint256 tokenId) external view returns(uint128);
+
+    function unlockedLiquidity(uint256 tokenId) external view returns(uint128);
 }

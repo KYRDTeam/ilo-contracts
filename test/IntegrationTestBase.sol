@@ -83,7 +83,7 @@ abstract contract IntegrationTestBase is Mock, Test {
             tickUpper: -MIN_TICK_500,
             hardCap: 100000 ether,
             softCap: 80000 ether,
-            maxCapPerUser: 50000 ether,
+            maxCapPerUser: 60000 ether,
             start: SALE_START,
             end: SALE_END,
             investorVestConfigs: _getLinearVesting()
