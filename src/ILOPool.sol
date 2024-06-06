@@ -276,7 +276,7 @@ contract ILOPool is
         TransferHelper.safeTransfer(_cachedPoolKey.token0, ownerOf(tokenId), amount0);
         TransferHelper.safeTransfer(_cachedPoolKey.token1, ownerOf(tokenId), amount1);
 
-        emit Claim(ownerOf(tokenId), liquidity2Claim, amount0, amount1);
+        emit Claim(ownerOf(tokenId), liquidity2Claim, amount0, amount1, position.feeGrowthInside0LastX128, position.feeGrowthInside1LastX128);
 
         address feeTaker = IILOManager(MANAGER).feeTaker();
         // transfer fee to fee taker
