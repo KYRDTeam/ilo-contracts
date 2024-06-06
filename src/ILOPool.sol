@@ -161,7 +161,7 @@ contract ILOPool is
         // otherwise, mint new nft for investor and assign vesting schedules
         if (balanceOf(recipient) == 0) {
             _mint(recipient, (tokenId = _nextId++));
-            _assignVestingSchedule(tokenId, _investorVestConfigs);
+            _positionVests[tokenId].schedule = _investorVestConfigs;
         } else {
             tokenId = tokenOfOwnerByIndex(recipient, 0);
         }
@@ -192,7 +192,7 @@ contract ILOPool is
         );
 
         // update total liquidity locked for vest and assiging vesing schedules
-        _updateVestingLiquidity(tokenId, _position.liquidity);
+        _positionVests[tokenId].totalLiquidity = _position.liquidity;
 
         // transfer fund into contract
         TransferHelper.safeTransferFrom(RAISE_TOKEN, msg.sender, address(this), raiseAmount);
@@ -341,8 +341,7 @@ contract ILOPool is
 
             Position storage _position = _positions[tokenId];
             _position.liquidity = liquidityShares;
-            
-            _updateVestingLiquidity(tokenId, liquidityShares);
+            _positionVests[tokenId].totalLiquidity = liquidityShares;
 
             // assign vesting schedule
             LinearVest[] storage schedule = _positionVests[tokenId].schedule;
@@ -449,17 +448,6 @@ contract ILOPool is
                 ));
             }
         }
-    }
-
-    /// @notice assign vesting schedule for position
-    function _assignVestingSchedule(uint256 nftId, LinearVest[] storage vestingSchedule) internal {
-        _positionVests[nftId].schedule = vestingSchedule;
-    }
-
-    /// @notice update total liquidity for vesting position
-    /// vesting liquidity of position only changes when investor buy ilo
-    function _updateVestingLiquidity(uint256 nftId, uint128 liquidity) internal {
-        _positionVests[nftId].totalLiquidity = liquidity;
     }
 
     /// @notice calculate the amount left after deduct fee

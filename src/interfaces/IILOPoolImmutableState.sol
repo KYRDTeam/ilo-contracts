@@ -13,6 +13,7 @@ interface IILOPoolImmutableState {
     function TICK_LOWER() external view returns (int24);
     function TICK_UPPER() external view returns (int24);
     function PLATFORM_FEE() external view returns (uint16);
+    function SQRT_RATIO_X96() external view returns (uint160);
     function PERFORMANCE_FEE() external view returns (uint16);
     function INVESTOR_SHARES() external view returns (uint16);
 }
