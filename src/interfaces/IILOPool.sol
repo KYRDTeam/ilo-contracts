@@ -49,10 +49,10 @@ interface IILOPool is
 
     event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, uint16 platformFee, uint16 performanceFee, uint16 investorShares, SaleInfo saleInfo, LinearVest[] investorVestConfigs);
 
-    event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
+    event Claim(address indexed user, uint256 tokenId,uint128 liquidity, uint256 amount0, uint256 amount1, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128);
     event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount, uint128 liquidity);
     event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
-    event UserRefund(address indexed user, uint256 raiseTokenAmount);
+    event UserRefund(address indexed user, uint256 tokenId, uint256 raiseTokenAmount);
     event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
 
     // details about the uniswap position
@@ -70,24 +70,15 @@ interface IILOPool is
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
-    /// @return token0 The address of the token0 for a specific pool
-    /// @return token1 The address of the token1 for a specific pool
-    /// @return fee The fee associated with the pool
-    /// @return tickLower The lower end of the tick range for the position
-    /// @return tickUpper The higher end of the tick range for the position
     /// @return liquidity The liquidity of the position
+    /// @return raiseAmount The raise amount of the position
     /// @return feeGrowthInside0LastX128 The fee growth of token0 as of the last action on the individual position
     /// @return feeGrowthInside1LastX128 The fee growth of token1 as of the last action on the individual position
     function positions(uint256 tokenId)
         external
         view
-        returns (
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickLower,
-            int24 tickUpper,
-            uint128 liquidity,
+        returns (uint128 liquidity,
+            uint256 raiseAmount,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128
         );

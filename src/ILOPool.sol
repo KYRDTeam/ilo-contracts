@@ -116,26 +116,17 @@ contract ILOPool is
         view
         override
         returns (
-            address token0,
-            address token1,
-            uint24 fee,
-            int24 tickLower,
-            int24 tickUpper,
             uint128 liquidity,
+            uint256 raiseAmount,
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128
         )
     {
-        Position memory position = _positions[tokenId];
         return (
-            _cachedPoolKey.token0,
-            _cachedPoolKey.token1,
-            _cachedPoolKey.fee,
-            TICK_LOWER,
-            TICK_UPPER,
-            position.liquidity,
-            position.feeGrowthInside0LastX128,
-            position.feeGrowthInside1LastX128
+            _positions[tokenId].liquidity,
+            _positions[tokenId].raiseAmount,
+            _positions[tokenId].feeGrowthInside0LastX128,
+            _positions[tokenId].feeGrowthInside1LastX128
         );
     }
 
@@ -219,9 +210,8 @@ contract ILOPool is
         // calculate amount of unlocked liquidity for the position
         uint128 liquidity2Claim = _claimableLiquidity(tokenId);
         IUniswapV3Pool pool = IUniswapV3Pool(_cachedUniV3PoolAddress);
+        Position storage position = _positions[tokenId];
         {
-            Position storage position = _positions[tokenId];
-
             uint128 positionLiquidity = position.liquidity;
             require(positionLiquidity >= liquidity2Claim);
 
@@ -276,7 +266,7 @@ contract ILOPool is
         TransferHelper.safeTransfer(_cachedPoolKey.token0, ownerOf(tokenId), amount0);
         TransferHelper.safeTransfer(_cachedPoolKey.token1, ownerOf(tokenId), amount1);
 
-        emit Claim(ownerOf(tokenId), liquidity2Claim, amount0, amount1);
+        emit Claim(ownerOf(tokenId), tokenId,liquidity2Claim, amount0, amount1, position.feeGrowthInside0LastX128, position.feeGrowthInside1LastX128);
 
         address feeTaker = IILOManager(MANAGER).feeTaker();
         // transfer fee to fee taker
@@ -378,9 +368,9 @@ contract ILOPool is
         delete _positions[tokenId];
         delete _positionVests[tokenId];
         _burn(tokenId);
-        
+
         TransferHelper.safeTransfer(RAISE_TOKEN, tokenOwner, refundAmount);
-        emit UserRefund(tokenOwner, refundAmount);
+        emit UserRefund(tokenOwner, tokenId,refundAmount);
     }
 
     /// @inheritdoc IILOPool

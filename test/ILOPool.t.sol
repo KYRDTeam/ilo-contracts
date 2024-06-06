@@ -93,7 +93,7 @@ contract ILOPoolTest is IntegrationTestBase {
         assertEq(amountAdded1, 79999999999999999);
         assertEq(balanceAfter - balanceBefore, 0.1 ether);
 
-        (,,,,,uint128 _liquidity,,) = IILOPool(iloPool).positions(tokenId);
+        (uint128 _liquidity,,,) = IILOPool(iloPool).positions(tokenId);
         assertEq(uint256(_liquidity), 40000000000000000);
 
     }
