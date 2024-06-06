@@ -14,7 +14,7 @@ contract ILOManagerTest is IntegrationTestBase {
         IILOConfig.InitPoolParams memory params = _getInitPoolParams();
         IILOPool iloPool = IILOPool(_initPool(PROJECT_OWNER, params));
         assertEq(iloPool.MANAGER(), address(iloManager));
-        assertEq(iloPool.RAISE_TOKEN(), USDT);
+        assertEq(iloPool.RAISE_TOKEN(), USDC);
         assertEq(iloPool.SALE_TOKEN(), SALE_TOKEN);
         assertEq(iloPool.TICK_LOWER(), MIN_TICK_500);
         assertEq(iloPool.TICK_UPPER(), -MIN_TICK_500);
@@ -25,7 +25,7 @@ contract ILOManagerTest is IntegrationTestBase {
 
     function testInitPoolNotOwner() external {
         vm.expectRevert("unauthorized");
-        _initPool(0x00000000000000000000000000000000DeaDBeef, _getInitPoolParams());
+        _initPool(DUMMY_ADDRESS, _getInitPoolParams());
     }
 
     function testInitPoolWrongInvestorVests() external {
