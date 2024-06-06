@@ -11,6 +11,7 @@ import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 import './interfaces/IILOPool.sol';
 import './interfaces/IILOManager.sol';
 import './libraries/PositionKey.sol';
+import './libraries/SqrtPriceMathPartial.sol';
 import './base/ILOSale.sol';
 import './base/ILOVest.sol';
 import './base/LiquidityManagement.sol';
@@ -420,23 +421,17 @@ contract ILOPool is
 
     /// @notice return sale token amount needed for the raiseAmount.
     /// @dev sale token amount is rounded up
-    function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256) {
+    function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256 saleAmountNeeded) {
         if (raiseAmount == 0) return 0;
-        return _poolKey().token0 == SALE_TOKEN
-                ? LiquidityAmounts.getInrangeAmount0ForAmount1(
-                    SQRT_RATIO_X96, 
-                    SQRT_RATIO_LOWER_X96, 
-                    SQRT_RATIO_UPPER_X96, 
-                    raiseAmount,
-                    true
-                )
-                : LiquidityAmounts.getInrangeAmount1ForAmount0(
-                    SQRT_RATIO_X96, 
-                    SQRT_RATIO_LOWER_X96, 
-                    SQRT_RATIO_UPPER_X96, 
-                    raiseAmount,
-                    true
-                );
+
+        if (_poolKey().token0 == SALE_TOKEN) {
+            // liquidity raised
+            uint128 liquidity1 = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, raiseAmount);
+            saleAmountNeeded = SqrtPriceMathPartial.getAmount0Delta(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, liquidity1, true);
+        } else {
+            uint128 liquidity0 = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, raiseAmount);
+            saleAmountNeeded = SqrtPriceMathPartial.getAmount1Delta(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, liquidity0, true);
+        }
     }
 
     /// @inheritdoc ILOVest
