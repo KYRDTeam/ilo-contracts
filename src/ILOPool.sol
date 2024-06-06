@@ -34,17 +34,6 @@ contract ILOPool is
     LiquidityManagement,
     PeripheryValidation
 {
-    // details about the uniswap position
-    struct Position {
-        // the liquidity of the position
-        uint128 liquidity;
-        // the fee growth of the aggregate position as of the last action on the individual position
-        uint256 feeGrowthInside0LastX128;
-        uint256 feeGrowthInside1LastX128;
-        
-        // the raise amount of position
-        uint256 raiseAmount;
-    }
 
     /// @dev when lauch successfully we can not refund anymore
     bool private _launchSucceeded;
@@ -177,11 +166,12 @@ contract ILOPool is
             _mint(recipient, (tokenId = _nextId++));
             _assignVestingSchedule(tokenId, _investorVestConfigs);
         } else {
-            tokenId = tokenOfOwnerByIndex(recipient, 1);
+            tokenId = tokenOfOwnerByIndex(recipient, 0);
         }
 
         Position storage _position = _positions[tokenId];
         require(raiseAmount <= saleInfo.maxCapPerUser - _position.raiseAmount);
+        _position.raiseAmount += raiseAmount;
 
         // get amount of liquidity associated with raise amount
         if (RAISE_TOKEN == _poolKey().token0) {
@@ -394,13 +384,14 @@ contract ILOPool is
     /// @inheritdoc IILOPool
     function claimRefund(uint256 tokenId) external override refundable() isAuthorizedForToken(tokenId) {
         uint256 refundAmount = _positions[tokenId].raiseAmount;
+        address tokenOwner = ownerOf(tokenId);
 
         delete _positions[tokenId];
         delete _positionVests[tokenId];
         _burn(tokenId);
-
-        TransferHelper.safeTransfer(RAISE_TOKEN, ownerOf(tokenId), refundAmount);
-        emit UserRefund(ownerOf(tokenId), refundAmount);
+        
+        TransferHelper.safeTransfer(RAISE_TOKEN, tokenOwner, refundAmount);
+        emit UserRefund(tokenOwner, refundAmount);
     }
 
     /// @inheritdoc IILOPool

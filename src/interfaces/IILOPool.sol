@@ -55,6 +55,18 @@ interface IILOPool is
     event UserRefund(address indexed user, uint256 raiseTokenAmount);
     event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
 
+    // details about the uniswap position
+    struct Position {
+        // the liquidity of the position
+        uint128 liquidity;
+        // the fee growth of the aggregate position as of the last action on the individual position
+        uint256 feeGrowthInside0LastX128;
+        uint256 feeGrowthInside1LastX128;
+        
+        // the raise amount of position
+        uint256 raiseAmount;
+    }
+
     /// @notice Returns the position information associated with a given token ID.
     /// @dev Throws if the token ID is not valid.
     /// @param tokenId The ID of the token that represents the position
