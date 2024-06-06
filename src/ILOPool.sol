@@ -85,8 +85,12 @@ contract ILOPool is
         _cachePoolKey(_project._cachedPoolKey);
         TICK_LOWER = params.tickLower;
         TICK_UPPER = params.tickUpper;
+        SQRT_RATIO_X96 = _project.initialPoolPriceX96;
         SQRT_RATIO_LOWER_X96 = TickMath.getSqrtRatioAtTick(TICK_LOWER);
         SQRT_RATIO_UPPER_X96 = TickMath.getSqrtRatioAtTick(TICK_UPPER);
+
+        require(SQRT_RATIO_LOWER_X96 < SQRT_RATIO_X96 && SQRT_RATIO_X96 < SQRT_RATIO_UPPER_X96);
+
         PLATFORM_FEE = _project.platformFee;
         PERFORMANCE_FEE = _project.performanceFee;
         INVESTOR_SHARES = _project.investorShares;

@@ -54,8 +54,11 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testBuy() external {
         _prepairBuy();
-        (uint256 tokenId,,,) = _buy(SALE_START+1, 0.1 ether);
+        (uint256 tokenId, uint128 liquidity, uint256 amountAdded0, uint256 amountAdded1) = _buy(SALE_START+1, 0.1 ether);
         assertGt(tokenId, 0);
+        assertEq(uint256(liquidity), 40000000000000000);
+        assertEq(amountAdded0, 79999999999999999);
+        assertEq(amountAdded1, 19999999999999999);
     }
 
     function _buy(uint64 buyTime, uint256 buyAmount) internal returns (
