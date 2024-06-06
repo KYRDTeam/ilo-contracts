@@ -219,9 +219,8 @@ contract ILOPool is
         // calculate amount of unlocked liquidity for the position
         uint128 liquidity2Claim = _claimableLiquidity(tokenId);
         IUniswapV3Pool pool = IUniswapV3Pool(_cachedUniV3PoolAddress);
+        Position storage position = _positions[tokenId];
         {
-            Position storage position = _positions[tokenId];
-
             uint128 positionLiquidity = position.liquidity;
             require(positionLiquidity >= liquidity2Claim);
 
