@@ -17,11 +17,14 @@ contract Mock {
     }
 
 
+    address constant DUMMY_ADDRESS = 0x00000000000000000000000000000000DeaDBeef;
     address constant DEV_RECIPIENT = 0x3C44CdDdB6a900fa2b585dd299e03d12FA4293BC; // anvil#3
     address constant TREASURY_RECIPIENT = 0x90F79bf6EB2c4f870365E785982E1f101E93b906; // anvil#4
     address constant LIQUIDITY_RECIPIENT = 0x15d34AAf54267DB7D7c367839AAf71A00a2C6A65; // anvil#5
     address constant PROJECT_OWNER = 0x9965507D1a55bcC2695C58ba16FB37d819B0A4dc; // anvil#6
-    address USDT = 0xdAC17F958D2ee523a2206206994597C13D831ec7;
+    address constant INVESTOR = 0x976EA74026E726554dB657fA54763abd0C3a0aa9; // anvil#7
+
+    address USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48;
     address SALE_TOKEN;
 
     uint64 constant SALE_START = 1717434000; // Mon Jun 03 2024 17:00:00 GMT+0000
@@ -36,7 +39,7 @@ contract Mock {
     function mockProject() internal view returns(Project memory) {
         return Project({
             saleToken: SALE_TOKEN, 
-            raiseToken: USDT,
+            raiseToken: USDC,
             fee: 500,
             initialPoolPriceX96: 39614081257132168796771975168, 
             launchTime: LAUNCH_START, // Wed Jun 05 2024 17:00:00 GMT+0000

@@ -3,52 +3,55 @@
 pragma solidity =0.7.6;
 
 import '@openzeppelin/contracts/utils/EnumerableSet.sol';
+import '../interfaces/IILOWhitelist.sol';
 
-abstract contract ILOWhitelist {
-    event SetWhitelist(address indexed user, bool isWhitelist);
-    event SetOpenToAll(bool openToAll);
-
+abstract contract ILOWhitelist is IILOWhitelist {
     bool private _openToAll;
 
-    modifier onlyWhitelisted(address user) {
-        require(_openToAll || EnumerableSet.contains(_whitelisted, user));
-        _;
+    /// @inheritdoc IILOWhitelist
+    function setOpenToAll(bool openToAll) external override onlyProjectAdmin{
+        _setOpenToAll(openToAll);
     }
 
-    EnumerableSet.AddressSet private _whitelisted;
-    
-    function setOpenToAll(bool openToAll) external {
-        _openToAll = openToAll;
-        emit SetOpenToAll(openToAll);
-    }
-
-    function isOpenToAll() external view returns(bool) {
+    /// @inheritdoc IILOWhitelist
+    function isOpenToAll() external override view returns(bool) {
         return _openToAll;
     }
 
-    /// @notice check if the address is whitelisted
-    function isWhitelisted(address user) external view returns (bool) {
+    /// @inheritdoc IILOWhitelist
+    function isWhitelisted(address user) external override view returns (bool) {
         return EnumerableSet.contains(_whitelisted, user);
     }
 
-    function setWhitelist(address user) external {
+    /// @inheritdoc IILOWhitelist
+    function setWhitelist(address user) external override onlyProjectAdmin{
         _setWhitelist(user);
     }
 
-    function removeWhitelist(address user) external {
+    /// @inheritdoc IILOWhitelist
+    function removeWhitelist(address user) external override onlyProjectAdmin{
         _removeWhitelist(user);
     }
 
-    function batchWhitelist(address[] calldata users) external {
+    /// @inheritdoc IILOWhitelist
+    function batchWhitelist(address[] calldata users) external override onlyProjectAdmin{
         for (uint256 i = 0; i < users.length; i++) {
             _setWhitelist(users[i]);
         }
     }
 
-    function batchRemoveWhitelist(address[] calldata users) external {
+    /// @inheritdoc IILOWhitelist
+    function batchRemoveWhitelist(address[] calldata users) external override onlyProjectAdmin{
         for (uint256 i = 0; i < users.length; i++) {
             _removeWhitelist(users[i]);
         }
+    }
+
+    EnumerableSet.AddressSet private _whitelisted;
+
+    function _setOpenToAll(bool openToAll) internal {
+        _openToAll = openToAll;
+        emit SetOpenToAll(openToAll);
     }
 
     function _removeWhitelist(address user) internal {
@@ -60,4 +63,10 @@ abstract contract ILOWhitelist {
         EnumerableSet.add(_whitelisted, user);
         emit SetWhitelist(user, true);
     }
+
+    modifier onlyWhitelisted(address user) {
+        require(_openToAll || EnumerableSet.contains(_whitelisted, user));
+        _;
+    }
+    modifier onlyProjectAdmin virtual;
 }

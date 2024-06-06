@@ -58,7 +58,7 @@ contract ILOPool is
     mapping(uint256 => Position) private _positions;
 
     /// @dev The ID of the next token that will be minted. Skips 0
-    uint256 private _nextId = 1;
+    uint256 private _nextId;
     uint256 totalRaised;
     constructor() ERC721('KRYSTAL ILOPool V1', 'KRYSTAL-ILO-V1') {
         _disableInitialize();
@@ -73,6 +73,7 @@ contract ILOPool is
     }
 
     function initialize(InitPoolParams calldata params) external override whenNotInitialized() {
+        _nextId = 1;
         // initialize imutable state
         MANAGER = msg.sender;
         IILOManager.Project memory _project = IILOManager(MANAGER).project(params.uniV3Pool);
@@ -184,6 +185,8 @@ contract ILOPool is
         } else {
             liquidityDelta = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, raiseAmount);
         }
+
+        require(liquidityDelta > 0);
 
         // calculate amount of share liquidity investor recieve by INVESTOR_SHARES config
         liquidityDelta = uint128(FullMath.mulDiv(liquidityDelta, INVESTOR_SHARES, BPS));
@@ -490,4 +493,11 @@ contract ILOPool is
         uint128 liquidityUnlocked = _unlockedLiquidity(tokenId);
         return liquidityClaimed < liquidityUnlocked ? liquidityUnlocked - liquidityClaimed : 0;
     }
+
+    modifier onlyProjectAdmin() override {
+        IILOManager.Project memory _project = IILOManager(MANAGER).project(_uniV3PoolAddress());
+        require(msg.sender == _project.admin);
+        _;
+    }
+
 }
