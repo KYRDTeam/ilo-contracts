@@ -20,8 +20,6 @@ import './base/Initializable.sol';
 import './base/Multicall.sol';
 import "./base/ILOWhitelist.sol";
 
-import "forge-std/console.sol";
-
 /// @title NFT positions
 /// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
 contract ILOPool is
@@ -435,11 +433,35 @@ contract ILOPool is
     /// @inheritdoc ILOVest
     function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 liquidityUnlocked) {
         PositionVest storage _positionVest = _positionVests[tokenId];
-        liquidityUnlocked = uint128(FullMath.mulDiv(
-                _positionVest.totalLiquidity,
-                _unlockedSharesBPS(_positionVest.schedule), 
-                BPS
-            ));
+        LinearVest[] storage vestingSchedule = _positionVest.schedule;
+        uint128 totalLiquidity = _positionVest.totalLiquidity;
+
+        for (uint256 index = 0; index < vestingSchedule.length; index++) {
+
+            LinearVest storage vest = vestingSchedule[index];
+
+            // if vest is not started, skip this vest and all following vest
+            if (block.timestamp < vest.start) {
+                break;
+            }
+
+            // if vest already end, all the shares are unlocked
+            // otherwise we calculate percentage of unlocked times and get the unlocked share number
+            // all vest after current unlocking vest is ignored
+            if (vest.end < block.timestamp) {
+                liquidityUnlocked += uint128(FullMath.mulDiv(
+                    vest.percentage, 
+                    totalLiquidity, 
+                    BPS
+                ));
+            } else {
+                liquidityUnlocked += uint128(FullMath.mulDiv(
+                    vest.percentage * totalLiquidity, 
+                    block.timestamp - vest.start, 
+                    (vest.end - vest.start) * BPS
+                ));
+            }
+        }
     }
 
     /// @notice assign vesting schedule for position

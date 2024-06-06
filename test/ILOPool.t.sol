@@ -215,4 +215,22 @@ contract ILOPoolTest is IntegrationTestBase {
         vm.prank(investor);
         return IILOPool(iloPool).buy(buyAmount, investor);
     }
+
+    function testClaim() external {
+        _launch();
+        uint256 tokenId = IILOPool(iloPool).tokenOfOwnerByIndex(INVESTOR, 0);
+
+        uint256 balance0Before = IERC20(USDC).balanceOf(INVESTOR);
+        uint256 balance1Before = IERC20(SALE_TOKEN).balanceOf(INVESTOR);
+
+        vm.prank(INVESTOR);
+        vm.warp(VEST_START_0 + 10);
+        IILOPool(iloPool).claim(tokenId);
+
+        uint256 balance0After = IERC20(USDC).balanceOf(INVESTOR);
+        uint256 balance1After = IERC20(SALE_TOKEN).balanceOf(INVESTOR);
+
+        // int(50000*0.2*0.3*10/86400*10**18)
+        assertEq(balance0After - balance0Before, 346874999999999999);
+    }
 }
