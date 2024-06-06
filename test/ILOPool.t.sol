@@ -16,7 +16,26 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function testBuyNoWhitelist() external {
+        vm.prank(DUMMY_ADDRESS);
+        IERC20(USDC).approve(iloPool, 1000000000 ether);
+        _writeTokenBalance(USDC, DUMMY_ADDRESS, 10 ether);
+
         vm.expectRevert();
+        IILOPool(iloPool).buy(0.1 ether, DUMMY_ADDRESS);
+    }
+
+    function testBuyOpenToAll() external {
+        vm.prank(PROJECT_OWNER);
+        IILOWhitelist(iloPool).setOpenToAll(true);
+        assertEq(IILOWhitelist(iloPool).isOpenToAll(), true);
+
+        vm.prank(DUMMY_ADDRESS);
+        IERC20(USDC).approve(iloPool, 1000000000 ether);
+
+        _writeTokenBalance(USDC, DUMMY_ADDRESS, 10 ether);
+
+        vm.prank(DUMMY_ADDRESS);
+        vm.warp(SALE_START+1);
         IILOPool(iloPool).buy(0.1 ether, DUMMY_ADDRESS);
     }
 
@@ -48,19 +67,19 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function testBuyBeforeSale() external {
-        _prepairBuy();
+        _prepareBuy();
         vm.expectRevert();
         _buy(SALE_START-1, 0.1 ether);
     }
 
     function testBuyAfterSale() external {
-        _prepairBuy();
+        _prepareBuy();
         vm.expectRevert();
         _buy(SALE_END+1, 0.1 ether);
     }
 
     function testBuy() external {
-        _prepairBuy();
+        _prepareBuy();
         uint256 balanceBefore = IERC20(USDC).balanceOf(iloPool);
         
         (uint256 tokenId, uint128 liquidity, uint256 amountAdded0, uint256 amountAdded1) = _buy(SALE_START+1, 0.1 ether);
@@ -98,9 +117,9 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function _launch() internal {
-        _prepairBuyFor(INVESTOR);
+        _prepareBuyFor(INVESTOR);
         _buyFor(INVESTOR, SALE_START+1, 50000 ether);
-        _prepairBuyFor(INVESTOR_2);
+        _prepareBuyFor(INVESTOR_2);
         _buyFor(INVESTOR_2, SALE_START+1, 40000 ether);
         _writeTokenBalance(SALE_TOKEN, iloPool, 95000 * 4 ether);
         // required saleTokenAmount = 360000000000000000029277
@@ -127,9 +146,9 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function testLaunchAfterRefund() external {
-        _prepairBuyFor(INVESTOR);
+        _prepareBuyFor(INVESTOR);
         _buyFor(INVESTOR, SALE_START+1, 50000 ether);
-        _prepairBuyFor(INVESTOR_2);
+        _prepareBuyFor(INVESTOR_2);
         _buyFor(INVESTOR_2, SALE_START+1, 40000 ether);
         _writeTokenBalance(SALE_TOKEN, iloPool, 95000 * 4 ether);
 
@@ -145,7 +164,7 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function testRefundBeforeRefundDeadline() external {
-        _prepairBuy();
+        _prepareBuy();
         (uint256 tokenId,,,) = _buy(SALE_START+1, 0.1 ether);
 
         vm.prank(INVESTOR);
@@ -155,7 +174,7 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function testRefund() external {
-        _prepairBuy();
+        _prepareBuy();
         (uint256 tokenId,,,) = _buy(SALE_START+1, 0.1 ether);
 
         uint256 balanceBefore = IERC20(USDC).balanceOf(INVESTOR);
@@ -169,7 +188,7 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function testRefundTwice() external {
-        _prepairBuy();
+        _prepareBuy();
         (uint256 tokenId,,,) = _buy(SALE_START+1, 0.1 ether);
         console.logUint(tokenId);
         vm.prank(INVESTOR);
@@ -190,11 +209,11 @@ contract ILOPoolTest is IntegrationTestBase {
         return _buyFor(INVESTOR, buyTime, buyAmount);
     }
 
-    function _prepairBuy() internal {
-        _prepairBuyFor(INVESTOR);
+    function _prepareBuy() internal {
+        _prepareBuyFor(INVESTOR);
     }
 
-    function _prepairBuyFor(address investor) internal {
+    function _prepareBuyFor(address investor) internal {
         vm.prank(PROJECT_OWNER);
         IILOWhitelist(iloPool).setWhitelist(investor);
 
