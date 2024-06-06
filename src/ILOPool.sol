@@ -20,6 +20,8 @@ import './base/Multicall.sol';
 import './base/PeripheryValidation.sol';
 import "./base/ILOWhitelist.sol";
 
+import "forge-std/console.sol";
+
 /// @title NFT positions
 /// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
 contract ILOPool is
@@ -315,9 +317,12 @@ contract ILOPool is
             uint256 amount1Min;
             uint256 token0;
             uint256 token1;
+            address token0Addr = _poolKey().token0;
+            address token1Addr = _poolKey().token1;
+            address uniV3PoolAddress = _uniV3PoolAddress();
 
             // calculate sale amount of tokens needed for launching pool
-            if (_poolKey().token0 == RAISE_TOKEN) {
+            if (token0Addr == RAISE_TOKEN) {
                 amount0Desired = totalRaised;
                 amount0Min = totalRaised;
                 amount1Desired = _saleAmountNeeded(totalRaised);
@@ -342,7 +347,8 @@ contract ILOPool is
         IILOManager.Project memory _project = IILOManager(MANAGER).project(_uniV3PoolAddress());
 
         // assigning vests for the project configuration
-        for (uint256 index = 0; index < _project.projectVestConfigs.length; index++) {
+        uint256 vestConfigsLength = _project.projectVestConfigs.length;
+        for (uint256 index = 0; index < vestConfigsLength; index++) {
             uint256 tokenId;
             IILOManager.ProjectVestConfig memory projectConfig = _project.projectVestConfigs[index];
             // mint nft for recipient
