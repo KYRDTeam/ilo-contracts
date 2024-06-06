@@ -12,3 +12,12 @@ out/
 
 # Dotenv file
 .env
+
+node_modules
+# Hardhat files
+/cache
+/artifacts
+
+# TypeChain files
+/typechain
+/typechain-types
