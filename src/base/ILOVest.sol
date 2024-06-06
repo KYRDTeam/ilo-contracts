@@ -5,8 +5,6 @@ pragma solidity =0.7.6;
 import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 import '../interfaces/IILOConfig.sol';
 
-import "forge-std/console.sol";
-
 abstract contract ILOVest is IILOConfig {
     struct PositionVest {
         uint128 totalLiquidity;

@@ -95,11 +95,6 @@ interface IILOPool is
     /// @notice Returns number of collected tokens associated with a given token ID.
     function claim(uint256 tokenId) external payable returns (uint256 amount0, uint256 amount1);
 
-    /// @notice Burns a token ID, which deletes it from the NFT contract. The token must have 0 liquidity and all tokens
-    /// must be collected first.
-    /// @param tokenId The ID of the token that is being burned
-    function burn(uint256 tokenId) external payable;
-
     function initialize(InitPoolParams calldata initPoolParams) external;
 
     function launch() external;

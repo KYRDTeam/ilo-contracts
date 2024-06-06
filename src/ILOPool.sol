@@ -48,7 +48,7 @@ contract ILOPool is
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId;
     uint256 totalRaised;
-    constructor() ERC721('KRYSTAL ILOPool V1', 'KRYSTAL-ILO-V1') {
+    constructor() ERC721('', '') {
         _disableInitialize();
     }
 
@@ -69,15 +69,13 @@ contract ILOPool is
         WETH9 = IILOManager(MANAGER).WETH9();
         RAISE_TOKEN = _project.raiseToken;
         SALE_TOKEN = _project.saleToken;
-        _cacheUniV3PoolAddress(params.uniV3Pool);
-        _cachePoolKey(_project._cachedPoolKey);
+        _cachedUniV3PoolAddress = params.uniV3Pool;
+        _cachedPoolKey = _project._cachedPoolKey;
         TICK_LOWER = params.tickLower;
         TICK_UPPER = params.tickUpper;
         SQRT_RATIO_X96 = _project.initialPoolPriceX96;
         SQRT_RATIO_LOWER_X96 = TickMath.getSqrtRatioAtTick(TICK_LOWER);
         SQRT_RATIO_UPPER_X96 = TickMath.getSqrtRatioAtTick(TICK_UPPER);
-
-        require(SQRT_RATIO_LOWER_X96 < SQRT_RATIO_X96 && SQRT_RATIO_X96 < SQRT_RATIO_UPPER_X96);
 
         PLATFORM_FEE = _project.platformFee;
         PERFORMANCE_FEE = _project.performanceFee;
@@ -130,9 +128,9 @@ contract ILOPool is
     {
         Position memory position = _positions[tokenId];
         return (
-            _poolKey().token0,
-            _poolKey().token1,
-            _poolKey().fee,
+            _cachedPoolKey.token0,
+            _cachedPoolKey.token1,
+            _cachedPoolKey.fee,
             TICK_LOWER,
             TICK_UPPER,
             position.liquidity,
@@ -173,7 +171,7 @@ contract ILOPool is
         _position.raiseAmount += raiseAmount;
 
         // get amount of liquidity associated with raise amount
-        if (RAISE_TOKEN == _poolKey().token0) {
+        if (RAISE_TOKEN == _cachedPoolKey.token0) {
             liquidityDelta = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, raiseAmount);
         } else {
             liquidityDelta = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, raiseAmount);
@@ -220,7 +218,7 @@ contract ILOPool is
 
         // calculate amount of unlocked liquidity for the position
         uint128 liquidity2Claim = _claimableLiquidity(tokenId);
-        IUniswapV3Pool pool = IUniswapV3Pool(_uniV3PoolAddress());
+        IUniswapV3Pool pool = IUniswapV3Pool(_cachedUniV3PoolAddress);
         {
             Position storage position = _positions[tokenId];
 
@@ -275,23 +273,15 @@ contract ILOPool is
         emit Collect(tokenId, address(this), amountCollected0, amountCollected1);
 
         // transfer token for user
-        TransferHelper.safeTransfer(_poolKey().token0, ownerOf(tokenId), amount0);
-        TransferHelper.safeTransfer(_poolKey().token1, ownerOf(tokenId), amount1);
+        TransferHelper.safeTransfer(_cachedPoolKey.token0, ownerOf(tokenId), amount0);
+        TransferHelper.safeTransfer(_cachedPoolKey.token1, ownerOf(tokenId), amount1);
 
         emit Claim(ownerOf(tokenId), liquidity2Claim, amount0, amount1);
 
         address feeTaker = IILOManager(MANAGER).feeTaker();
         // transfer fee to fee taker
-        TransferHelper.safeTransfer(_poolKey().token0, feeTaker, amountCollected0-amount0);
-        TransferHelper.safeTransfer(_poolKey().token1, feeTaker, amountCollected1-amount1);
-    }
-
-    /// @inheritdoc IILOPool
-    function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId) {
-        Position storage position = _positions[tokenId];
-        require(position.liquidity == 0, 'Not cleared');
-        delete _positions[tokenId];
-        _burn(tokenId);
+        TransferHelper.safeTransfer(_cachedPoolKey.token0, feeTaker, amountCollected0-amount0);
+        TransferHelper.safeTransfer(_cachedPoolKey.token1, feeTaker, amountCollected1-amount1);
     }
 
     modifier OnlyManager() {
@@ -300,48 +290,45 @@ contract ILOPool is
     }
 
     /// @inheritdoc IILOPool
-    function launch() external override afterSale() OnlyManager() {
+    function launch() external override OnlyManager() {
         require(!_launchSucceeded);
         // when refund triggered, we can not launch pool anymore
         require(!_refundTriggered);
         // make sure that soft cap requirement match
         require(totalRaised >= saleInfo.softCap);
         uint128 liquidity;
+        address uniV3PoolAddress = _cachedUniV3PoolAddress;
         {
-            uint256 amount0Desired;
-            uint256 amount1Desired;
+            uint256 amount0;
+            uint256 amount1;
             uint256 amount0Min;
             uint256 amount1Min;
-            uint256 token0;
-            uint256 token1;
-            address token0Addr = _poolKey().token0;
-            address token1Addr = _poolKey().token1;
-            address uniV3PoolAddress = _uniV3PoolAddress();
+            address token0Addr = _cachedPoolKey.token0;
 
             // calculate sale amount of tokens needed for launching pool
             if (token0Addr == RAISE_TOKEN) {
-                amount0Desired = totalRaised;
+                amount0 = totalRaised;
                 amount0Min = totalRaised;
-                amount1Desired = _saleAmountNeeded(totalRaised);
+                amount1 = _saleAmountNeeded(totalRaised);
             } else {
-                amount0Desired = _saleAmountNeeded(totalRaised);
-                amount1Desired = totalRaised;
+                amount0 = _saleAmountNeeded(totalRaised);
+                amount1 = totalRaised;
                 amount1Min = totalRaised;
             }
 
             // actually deploy liquidity to uniswap pool
-            (liquidity, token0, token1) = addLiquidity(AddLiquidityParams({
-                pool: IUniswapV3Pool(_uniV3PoolAddress()),
-                amount0Desired: amount0Desired,
-                amount1Desired: amount1Desired,
+            (liquidity, amount0, amount1) = addLiquidity(AddLiquidityParams({
+                pool: IUniswapV3Pool(uniV3PoolAddress),
+                amount0Desired: amount0,
+                amount1Desired: amount1,
                 amount0Min: amount0Min,
                 amount1Min: amount1Min
             }));
 
-            emit PoolLaunch(_uniV3PoolAddress(), liquidity, token0, token1);
+            emit PoolLaunch(uniV3PoolAddress, liquidity, amount0, amount1);
         }
 
-        IILOManager.Project memory _project = IILOManager(MANAGER).project(_uniV3PoolAddress());
+        IILOManager.Project memory _project = IILOManager(MANAGER).project(uniV3PoolAddress);
 
         // assigning vests for the project configuration
         uint256 vestConfigsLength = _project.projectVestConfigs.length;
@@ -376,7 +363,7 @@ contract ILOPool is
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
             require(!_launchSucceeded);
-            IILOManager.Project memory _project = IILOManager(MANAGER).project(_uniV3PoolAddress());
+            IILOManager.Project memory _project = IILOManager(MANAGER).project(_cachedUniV3PoolAddress);
             require(block.timestamp >= _project.refundDeadline);
 
             _refundTriggered = true;
@@ -420,7 +407,7 @@ contract ILOPool is
     function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256 saleAmountNeeded) {
         if (raiseAmount == 0) return 0;
 
-        if (_poolKey().token0 == SALE_TOKEN) {
+        if (_cachedPoolKey.token0 == SALE_TOKEN) {
             // liquidity raised
             uint128 liquidity1 = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, raiseAmount);
             saleAmountNeeded = SqrtPriceMathPartial.getAmount0Delta(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, liquidity1, true);
@@ -489,7 +476,8 @@ contract ILOPool is
         amount1Left = amount1 - FullMath.mulDiv(amount1, feeBPS, BPS);
     }
 
-    function unlockedLiquidity(uint256 tokenId) external view returns(uint128) {
+    /// @inheritdoc IILOVest
+    function unlockedLiquidity(uint256 tokenId) external view override returns(uint128) {
         return _unlockedLiquidity(tokenId);
     }
 
@@ -511,7 +499,7 @@ contract ILOPool is
     }
 
     modifier onlyProjectAdmin() override {
-        IILOManager.Project memory _project = IILOManager(MANAGER).project(_uniV3PoolAddress());
+        IILOManager.Project memory _project = IILOManager(MANAGER).project(_cachedUniV3PoolAddress);
         require(msg.sender == _project.admin);
         _;
     }

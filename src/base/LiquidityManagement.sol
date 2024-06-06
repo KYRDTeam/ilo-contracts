@@ -23,10 +23,10 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, ILOPoolImmutabl
         uint256 amount1Owed,
         bytes calldata data
     ) external override {
-        require(msg.sender == _uniV3PoolAddress());
+        require(msg.sender == _cachedUniV3PoolAddress);
 
-        if (amount0Owed > 0) pay(_poolKey().token0, address(this), msg.sender, amount0Owed);
-        if (amount1Owed > 0) pay(_poolKey().token1, address(this), msg.sender, amount1Owed);
+        if (amount0Owed > 0) pay(_cachedPoolKey.token0, address(this), msg.sender, amount0Owed);
+        if (amount1Owed > 0) pay(_cachedPoolKey.token1, address(this), msg.sender, amount1Owed);
     }
 
     struct AddLiquidityParams {

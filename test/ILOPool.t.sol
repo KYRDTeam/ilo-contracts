@@ -6,6 +6,7 @@ pragma abicoder v2;
 import "./IntegrationTestBase.sol";
 import '../src/interfaces/IILOPool.sol';
 import '../src/interfaces/IILOWhitelist.sol';
+import '../src/interfaces/IILOVest.sol';
 
 
 contract ILOPoolTest is IntegrationTestBase {
@@ -237,13 +238,17 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testClaim() external {
         _launch();
+        vm.warp(VEST_START_0 + 10);
         uint256 tokenId = IILOPool(iloPool).tokenOfOwnerByIndex(INVESTOR, 0);
+
+        assertEq(uint256(IILOVest(iloPool).unlockedLiquidity(tokenId)), 694444444444444444);
+        assertEq(uint256(IILOVest(iloPool).claimableLiquidity(tokenId)), 694444444444444444);
+        assertEq(uint256(IILOVest(iloPool).claimedLiquidity(tokenId)), 0);
 
         uint256 balance0Before = IERC20(USDC).balanceOf(INVESTOR);
         uint256 balance1Before = IERC20(SALE_TOKEN).balanceOf(INVESTOR);
 
         vm.prank(INVESTOR);
-        vm.warp(VEST_START_0 + 10);
         IILOPool(iloPool).claim(tokenId);
 
         uint256 balance0After = IERC20(USDC).balanceOf(INVESTOR);
