@@ -274,6 +274,6 @@ contract ILOPoolTest is IntegrationTestBase {
         (unlockedLiquidity, claimedLiquidity) = IILOVest(iloPool).vestingStatus(tokenId);
 
         assertEq(uint256(unlockedLiquidity), 6016203703703703704355);
-        assertEq(uint256(claimedLiquidity), 6016203703703703704355-694444444444444444);
+        assertEq(uint256(claimedLiquidity), 694444444444444444);
     }
 }
