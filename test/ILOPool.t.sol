@@ -101,14 +101,12 @@ contract ILOPoolTest is IntegrationTestBase {
         _prepareBuy();
         uint256 balanceBefore = IERC20(USDC).balanceOf(iloPool);
         
-        (uint256 tokenId, uint128 liquidity, uint256 amountAdded0, uint256 amountAdded1) = _buy(SALE_START+1, 0.1 ether);
+        (uint256 tokenId, uint128 liquidity) = _buy(SALE_START+1, 0.1 ether);
         
         uint256 balanceAfter = IERC20(USDC).balanceOf(iloPool);
 
         assertGt(tokenId, 0);
         assertEq(uint256(liquidity), 40000000000000000);
-        assertEq(amountAdded0, 19999999999999999);
-        assertEq(amountAdded1, 79999999999999999);
         assertEq(balanceAfter - balanceBefore, 0.1 ether);
 
         (uint128 _liquidity,,,) = IILOPool(iloPool).positions(tokenId);
@@ -178,7 +176,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testRefundBeforeRefundDeadline() external {
         _prepareBuy();
-        (uint256 tokenId,,,) = _buy(SALE_START+1, 0.1 ether);
+        (uint256 tokenId,) = _buy(SALE_START+1, 0.1 ether);
 
         vm.prank(INVESTOR);
         vm.warp(LAUNCH_START + 86400*7 - 1);
@@ -188,7 +186,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testRefund() external {
         _prepareBuy();
-        (uint256 tokenId,,,) = _buy(SALE_START+1, 0.1 ether);
+        (uint256 tokenId,) = _buy(SALE_START+1, 0.1 ether);
 
         uint256 balanceBefore = IERC20(USDC).balanceOf(INVESTOR);
 
@@ -202,7 +200,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testRefundTwice() external {
         _prepareBuy();
-        (uint256 tokenId,,,) = _buy(SALE_START+1, 0.1 ether);
+        (uint256 tokenId,) = _buy(SALE_START+1, 0.1 ether);
         console.logUint(tokenId);
         vm.prank(INVESTOR);
         vm.warp(LAUNCH_START + 86400*7 + 1);
@@ -215,9 +213,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function _buy(uint64 buyTime, uint256 buyAmount) internal returns (
             uint256 tokenId,
-            uint128 liquidity,
-            uint256 amountAdded0,
-            uint256 amountAdded1
+            uint128 liquidity
     ) {
         return _buyFor(INVESTOR, buyTime, buyAmount);
     }
@@ -239,9 +235,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function _buyFor(address investor, uint64 buyTime, uint256 buyAmount) internal returns (
             uint256 tokenId,
-            uint128 liquidity,
-            uint256 amountAdded0,
-            uint256 amountAdded1
+            uint128 liquidity
     ) {
         vm.warp(buyTime);
         vm.prank(investor);
