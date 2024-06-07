@@ -93,3 +93,26 @@ function claim(uint256 tokenId) external payable returns (uint256 amount0, uint2
 function launch(address uniV3PoolAddress);
 ```
 
+# ERROR:
+|  Code	|   Description	           |
+|---	|---	                   |
+|   UA	| Unauthorized             |
+|   NI	| Not initialized          |
+|   RE	| Re-initialize            |
+|   PT	| Invalid Pool Time        |
+|   VT	| Invalid Vest Time        |
+|   LT	| Invalid Launch Time      |
+|   ST	| Invalid Sale Time        |
+|   RFT	| Invalid Refund Time      |
+|   TS	| Invalid Total Shares     |
+|   VS	| Invalid Vest Shares      |
+|   NP	| No Pools                 |
+|  UV3P	| Invalid Uni V3 Pool      |
+|   HC	| Over Hard Cap            |
+|   UC	| Over User Cap            |
+|   SC	| Soft cap not met         |
+|   SA	| Over Sale Amount         |
+|   ZA	| Zero Buy Amount          |
+|  PNL	| Pool Not Launched        |
+|  PL	| Pool Launched            |
+|  IRF	| Pool In Refund state     |

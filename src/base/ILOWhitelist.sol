@@ -65,7 +65,7 @@ abstract contract ILOWhitelist is IILOWhitelist {
     }
 
     modifier onlyWhitelisted(address user) {
-        require(_openToAll || EnumerableSet.contains(_whitelisted, user));
+        require(_openToAll || EnumerableSet.contains(_whitelisted, user), "UA");
         _;
     }
     modifier onlyProjectAdmin virtual;

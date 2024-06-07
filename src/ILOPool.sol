@@ -143,10 +143,10 @@ contract ILOPool is
         )
     {
         // check if raise amount over capacity
-        require(saleInfo.hardCap - totalRaised >= raiseAmount);
+        require(saleInfo.hardCap - totalRaised >= raiseAmount, "HC");
         totalRaised += raiseAmount;
 
-        require(_saleAmountNeeded(totalRaised) <= saleInfo.maxSaleAmount);
+        require(_saleAmountNeeded(totalRaised) <= saleInfo.maxSaleAmount, "SA");
 
         // if investor already have a position, just increase raise amount and liquidity
         // otherwise, mint new nft for investor and assign vesting schedules
@@ -158,7 +158,7 @@ contract ILOPool is
         }
 
         Position storage _position = _positions[tokenId];
-        require(raiseAmount <= saleInfo.maxCapPerUser - _position.raiseAmount);
+        require(raiseAmount <= saleInfo.maxCapPerUser - _position.raiseAmount, "UC");
         _position.raiseAmount += raiseAmount;
 
         // get amount of liquidity associated with raise amount
@@ -168,7 +168,7 @@ contract ILOPool is
             liquidityDelta = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, raiseAmount);
         }
 
-        require(liquidityDelta > 0);
+        require(liquidityDelta > 0, "ZA");
 
         // calculate amount of share liquidity investor recieve by INVESTOR_SHARES config
         liquidityDelta = uint128(FullMath.mulDiv(liquidityDelta, INVESTOR_SHARES, BPS));
@@ -192,7 +192,7 @@ contract ILOPool is
     }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
-        require(_isApprovedOrOwner(msg.sender, tokenId), 'Not approved');
+        require(_isApprovedOrOwner(msg.sender, tokenId), 'UA');
         _;
     }
 
@@ -205,7 +205,7 @@ contract ILOPool is
         returns (uint256 amount0, uint256 amount1)
     {
         // only can claim if the launch is successfully
-        require(_launchSucceeded);
+        require(_launchSucceeded, "PNL");
 
         // calculate amount of unlocked liquidity for the position
         uint128 liquidity2Claim = _claimableLiquidity(tokenId);
@@ -275,17 +275,17 @@ contract ILOPool is
     }
 
     modifier OnlyManager() {
-        require(msg.sender == MANAGER);
+        require(msg.sender == MANAGER, "UA");
         _;
     }
 
     /// @inheritdoc IILOPool
     function launch() external override OnlyManager() {
-        require(!_launchSucceeded);
+        require(!_launchSucceeded, "PL");
         // when refund triggered, we can not launch pool anymore
-        require(!_refundTriggered);
+        require(!_refundTriggered, "IRF");
         // make sure that soft cap requirement match
-        require(totalRaised >= saleInfo.softCap);
+        require(totalRaised >= saleInfo.softCap, "SC");
         uint128 liquidity;
         address uniV3PoolAddress = _cachedUniV3PoolAddress;
         {
@@ -351,9 +351,9 @@ contract ILOPool is
     modifier refundable() {
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
-            require(!_launchSucceeded);
+            require(!_launchSucceeded, "PL");
             IILOManager.Project memory _project = IILOManager(MANAGER).project(_cachedUniV3PoolAddress);
-            require(block.timestamp >= _project.refundDeadline);
+            require(block.timestamp >= _project.refundDeadline, "RFT");
 
             _refundTriggered = true;
         }
@@ -478,7 +478,7 @@ contract ILOPool is
 
     modifier onlyProjectAdmin() override {
         IILOManager.Project memory _project = IILOManager(MANAGER).project(_cachedUniV3PoolAddress);
-        require(msg.sender == _project.admin);
+        require(msg.sender == _project.admin, "UA");
         _;
     }
 

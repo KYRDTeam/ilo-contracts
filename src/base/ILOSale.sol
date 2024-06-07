@@ -9,7 +9,7 @@ abstract contract ILOSale is IILOSale {
     SaleInfo saleInfo;
 
     modifier duringSale {
-        require(block.timestamp > saleInfo.start && block.timestamp < saleInfo.end);
+        require(block.timestamp > saleInfo.start && block.timestamp < saleInfo.end, "ST");
         _;
     }
 }

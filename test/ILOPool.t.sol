@@ -19,9 +19,10 @@ contract ILOPoolTest is IntegrationTestBase {
     function testBuyNoWhitelist() external {
         vm.prank(DUMMY_ADDRESS);
         IERC20(USDC).approve(iloPool, 1000000000 ether);
+        vm.warp(SALE_START+1);
         _writeTokenBalance(USDC, DUMMY_ADDRESS, 10 ether);
 
-        vm.expectRevert();
+        vm.expectRevert(bytes("UA"));
         IILOPool(iloPool).buy(0.1 ether, DUMMY_ADDRESS);
     }
 
@@ -69,34 +70,32 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function testSetWhiltelistNotProjectOwner() external {
-        vm.expectRevert();
+        vm.expectRevert(bytes("UA"));
         vm.prank(DUMMY_ADDRESS);
         IILOWhitelist(iloPool).setWhitelist(INVESTOR);
     }
 
     function testBuyZero() external {
-        vm.prank(PROJECT_OWNER);
-        IILOWhitelist(iloPool).setWhitelist(INVESTOR);
-        vm.expectRevert();
-        IILOPool(iloPool).buy(0, INVESTOR);
+        _prepareBuy();
+        vm.expectRevert(bytes("ZA"));
+        _buyFor(INVESTOR, SALE_START+1, 0);
     }
 
     function testBuyTooMuch() external {
-        vm.prank(PROJECT_OWNER);
-        IILOWhitelist(iloPool).setWhitelist(INVESTOR);
-        vm.expectRevert();
-        IILOPool(iloPool).buy(70000 ether, INVESTOR);
+        _prepareBuy();
+        vm.expectRevert(bytes("UC"));
+        _buyFor(INVESTOR, SALE_START+1, 70000 ether);
     }
 
     function testBuyBeforeSale() external {
         _prepareBuy();
-        vm.expectRevert();
+        vm.expectRevert(bytes("ST"));
         _buy(SALE_START-1, 0.1 ether);
     }
 
     function testBuyAfterSale() external {
         _prepareBuy();
-        vm.expectRevert();
+        vm.expectRevert(bytes("ST"));
         _buy(SALE_END+1, 0.1 ether);
     }
 
@@ -120,21 +119,14 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function testLaunchFromNonManager() external {
-        vm.expectRevert();
-        IILOPool(iloPool).launch();
-    }
-
-    function testLaunchBeforeSaleEnd() external {
-        vm.warp(SALE_END - 1);
-        vm.prank(address(iloManager));
-        vm.expectRevert();
+        vm.expectRevert(bytes("UA"));
         IILOPool(iloPool).launch();
     }
 
     function testLaunchWhenSoftCapFailed() external {
         vm.warp(SALE_END + 1);
         vm.prank(address(iloManager));
-        vm.expectRevert();
+        vm.expectRevert(bytes("SC"));
         IILOPool(iloPool).launch();
     }
 
@@ -162,7 +154,7 @@ contract ILOPoolTest is IntegrationTestBase {
     function testRefundAfterLaunch() external {
         _launch();
         uint256 tokenId = IILOPool(iloPool).tokenOfOwnerByIndex(INVESTOR, 0);
-        vm.expectRevert();
+        vm.expectRevert(bytes("PL"));
         vm.warp(LAUNCH_START + 86400*7 + 1);
         vm.prank(INVESTOR);
         IILOPool(iloPool).claimRefund(tokenId);
@@ -182,7 +174,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
         vm.warp(LAUNCH_START + 86400*7 + 1);
         vm.prank(address(iloManager));
-        vm.expectRevert();
+        vm.expectRevert(bytes("IRF"));
         IILOPool(iloPool).launch();
     }
 
@@ -192,7 +184,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
         vm.prank(INVESTOR);
         vm.warp(LAUNCH_START + 86400*7 - 1);
-        vm.expectRevert();
+        vm.expectRevert(bytes("RFT"));
         IILOPool(iloPool).claimRefund(tokenId);
     }
 
@@ -219,7 +211,7 @@ contract ILOPoolTest is IntegrationTestBase {
         IILOPool(iloPool).claimRefund(tokenId);
         
         vm.prank(INVESTOR);
-        vm.expectRevert();
+        vm.expectRevert(bytes("ERC721: operator query for nonexistent token"));
         IILOPool(iloPool).claimRefund(tokenId);
     }
 

@@ -26,21 +26,21 @@ contract ILOManagerTest is IntegrationTestBase {
     }
 
     function testInitPoolNotOwner() external {
-        vm.expectRevert("unauthorized");
+        vm.expectRevert(bytes("UA"));
         _initPool(DUMMY_ADDRESS, _getInitPoolParams());
     }
 
     function testInitPoolWrongInvestorVests() external {
         IILOConfig.InitPoolParams memory params = _getInitPoolParams();
         params.investorVestConfigs[0].percentage = 1;
-        vm.expectRevert();
+        vm.expectRevert(bytes("VS"));
         _initPool(PROJECT_OWNER, params);
     }
 
     function testInitPoolSaleStartAfterEnd() external {
         IILOConfig.InitPoolParams memory params = _getInitPoolParams();
         params.start = params.end + 1;
-        vm.expectRevert();
+        vm.expectRevert(bytes("PT"));
         _initPool(PROJECT_OWNER, params);
     }
 
@@ -48,21 +48,21 @@ contract ILOManagerTest is IntegrationTestBase {
         IILOConfig.InitPoolParams memory params = _getInitPoolParams();
         params.start = LAUNCH_START + 1;
         params.end = LAUNCH_START + 2;
-        vm.expectRevert();
+        vm.expectRevert(bytes("PT"));
         _initPool(PROJECT_OWNER, params);
     }
 
     function testInitPoolVestOverlap() external {
         IILOConfig.InitPoolParams memory params = _getInitPoolParams();
         params.investorVestConfigs[1].start = params.investorVestConfigs[0].end - 1;
-        vm.expectRevert();
+        vm.expectRevert(bytes("VT"));
         _initPool(PROJECT_OWNER, params);
     }
 
     function testInitPoolVestStartBeforeLaunch() external {
         IILOConfig.InitPoolParams memory params = _getInitPoolParams();
         params.investorVestConfigs[0].start = LAUNCH_START - 1;
-        vm.expectRevert();
+        vm.expectRevert(bytes("VT"));
         _initPool(PROJECT_OWNER, params);
     }
 
@@ -70,7 +70,7 @@ contract ILOManagerTest is IntegrationTestBase {
         IILOConfig.InitPoolParams memory params = _getInitPoolParams();
         _initPool(PROJECT_OWNER, params);
         vm.warp(LAUNCH_START-1);
-        vm.expectRevert();
+        vm.expectRevert(bytes("LT"));
         iloManager.launch(projectId);
     }
 

@@ -49,7 +49,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     modifier onlyProjectAdmin(address uniV3Pool) {
-        require(_cachedProject[uniV3Pool].admin == msg.sender, "unauthorized");
+        require(_cachedProject[uniV3Pool].admin == msg.sender, "UA");
         _;
     }
 
@@ -71,12 +71,10 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool) returns (address iloPoolAddress) {
-        require(ILO_POOL_IMPLEMENTATION != address(0), "no pool implementation!");
-
         // validate time for sale start and end compared to launch time
         Project storage _project = _cachedProject[params.uniV3Pool];
-        require(_project.uniV3PoolAddress != address(0), "project not initialized");
-        require(params.start < params.end && params.end < _project.launchTime, "invalid time configs");
+        require(_project.uniV3PoolAddress != address(0), "NI");
+        require(params.start < params.end && params.end < _project.launchTime, "PT");
         _validateVestSchedule(_project.launchTime, params.investorVestConfigs);
         // this salt make sure that pool address can not be represented in any other chains
         bytes32 salt = keccak256(abi.encodePacked(
@@ -99,8 +97,8 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             (uint160 sqrtPriceX96Existing, , , , , , ) = IUniswapV3Pool(pool).slot0();
             if (sqrtPriceX96Existing == 0) {
                 IUniswapV3Pool(pool).initialize(sqrtPriceX96);
-            } else if (sqrtPriceX96Existing != sqrtPriceX96) {
-                revert("uni v3 pool already exists");
+            } else {
+                require(sqrtPriceX96Existing == sqrtPriceX96, "UV3P");
             }
         }
     }
@@ -117,7 +115,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         ProjectVestConfig[] calldata projectVestConfigs
     ) internal {
         Project storage _project = _cachedProject[uniV3PoolAddress];
-        require(_project.uniV3PoolAddress == address(0), "project already initialized");
+        require(_project.uniV3PoolAddress == address(0), "RE");
 
         uint256 projectVestConfigsLength = projectVestConfigs.length;
         for (uint256 index = 0; index < projectVestConfigsLength; index++) {
@@ -139,35 +137,34 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     function _validateSharesAndVests(uint64 launchTime, uint16 investorShares, ProjectVestConfig[] calldata projectVestConfigs) internal pure {
-        require(investorShares <= BPS);
+        require(investorShares <= BPS, "TS");
         uint16 totalShares = investorShares;
         uint256 configLength = projectVestConfigs.length;
         for (uint256 index = 0; index < configLength; index++) {
             // we need to subtract fist in order to avoid int overflow
-            require(BPS - totalShares >= projectVestConfigs[index].shares);
+            require(BPS - totalShares >= projectVestConfigs[index].shares, "TS");
             _validateVestSchedule(launchTime, projectVestConfigs[index].vestSchedule);
             totalShares += projectVestConfigs[index].shares;
         }
         // total shares should be exactly equal BPS
-        require(totalShares == BPS);
+        require(totalShares == BPS, "TS");
     }
 
     function _validateVestSchedule(uint64 launchTime, LinearVest[] memory vestSchedule) internal pure {
-        require(vestSchedule.length > 0);
-        require(vestSchedule[0].start >= launchTime);
+        require(vestSchedule[0].start >= launchTime, "VT");
         uint16 totalShares;
         uint64 lastEnd;
         uint256 vestScheduleLength = vestSchedule.length;
         for (uint256 index = 0; index < vestScheduleLength; index++) {
             // vesting schedule must not overlap
-            require(vestSchedule[index].start >= lastEnd);
+            require(vestSchedule[index].start >= lastEnd, "VT");
             lastEnd = vestSchedule[index].end;
             // we need to subtract fist in order to avoid int overflow
-            require(BPS - totalShares >= vestSchedule[index].percentage);
+            require(BPS - totalShares >= vestSchedule[index].percentage, "VS");
             totalShares += vestSchedule[index].percentage;
         }
         // total shares should be exactly equal BPS
-        require(totalShares == BPS);
+        require(totalShares == BPS, "VS");
     }
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
@@ -209,11 +206,11 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function launch(address uniV3PoolAddress) external override {
-        require(block.timestamp > _cachedProject[uniV3PoolAddress].launchTime);
+        require(block.timestamp > _cachedProject[uniV3PoolAddress].launchTime, "LT");
         (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(uniV3PoolAddress).slot0();
-        require(_cachedProject[uniV3PoolAddress].initialPoolPriceX96 == sqrtPriceX96);
+        require(_cachedProject[uniV3PoolAddress].initialPoolPriceX96 == sqrtPriceX96, "UV3P");
         address[] memory initializedPools = _initializedILOPools[uniV3PoolAddress];
-        require(initializedPools.length > 0);
+        require(initializedPools.length > 0, "NP");
         for (uint256 i = 0; i < initializedPools.length; i++) {
             IILOPool(initializedPools[i]).launch();
         }
@@ -223,7 +220,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function claimRefund(address uniV3PoolAddress) external override onlyProjectAdmin(uniV3PoolAddress) returns(uint256 totalRefundAmount) {
-        require(_cachedProject[uniV3PoolAddress].refundDeadline < block.timestamp);
+        require(_cachedProject[uniV3PoolAddress].refundDeadline < block.timestamp, "RFT");
         address[] memory initializedPools = _initializedILOPools[uniV3PoolAddress];
         for (uint256 i = 0; i < initializedPools.length; i++) {
             totalRefundAmount += IILOPool(initializedPools[i]).claimProjectRefund(_cachedProject[uniV3PoolAddress].admin);
