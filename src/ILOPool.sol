@@ -12,7 +12,6 @@ import './interfaces/IILOPool.sol';
 import './interfaces/IILOManager.sol';
 import './libraries/PositionKey.sol';
 import './libraries/SqrtPriceMathPartial.sol';
-import './base/ILOSale.sol';
 import './base/ILOVest.sol';
 import './base/LiquidityManagement.sol';
 import './base/ILOPoolImmutableState.sol';
@@ -26,13 +25,13 @@ contract ILOPool is
     ERC721,
     IILOPool,
     ILOWhitelist,
-    ILOSale,
     ILOVest,
     Initializable,
     Multicall,
     ILOPoolImmutableState,
     LiquidityManagement
 {
+    SaleInfo saleInfo;
 
     /// @dev when lauch successfully we can not refund anymore
     bool private _launchSucceeded;
