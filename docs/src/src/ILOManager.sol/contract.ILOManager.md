@@ -1,5 +1,5 @@
 # ILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/be1379a5058f6506f3a229427893748ee4e5ab65/src/ILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/ILOManager.sol)
 
 **Inherits:**
 [IILOManager](/src/interfaces/IILOManager.sol/interface.IILOManager.md), Ownable, [Initializable](/src/base/Initializable.sol/abstract.Initializable.md)
@@ -37,28 +37,28 @@ uint16 constant BPS = 10000;
 ### PLATFORM_FEE
 
 ```solidity
-uint16 PLATFORM_FEE;
+uint16 public override PLATFORM_FEE;
 ```
 
 
 ### PERFORMANCE_FEE
 
 ```solidity
-uint16 PERFORMANCE_FEE;
+uint16 public override PERFORMANCE_FEE;
 ```
 
 
 ### FEE_TAKER
 
 ```solidity
-address FEE_TAKER;
+address public override FEE_TAKER;
 ```
 
 
 ### ILO_POOL_IMPLEMENTATION
 
 ```solidity
-address ILO_POOL_IMPLEMENTATION;
+address public override ILO_POOL_IMPLEMENTATION;
 ```
 
 
@@ -83,7 +83,7 @@ mapping(address => address[]) private _initializedILOPools;
 
 
 ```solidity
-constructor() public;
+constructor();
 ```
 
 ### initialize
@@ -144,8 +144,6 @@ function project(address uniV3PoolAddress) external view override returns (Proje
 
 this function init an `ILO Pool` which will be used for sale and vest. One project can init many ILO Pool
 
-only project admin can use this function
-
 
 ```solidity
 function initILOPool(InitPoolParams calldata params)
@@ -187,20 +185,22 @@ function _cacheProject(
 ) internal;
 ```
 
-### _validateSharesPercentage
+### _validateSharesAndVests
 
 
 ```solidity
-function _validateSharesPercentage(uint16 investorShares, ProjectVestConfig[] calldata projectVestConfigs)
-    internal
-    pure;
+function _validateSharesAndVests(
+    uint64 launchTime,
+    uint16 investorShares,
+    ProjectVestConfig[] calldata projectVestConfigs
+) internal pure;
 ```
 
 ### _validateVestSchedule
 
 
 ```solidity
-function _validateVestSchedule(LinearVest[] memory vestSchedule) internal pure;
+function _validateVestSchedule(uint64 launchTime, LinearVest[] memory vestSchedule) internal pure;
 ```
 
 ### setPlatformFee
@@ -230,45 +230,32 @@ set platform fee for decrease liquidity. Platform fee is imutable among all proj
 function setFeeTaker(address _feeTaker) external override onlyOwner;
 ```
 
-### feeTaker
-
-
-```solidity
-function feeTaker() external view override returns (address _feeTaker);
-```
-
 ### setILOPoolImplementation
 
-new ilo implementation for clone
-
 
 ```solidity
-function setILOPoolImplementation(address iloPoolImplementation) external onlyOwner;
+function setILOPoolImplementation(address iloPoolImplementation) external override onlyOwner;
 ```
 
 ### transferAdminProject
 
-transfer admin of project
-
 
 ```solidity
-function transferAdminProject(address admin, address uniV3Pool) external;
+function transferAdminProject(address admin, address uniV3Pool) external override onlyProjectAdmin(uniV3Pool);
 ```
 
 ### setDefaultDeadlineOffset
 
-set time offset for refund if project not launch
-
 
 ```solidity
-function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external onlyOwner;
+function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external override onlyOwner;
 ```
 
 ### setRefundDeadlineForProject
 
 
 ```solidity
-function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external onlyOwner;
+function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external override onlyOwner;
 ```
 
 ### launch
@@ -280,34 +267,16 @@ launch all projects
 function launch(address uniV3PoolAddress) external override;
 ```
 
-## Events
-### PoolImplementationChanged
+### claimRefund
+
+claim all projects refund
+
 
 ```solidity
-event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
-```
-
-### ProjectAdminChanged
-
-```solidity
-event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
-```
-
-### DefaultDeadlineOffsetChanged
-
-```solidity
-event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
-```
-
-### RefundDeadlineChanged
-
-```solidity
-event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
-```
-
-### ProjectLaunch
-
-```solidity
-event ProjectLaunch(address indexed uniV3PoolAddress);
+function claimRefund(address uniV3PoolAddress)
+    external
+    override
+    onlyProjectAdmin(uniV3PoolAddress)
+    returns (uint256 totalRefundAmount);
 ```
 

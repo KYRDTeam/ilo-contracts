@@ -1,5 +1,5 @@
 # IILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/be1379a5058f6506f3a229427893748ee4e5ab65/src/interfaces/IILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/interfaces/IILOManager.sol)
 
 **Inherits:**
 [IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md)
@@ -29,10 +29,20 @@ function initProject(InitProjectParams calldata params) external returns (addres
 
 ### initILOPool
 
+this function init an `ILO Pool` which will be used for sale and vest. One project can init many ILO Pool
+
+only project admin can use this function
+
 
 ```solidity
 function initILOPool(InitPoolParams calldata params) external returns (address iloPoolAddress);
 ```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`params`|`InitPoolParams`|the parameters for init project|
+
 
 ### project
 
@@ -50,13 +60,6 @@ set platform fee for decrease liquidity. Platform fee is imutable among all proj
 function setFeeTaker(address _feeTaker) external;
 ```
 
-### feeTaker
-
-
-```solidity
-function feeTaker() external returns (address _feeTaker);
-```
-
 ### UNIV3_FACTORY
 
 
@@ -69,6 +72,34 @@ function UNIV3_FACTORY() external returns (address);
 
 ```solidity
 function WETH9() external returns (address);
+```
+
+### PLATFORM_FEE
+
+
+```solidity
+function PLATFORM_FEE() external returns (uint16);
+```
+
+### PERFORMANCE_FEE
+
+
+```solidity
+function PERFORMANCE_FEE() external returns (uint16);
+```
+
+### FEE_TAKER
+
+
+```solidity
+function FEE_TAKER() external returns (address);
+```
+
+### ILO_POOL_IMPLEMENTATION
+
+
+```solidity
+function ILO_POOL_IMPLEMENTATION() external returns (address);
 ```
 
 ### initialize
@@ -95,11 +126,96 @@ launch all projects
 function launch(address uniV3PoolAddress) external;
 ```
 
+### setILOPoolImplementation
+
+new ilo implementation for clone
+
+
+```solidity
+function setILOPoolImplementation(address iloPoolImplementation) external;
+```
+
+### transferAdminProject
+
+transfer admin of project
+
+
+```solidity
+function transferAdminProject(address admin, address uniV3Pool) external;
+```
+
+### setDefaultDeadlineOffset
+
+set time offset for refund if project not launch
+
+
+```solidity
+function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external;
+```
+
+### setRefundDeadlineForProject
+
+
+```solidity
+function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external;
+```
+
+### claimRefund
+
+claim all projects refund
+
+
+```solidity
+function claimRefund(address uniV3PoolAddress) external returns (uint256 totalRefundAmount);
+```
+
 ## Events
 ### ProjectCreated
 
 ```solidity
 event ProjectCreated(address indexed uniV3PoolAddress, Project project);
+```
+
+### ILOPoolCreated
+
+```solidity
+event ILOPoolCreated(address indexed uniV3PoolAddress, address indexed iloPoolAddress, uint256 index);
+```
+
+### PoolImplementationChanged
+
+```solidity
+event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
+```
+
+### ProjectAdminChanged
+
+```solidity
+event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
+```
+
+### DefaultDeadlineOffsetChanged
+
+```solidity
+event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
+```
+
+### RefundDeadlineChanged
+
+```solidity
+event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
+```
+
+### ProjectLaunch
+
+```solidity
+event ProjectLaunch(address indexed uniV3PoolAddress);
+```
+
+### ProjectRefund
+
+```solidity
+event ProjectRefund(address indexed project, uint256 refundAmount);
 ```
 
 ## Structs

@@ -1,13 +1,20 @@
 # ILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/be1379a5058f6506f3a229427893748ee4e5ab65/src/ILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/ILOPool.sol)
 
 **Inherits:**
-ERC721, [IILOPool](/src/interfaces/IILOPool.sol/interface.IILOPool.md), [ILOWhitelist](/src/base/ILOWhitelist.sol/abstract.ILOWhitelist.md), [ILOSale](/src/base/ILOSale.sol/abstract.ILOSale.md), [ILOVest](/src/base/ILOVest.sol/abstract.ILOVest.md), [Initializable](/src/base/Initializable.sol/abstract.Initializable.md), [Multicall](/src/base/Multicall.sol/abstract.Multicall.md), [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [LiquidityManagement](/src/base/LiquidityManagement.sol/abstract.LiquidityManagement.md), [PeripheryValidation](/src/base/PeripheryValidation.sol/abstract.PeripheryValidation.md)
+ERC721, [IILOPool](/src/interfaces/IILOPool.sol/interface.IILOPool.md), [ILOWhitelist](/src/base/ILOWhitelist.sol/abstract.ILOWhitelist.md), [ILOVest](/src/base/ILOVest.sol/abstract.ILOVest.md), [Initializable](/src/base/Initializable.sol/abstract.Initializable.md), [Multicall](/src/base/Multicall.sol/abstract.Multicall.md), [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [LiquidityManagement](/src/base/LiquidityManagement.sol/abstract.LiquidityManagement.md)
 
 Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
 
 
 ## State Variables
+### saleInfo
+
+```solidity
+SaleInfo saleInfo;
+```
+
+
 ### _launchSucceeded
 *when lauch successfully we can not refund anymore*
 
@@ -26,10 +33,10 @@ bool private _refundTriggered;
 ```
 
 
-### investorVestConfigs
+### _investorVestConfigs
 
 ```solidity
-LinearVest[] investorVestConfigs;
+LinearVest[] private _investorVestConfigs;
 ```
 
 
@@ -47,7 +54,7 @@ mapping(uint256 => Position) private _positions;
 
 
 ```solidity
-uint256 private _nextId = 1;
+uint256 private _nextId;
 ```
 
 
@@ -63,7 +70,7 @@ uint256 totalRaised;
 
 
 ```solidity
-constructor() ERC721("KRYSTAL ILOPool V1", "KRYSTAL-ILO-V1");
+constructor() ERC721("", "");
 ```
 
 ### name
@@ -99,16 +106,7 @@ function positions(uint256 tokenId)
     external
     view
     override
-    returns (
-        address token0,
-        address token1,
-        uint24 fee,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 liquidity,
-        uint256 feeGrowthInside0LastX128,
-        uint256 feeGrowthInside1LastX128
-    );
+    returns (uint128 liquidity, uint256 raiseAmount, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128);
 ```
 **Parameters**
 
@@ -120,25 +118,21 @@ function positions(uint256 tokenId)
 
 |Name|Type|Description|
 |----|----|-----------|
-|`token0`|`address`|The address of the token0 for a specific pool|
-|`token1`|`address`|The address of the token1 for a specific pool|
-|`fee`|`uint24`|The fee associated with the pool|
-|`tickLower`|`int24`|The lower end of the tick range for the position|
-|`tickUpper`|`int24`|The higher end of the tick range for the position|
 |`liquidity`|`uint128`|The liquidity of the position|
+|`raiseAmount`|`uint256`|The raise amount of the position|
 |`feeGrowthInside0LastX128`|`uint256`|The fee growth of token0 as of the last action on the individual position|
 |`feeGrowthInside1LastX128`|`uint256`|The fee growth of token1 as of the last action on the individual position|
 
 
 ### buy
 
+this function is for investor buying ILO
+
 
 ```solidity
 function buy(uint256 raiseAmount, address recipient)
     external
     override
-    duringSale
-    onlyWhitelisted(recipient)
     returns (uint256 tokenId, uint128 liquidityDelta, uint256 amountAdded0, uint256 amountAdded1);
 ```
 
@@ -163,43 +157,66 @@ function claim(uint256 tokenId)
     returns (uint256 amount0, uint256 amount1);
 ```
 
-### burn
-
-Burns a token ID, which deletes it from the NFT contract. The token must have 0 liquidity and all tokens
-must be collected first.
+### OnlyManager
 
 
 ```solidity
-function burn(uint256 tokenId) external payable override isAuthorizedForToken(tokenId);
+modifier OnlyManager();
 ```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`tokenId`|`uint256`|The ID of the token that is being burned|
-
 
 ### launch
 
 
 ```solidity
-function launch() external override afterSale;
+function launch() external override OnlyManager;
+```
+
+### refundable
+
+
+```solidity
+modifier refundable();
 ```
 
 ### claimRefund
 
+user claim refund when refund conditions are met
+
 
 ```solidity
-function claimRefund(uint256 tokenId) external isAuthorizedForToken(tokenId);
+function claimRefund(uint256 tokenId) external override refundable isAuthorizedForToken(tokenId);
+```
+
+### claimProjectRefund
+
+project admin claim refund sale token
+
+
+```solidity
+function claimProjectRefund(address projectAdmin)
+    external
+    override
+    refundable
+    OnlyManager
+    returns (uint256 refundAmount);
+```
+
+### _refundProject
+
+
+```solidity
+function _refundProject(address projectAdmin) internal returns (uint256 refundAmount);
 ```
 
 ### totalSold
 
 returns amount of sale token that has already been sold
 
+*sale token amount is rounded up*
+
 
 ```solidity
-function totalSold() public view returns (uint256);
+function totalSold() external view override returns (uint256);
 ```
 
 ### _saleAmountNeeded
@@ -210,7 +227,7 @@ return sale token amount needed for the raiseAmount.
 
 
 ```solidity
-function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256);
+function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256 saleAmountNeeded);
 ```
 
 ### _unlockedLiquidity
@@ -233,25 +250,6 @@ function _unlockedLiquidity(uint256 tokenId) internal view override returns (uin
 |----|----|-----------|
 |`liquidityUnlocked`|`uint128`|amount of unlocked liquidity|
 
-
-### _assignVestingSchedule
-
-assign vesting schedule for position
-
-
-```solidity
-function _assignVestingSchedule(uint256 nftId, LinearVest[] storage vestingSchedule) internal;
-```
-
-### _updateVestingLiquidity
-
-update total liquidity for vesting position
-vesting liquidity of position only changes when investor buy ilo
-
-
-```solidity
-function _updateVestingLiquidity(uint256 nftId, uint128 liquidity) internal;
-```
 
 ### _deductFees
 
@@ -280,25 +278,17 @@ function _deductFees(uint256 amount0, uint256 amount1, uint16 feeBPS)
 |`amount1Left`|`uint256`|the amount of token1 after deduct fee|
 
 
-### unlockedLiquidity
+### vestingStatus
+
+return vesting status of position
 
 
 ```solidity
-function unlockedLiquidity(uint256 tokenId) external view returns (uint128);
-```
-
-### claimableLiquidity
-
-
-```solidity
-function claimableLiquidity(uint256 tokenId) external view returns (uint128);
-```
-
-### claimedLiquidity
-
-
-```solidity
-function claimedLiquidity(uint256 tokenId) external view returns (uint128);
+function vestingStatus(uint256 tokenId)
+    external
+    view
+    override
+    returns (uint128 unlockedLiquidity, uint128 claimedLiquidity);
 ```
 
 ### _claimableLiquidity
@@ -308,34 +298,10 @@ function claimedLiquidity(uint256 tokenId) external view returns (uint128);
 function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128);
 ```
 
-## Events
-### Claim
+### onlyProjectAdmin
+
 
 ```solidity
-event Claim(address indexed user, uint128 liquidity, uint256 amount0, uint256 amount1);
-```
-
-### Buy
-
-```solidity
-event Buy(address indexed investor, uint256 raiseAmount, uint128 liquidity);
-```
-
-### PoolLaunch
-
-```solidity
-event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
-```
-
-## Structs
-### Position
-
-```solidity
-struct Position {
-    uint128 liquidity;
-    uint256 feeGrowthInside0LastX128;
-    uint256 feeGrowthInside1LastX128;
-    uint256 raiseAmount;
-}
+modifier onlyProjectAdmin() override;
 ```
 

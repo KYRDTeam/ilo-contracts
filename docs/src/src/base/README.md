@@ -1,9 +1,7 @@
 
 
 # Contents
-- [BlockTimestamp](BlockTimestamp.sol/abstract.BlockTimestamp.md)
 - [ILOPoolImmutableState](ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md)
-- [ILOSale](ILOSale.sol/abstract.ILOSale.md)
 - [ILOVest](ILOVest.sol/abstract.ILOVest.md)
 - [ILOWhitelist](ILOWhitelist.sol/abstract.ILOWhitelist.md)
 - [Initializable](Initializable.sol/abstract.Initializable.md)
@@ -11,4 +9,3 @@
 - [Multicall](Multicall.sol/abstract.Multicall.md)
 - [PeripheryPayments](PeripheryPayments.sol/abstract.PeripheryPayments.md)
 - [PeripheryPaymentsWithFee](PeripheryPaymentsWithFee.sol/abstract.PeripheryPaymentsWithFee.md)
-- [PeripheryValidation](PeripheryValidation.sol/abstract.PeripheryValidation.md)

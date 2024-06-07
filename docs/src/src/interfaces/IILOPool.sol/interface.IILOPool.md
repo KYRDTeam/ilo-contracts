@@ -1,8 +1,8 @@
 # IILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/be1379a5058f6506f3a229427893748ee4e5ab65/src/interfaces/IILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/interfaces/IILOPool.sol)
 
 **Inherits:**
-[IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md), [IPeripheryPayments](/src/interfaces/IPeripheryPayments.sol/interface.IPeripheryPayments.md), [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md), IERC721Metadata, IERC721Enumerable
+[IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md), [IILOVest](/src/interfaces/IILOVest.sol/interface.IILOVest.md), [IILOSale](/src/interfaces/IILOSale.sol/interface.IILOSale.md), [IPeripheryPayments](/src/interfaces/IPeripheryPayments.sol/interface.IPeripheryPayments.md), [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md), IERC721Metadata, IERC721Enumerable
 
 Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 and authorized.
@@ -20,16 +20,7 @@ Returns the position information associated with a given token ID.
 function positions(uint256 tokenId)
     external
     view
-    returns (
-        address token0,
-        address token1,
-        uint24 fee,
-        int24 tickLower,
-        int24 tickUpper,
-        uint128 liquidity,
-        uint256 feeGrowthInside0LastX128,
-        uint256 feeGrowthInside1LastX128
-    );
+    returns (uint128 liquidity, uint256 raiseAmount, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128);
 ```
 **Parameters**
 
@@ -41,12 +32,8 @@ function positions(uint256 tokenId)
 
 |Name|Type|Description|
 |----|----|-----------|
-|`token0`|`address`|The address of the token0 for a specific pool|
-|`token1`|`address`|The address of the token1 for a specific pool|
-|`fee`|`uint24`|The fee associated with the pool|
-|`tickLower`|`int24`|The lower end of the tick range for the position|
-|`tickUpper`|`int24`|The higher end of the tick range for the position|
 |`liquidity`|`uint128`|The liquidity of the position|
+|`raiseAmount`|`uint256`|The raise amount of the position|
 |`feeGrowthInside0LastX128`|`uint256`|The fee growth of token0 as of the last action on the individual position|
 |`feeGrowthInside1LastX128`|`uint256`|The fee growth of token1 as of the last action on the individual position|
 
@@ -60,22 +47,6 @@ Returns number of collected tokens associated with a given token ID.
 function claim(uint256 tokenId) external payable returns (uint256 amount0, uint256 amount1);
 ```
 
-### burn
-
-Burns a token ID, which deletes it from the NFT contract. The token must have 0 liquidity and all tokens
-must be collected first.
-
-
-```solidity
-function burn(uint256 tokenId) external payable;
-```
-**Parameters**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`tokenId`|`uint256`|The ID of the token that is being burned|
-
-
 ### initialize
 
 
@@ -88,6 +59,24 @@ function initialize(InitPoolParams calldata initPoolParams) external;
 
 ```solidity
 function launch() external;
+```
+
+### claimProjectRefund
+
+project admin claim refund sale token
+
+
+```solidity
+function claimProjectRefund(address projectAdmin) external returns (uint256 refundAmount);
+```
+
+### claimRefund
+
+user claim refund when refund conditions are met
+
+
+```solidity
+function claimRefund(uint256 tokenId) external;
 ```
 
 ## Events
@@ -156,7 +145,58 @@ event ILOPoolInitialized(
     uint16 platformFee,
     uint16 performanceFee,
     uint16 investorShares,
-    IILOSale.SaleInfo saleInfo
+    SaleInfo saleInfo,
+    LinearVest[] investorVestConfigs
 );
+```
+
+### Claim
+
+```solidity
+event Claim(
+    address indexed user,
+    uint256 tokenId,
+    uint128 liquidity,
+    uint256 amount0,
+    uint256 amount1,
+    uint256 feeGrowthInside0LastX128,
+    uint256 feeGrowthInside1LastX128
+);
+```
+
+### Buy
+
+```solidity
+event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount, uint128 liquidity);
+```
+
+### PoolLaunch
+
+```solidity
+event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
+```
+
+### UserRefund
+
+```solidity
+event UserRefund(address indexed user, uint256 tokenId, uint256 raiseTokenAmount);
+```
+
+### ProjectRefund
+
+```solidity
+event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
+```
+
+## Structs
+### Position
+
+```solidity
+struct Position {
+    uint128 liquidity;
+    uint256 feeGrowthInside0LastX128;
+    uint256 feeGrowthInside1LastX128;
+    uint256 raiseAmount;
+}
 ```
 

@@ -1,5 +1,5 @@
 # LiquidityAmounts
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/be1379a5058f6506f3a229427893748ee4e5ab65/src/libraries/LiquidityAmounts.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/libraries/LiquidityAmounts.sol)
 
 Provides functions for computing liquidity amounts from token amounts and prices
 
@@ -194,30 +194,4 @@ function getAmountsForLiquidity(uint160 sqrtRatioX96, uint160 sqrtRatioAX96, uin
 |`amount0`|`uint256`|The amount of token0|
 |`amount1`|`uint256`|The amount of token1|
 
-
-### getInrangeAmount0ForAmount1
-
-
-```solidity
-function getInrangeAmount0ForAmount1(
-    uint160 sqrtRatioX96,
-    uint160 sqrtRatioAX96,
-    uint160 sqrtRatioBX96,
-    uint256 amount1,
-    bool roundUp
-) internal pure returns (uint256);
-```
-
-### getInrangeAmount1ForAmount0
-
-
-```solidity
-function getInrangeAmount1ForAmount0(
-    uint160 sqrtRatioX96,
-    uint160 sqrtRatioAX96,
-    uint160 sqrtRatioBX96,
-    uint256 amount0,
-    bool roundUp
-) internal pure returns (uint256);
-```
 
