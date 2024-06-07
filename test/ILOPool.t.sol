@@ -43,21 +43,14 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testWhiltelist() external {
         vm.startPrank(PROJECT_OWNER);
-        IILOWhitelist(iloPool).setWhitelist(INVESTOR);
-        assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR), true);
-
-        IILOWhitelist(iloPool).removeWhitelist(INVESTOR);
-        assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR), false);
         
         IILOWhitelist(iloPool).batchWhitelist(_getListAddress());
         assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR), true);
         assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR_2), true);
         assertEq(IILOWhitelist(iloPool).isWhitelisted(DUMMY_ADDRESS), true);
         
-        IILOWhitelist(iloPool).removeWhitelist(DUMMY_ADDRESS);
-        assertEq(IILOWhitelist(iloPool).isWhitelisted(DUMMY_ADDRESS), false);
-        
         IILOWhitelist(iloPool).batchRemoveWhitelist(_getListAddress());
+        assertEq(IILOWhitelist(iloPool).isWhitelisted(DUMMY_ADDRESS), false);
         assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR), false);
         assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR_2), false);
     }
@@ -69,10 +62,15 @@ contract ILOPoolTest is IntegrationTestBase {
         addresses[2] = DUMMY_ADDRESS;
     }
 
+    function _getListAddressFromAddress(address addr) internal pure returns (address[] memory addresses) {
+        addresses = new address[](1);
+        addresses[0] = addr;
+    }
+
     function testSetWhiltelistNotProjectOwner() external {
         vm.expectRevert(bytes("UA"));
         vm.prank(DUMMY_ADDRESS);
-        IILOWhitelist(iloPool).setWhitelist(INVESTOR);
+        IILOWhitelist(iloPool).batchWhitelist(_getListAddress());
     }
 
     function testBuyZero() external {
@@ -230,7 +228,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function _prepareBuyFor(address investor) internal {
         vm.prank(PROJECT_OWNER);
-        IILOWhitelist(iloPool).setWhitelist(investor);
+        IILOWhitelist(iloPool).batchWhitelist(_getListAddressFromAddress(investor));
 
         vm.prank(investor);
         IERC20(USDC).approve(iloPool, 1000000000 ether);
@@ -255,9 +253,9 @@ contract ILOPoolTest is IntegrationTestBase {
         vm.warp(VEST_START_0 + 10);
         uint256 tokenId = IILOPool(iloPool).tokenOfOwnerByIndex(INVESTOR, 0);
 
-        assertEq(uint256(IILOVest(iloPool).unlockedLiquidity(tokenId)), 694444444444444444);
-        assertEq(uint256(IILOVest(iloPool).claimableLiquidity(tokenId)), 694444444444444444);
-        assertEq(uint256(IILOVest(iloPool).claimedLiquidity(tokenId)), 0);
+        (uint128 unlockedLiquidity, uint128 claimedLiquidity) = IILOVest(iloPool).vestingStatus(tokenId);
+        assertEq(uint256(unlockedLiquidity), 694444444444444444);
+        assertEq(uint256(claimedLiquidity), 0);
 
         uint256 balance0Before = IERC20(USDC).balanceOf(INVESTOR);
         uint256 balance1Before = IERC20(SALE_TOKEN).balanceOf(INVESTOR);
@@ -273,8 +271,9 @@ contract ILOPoolTest is IntegrationTestBase {
 
         vm.warp(VEST_START_1 + 100);
 
-        assertEq(uint256(IILOVest(iloPool).unlockedLiquidity(tokenId)), 6016203703703703704355);
-        assertEq(uint256(IILOVest(iloPool).claimedLiquidity(tokenId)), 694444444444444444);
-        assertEq(uint256(IILOVest(iloPool).claimableLiquidity(tokenId)), 6016203703703703704355-694444444444444444);
+        (unlockedLiquidity, claimedLiquidity) = IILOVest(iloPool).vestingStatus(tokenId);
+
+        assertEq(uint256(unlockedLiquidity), 6016203703703703704355);
+        assertEq(uint256(claimedLiquidity), 6016203703703703704355-694444444444444444);
     }
 }

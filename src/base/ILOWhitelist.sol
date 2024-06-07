@@ -20,17 +20,7 @@ abstract contract ILOWhitelist is IILOWhitelist {
 
     /// @inheritdoc IILOWhitelist
     function isWhitelisted(address user) external override view returns (bool) {
-        return _openToAll || EnumerableSet.contains(_whitelisted, user);
-    }
-
-    /// @inheritdoc IILOWhitelist
-    function setWhitelist(address user) external override onlyProjectAdmin{
-        _setWhitelist(user);
-    }
-
-    /// @inheritdoc IILOWhitelist
-    function removeWhitelist(address user) external override onlyProjectAdmin{
-        _removeWhitelist(user);
+        return _isWhitelisted(user);
     }
 
     /// @inheritdoc IILOWhitelist
@@ -64,9 +54,7 @@ abstract contract ILOWhitelist is IILOWhitelist {
         emit SetWhitelist(user, true);
     }
 
-    modifier onlyWhitelisted(address user) {
-        require(_openToAll || EnumerableSet.contains(_whitelisted, user), "UA");
-        _;
+    function _isWhitelisted(address user) internal view returns(bool) {
+        return _openToAll || EnumerableSet.contains(_whitelisted, user);
     }
-    modifier onlyProjectAdmin virtual;
 }

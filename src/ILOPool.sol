@@ -133,8 +133,6 @@ contract ILOPool is
     /// @inheritdoc IILOSale
     function buy(uint256 raiseAmount, address recipient)
         external override 
-        duringSale()
-        onlyWhitelisted(recipient)
         returns (
             uint256 tokenId,
             uint128 liquidityDelta,
@@ -142,6 +140,8 @@ contract ILOPool is
             uint256 amountAdded1
         )
     {
+        require(_isWhitelisted(recipient), "UA");
+        require(block.timestamp > saleInfo.start && block.timestamp < saleInfo.end, "ST");
         // check if raise amount over capacity
         require(saleInfo.hardCap - totalRaised >= raiseAmount, "HC");
         totalRaised += raiseAmount;
@@ -455,18 +455,12 @@ contract ILOPool is
     }
 
     /// @inheritdoc IILOVest
-    function unlockedLiquidity(uint256 tokenId) external view override returns(uint128) {
-        return _unlockedLiquidity(tokenId);
-    }
-
-    /// @inheritdoc IILOVest
-    function claimableLiquidity(uint256 tokenId) external view override returns(uint128) {
-        return _claimableLiquidity(tokenId);
-    }
-
-    /// @inheritdoc IILOVest
-    function claimedLiquidity(uint256 tokenId) external view override returns(uint128) {
-        return  _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
+    function vestingStatus(uint256 tokenId) external view override returns (
+        uint128 unlockedLiquidity,
+        uint128 claimedLiquidity
+    ) {
+        unlockedLiquidity = _unlockedLiquidity(tokenId);
+        claimedLiquidity = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
     }
 
     /// @inheritdoc ILOVest
