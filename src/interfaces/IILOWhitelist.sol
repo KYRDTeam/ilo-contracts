@@ -10,8 +10,9 @@ interface IILOWhitelist {
     function setOpenToAll(bool openToAll) external;
     function isOpenToAll() external returns(bool);
     function isWhitelisted(address user) external returns (bool);
-    function setWhitelist(address user) external;
-    function removeWhitelist(address user) external;
     function batchWhitelist(address[] calldata users) external;
     function batchRemoveWhitelist(address[] calldata users) external;
+
+    modifier onlyProjectAdmin virtual;
+
 }

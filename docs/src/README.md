@@ -22,15 +22,27 @@ struct ProjectVestConfig {
     LinearVest[] vestSchedule;
 }
 
-function initProject(
-    address saleToken,
-    address raiseToken,
-    uint24 fee,
-    uint160 initialPoolPriceX96,
-    uint64 launchTime,
-    uint16 investorShares,
-    ProjectVestConfig[] calldata projectVestConfigs
-) external override returns (address uniV3PoolAddress);
+struct InitProjectParams {
+    // the sale token
+    address saleToken;
+    // the raise token
+    address raiseToken;
+    // uniswap v3 fee tier
+    uint24 fee;
+    // uniswap sqrtPriceX96 for initialize pool
+    uint160 initialPoolPriceX96;
+    // time for lauch all liquidity. Only one launch time for all ilo pools
+    uint64 launchTime;
+    // number of liquidity shares after investor invest into ilo pool interm of BPS = 10000
+    uint16 investorShares;  // BPS shares
+    // config for all other shares and vest
+    ProjectVestConfig[] projectVestConfigs;
+}
+
+/// @notice init project with details
+/// @param params the parameters to initialize the project
+/// @return uniV3PoolAddress address of uniswap v3 pool. We use this address as project id
+function initProject(InitProjectParams calldata params) external returns(address uniV3PoolAddress);
 ```
 
 [Init ILO Pool](docs/src/src/ILOManager.sol/contract.ILOManager.md#initILOPool):
@@ -81,3 +93,26 @@ function claim(uint256 tokenId) external payable returns (uint256 amount0, uint2
 function launch(address uniV3PoolAddress);
 ```
 
+# ERROR:
+|  Code	|   Description	           |
+|---	|---	                   |
+|   UA	| Unauthorized             |
+|   NI	| Not initialized          |
+|   RE	| Re-initialize            |
+|   PT	| Invalid Pool Time        |
+|   VT	| Invalid Vest Time        |
+|   LT	| Invalid Launch Time      |
+|   ST	| Invalid Sale Time        |
+|   RFT	| Invalid Refund Time      |
+|   TS	| Invalid Total Shares     |
+|   VS	| Invalid Vest Shares      |
+|   NP	| No Pools                 |
+|  UV3P	| Invalid Uni V3 Pool      |
+|   HC	| Over Hard Cap            |
+|   UC	| Over User Cap            |
+|   SC	| Soft cap not met         |
+|   SA	| Over Sale Amount         |
+|   ZA	| Zero Buy Amount          |
+|  PNL	| Pool Not Launched        |
+|  PL	| Pool Launched            |
+|  IRF	| Pool In Refund state     |

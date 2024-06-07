@@ -1,5 +1,5 @@
 # SqrtPriceMathPartial
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/be1379a5058f6506f3a229427893748ee4e5ab65/src/libraries/SqrtPriceMathPartial.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/libraries/SqrtPriceMathPartial.sol)
 
 Exposes two functions from @uniswap/v3-core SqrtPriceMath
 that use square root of price as a Q64.96 and liquidity to compute deltas

@@ -1,8 +1,18 @@
 # ILOWhitelist
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/be1379a5058f6506f3a229427893748ee4e5ab65/src/base/ILOWhitelist.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/base/ILOWhitelist.sol)
+
+**Inherits:**
+[IILOWhitelist](/src/interfaces/IILOWhitelist.sol/interface.IILOWhitelist.md)
 
 
 ## State Variables
+### _openToAll
+
+```solidity
+bool private _openToAll;
+```
+
+
 ### _whitelisted
 
 ```solidity
@@ -11,48 +21,46 @@ EnumerableSet.AddressSet private _whitelisted;
 
 
 ## Functions
-### onlyWhitelisted
+### setOpenToAll
 
 
 ```solidity
-modifier onlyWhitelisted(address user);
+function setOpenToAll(bool openToAll) external override onlyProjectAdmin;
+```
+
+### isOpenToAll
+
+
+```solidity
+function isOpenToAll() external view override returns (bool);
 ```
 
 ### isWhitelisted
 
-check if the address is whitelisted
-
 
 ```solidity
-function isWhitelisted(address user) external view returns (bool);
-```
-
-### setWhitelist
-
-
-```solidity
-function setWhitelist(address user) external;
-```
-
-### removeWhitelist
-
-
-```solidity
-function removeWhitelist(address user) external;
+function isWhitelisted(address user) external view override returns (bool);
 ```
 
 ### batchWhitelist
 
 
 ```solidity
-function batchWhitelist(address[] calldata users) external;
+function batchWhitelist(address[] calldata users) external override onlyProjectAdmin;
 ```
 
 ### batchRemoveWhitelist
 
 
 ```solidity
-function batchRemoveWhitelist(address[] calldata users) external;
+function batchRemoveWhitelist(address[] calldata users) external override onlyProjectAdmin;
+```
+
+### _setOpenToAll
+
+
+```solidity
+function _setOpenToAll(bool openToAll) internal;
 ```
 
 ### _removeWhitelist
@@ -69,10 +77,10 @@ function _removeWhitelist(address user) internal;
 function _setWhitelist(address user) internal;
 ```
 
-## Events
-### SetWhitelist
+### _isWhitelisted
+
 
 ```solidity
-event SetWhitelist(address indexed user, bool isWhitelist);
+function _isWhitelisted(address user) internal view returns (bool);
 ```
 
