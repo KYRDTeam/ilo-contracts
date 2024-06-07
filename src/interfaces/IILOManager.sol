@@ -73,10 +73,12 @@ interface IILOManager is IILOConfig {
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setFeeTaker(address _feeTaker) external;
 
-    function feeTaker() external returns(address _feeTaker);
-
     function UNIV3_FACTORY() external returns(address);
     function WETH9() external returns(address);
+    function PLATFORM_FEE() external returns(uint16);
+    function PERFORMANCE_FEE() external returns(uint16);
+    function FEE_TAKER() external returns(address);
+    function ILO_POOL_IMPLEMENTATION() external returns(address);
 
     function initialize(
         address initialOwner,
@@ -90,6 +92,16 @@ interface IILOManager is IILOConfig {
 
     /// @notice launch all projects
     function launch(address uniV3PoolAddress) external;
+
+    /// @notice new ilo implementation for clone
+    function setILOPoolImplementation(address iloPoolImplementation) external;
+
+    /// @notice transfer admin of project
+    function transferAdminProject(address admin, address uniV3Pool) external;
+
+    /// @notice set time offset for refund if project not launch
+    function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external;
+    function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external;
 
     /// @notice claim all projects refund
     function claimRefund(address uniV3PoolAddress) external returns(uint256 totalRefundAmount);

@@ -40,11 +40,32 @@ contract ILOPoolTest is IntegrationTestBase {
         IILOPool(iloPool).buy(0.1 ether, DUMMY_ADDRESS);
     }
 
-    function testSetWhiltelist() external {
-        vm.prank(PROJECT_OWNER);
+    function testWhiltelist() external {
+        vm.startPrank(PROJECT_OWNER);
         IILOWhitelist(iloPool).setWhitelist(INVESTOR);
-        bool whiteListed = IILOWhitelist(iloPool).isWhitelisted(INVESTOR);
-        assertEq(whiteListed, true);
+        assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR), true);
+
+        IILOWhitelist(iloPool).removeWhitelist(INVESTOR);
+        assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR), false);
+        
+        IILOWhitelist(iloPool).batchWhitelist(_getListAddress());
+        assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR), true);
+        assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR_2), true);
+        assertEq(IILOWhitelist(iloPool).isWhitelisted(DUMMY_ADDRESS), true);
+        
+        IILOWhitelist(iloPool).removeWhitelist(DUMMY_ADDRESS);
+        assertEq(IILOWhitelist(iloPool).isWhitelisted(DUMMY_ADDRESS), false);
+        
+        IILOWhitelist(iloPool).batchRemoveWhitelist(_getListAddress());
+        assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR), false);
+        assertEq(IILOWhitelist(iloPool).isWhitelisted(INVESTOR_2), false);
+    }
+
+    function _getListAddress() internal pure returns (address[] memory addresses) {
+        addresses = new address[](3);
+        addresses[0] = INVESTOR;
+        addresses[1] = INVESTOR_2;
+        addresses[2] = DUMMY_ADDRESS;
     }
 
     function testSetWhiltelistNotProjectOwner() external {
@@ -119,11 +140,12 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function _launch() internal {
         _prepareBuyFor(INVESTOR);
-        _buyFor(INVESTOR, SALE_START+1, 50000 ether);
+        _buyFor(INVESTOR, SALE_START+1, 49000 ether);
         _prepareBuyFor(INVESTOR_2);
         _buyFor(INVESTOR_2, SALE_START+1, 40000 ether);
+        _buyFor(INVESTOR, SALE_START+1, 1000 ether);
         _writeTokenBalance(SALE_TOKEN, iloPool, 95000 * 4 ether);
-        // required saleTokenAmount = 360000000000000000029277
+        assertEq(IILOPool(iloPool).totalSold(), 360000000000000000029277);
         
         uint256 balanceBefore = IERC20(SALE_TOKEN).balanceOf(PROJECT_OWNER);
         vm.warp(SALE_END + 1);
@@ -256,5 +278,11 @@ contract ILOPoolTest is IntegrationTestBase {
 
         // int(50000*0.2*0.3*10/86400*10**18)
         assertEq(balance0After - balance0Before, 346874999999999999);
+
+        vm.warp(VEST_START_1 + 100);
+
+        assertEq(uint256(IILOVest(iloPool).unlockedLiquidity(tokenId)), 6016203703703703704355);
+        assertEq(uint256(IILOVest(iloPool).claimedLiquidity(tokenId)), 694444444444444444);
+        assertEq(uint256(IILOVest(iloPool).claimableLiquidity(tokenId)), 6016203703703703704355-694444444444444444);
     }
 }

@@ -17,10 +17,10 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     uint64 private DEFAULT_DEADLINE_OFFSET = 7 * 24 * 60 * 60; // 7 days
     uint16 constant BPS = 10000;
-    uint16 PLATFORM_FEE;
-    uint16 PERFORMANCE_FEE;
-    address FEE_TAKER;
-    address ILO_POOL_IMPLEMENTATION;
+    uint16 public override PLATFORM_FEE;
+    uint16 public override PERFORMANCE_FEE;
+    address public override FEE_TAKER;
+    address public override ILO_POOL_IMPLEMENTATION;
 
     mapping(address => Project) private _cachedProject; // map uniV3Pool => project (aka projectId => project)
     mapping(address => address[]) private _initializedILOPools; // map uniV3Pool => list of initialized ilo pools
@@ -185,31 +185,23 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         FEE_TAKER = _feeTaker;
     }
 
-    function feeTaker() external view override returns(address _feeTaker) {
-        return FEE_TAKER;
-    }
-
-    /// @notice new ilo implementation for clone
-    function setILOPoolImplementation(address iloPoolImplementation) external onlyOwner() {
+    function setILOPoolImplementation(address iloPoolImplementation) external override onlyOwner() {
         emit PoolImplementationChanged(ILO_POOL_IMPLEMENTATION, iloPoolImplementation);
         ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
     }
 
-    /// @notice transfer admin of project
-    function transferAdminProject(address admin, address uniV3Pool) external {
+    function transferAdminProject(address admin, address uniV3Pool) external override onlyProjectAdmin(uniV3Pool) {
         Project storage _project = _cachedProject[uniV3Pool];
-        require(msg.sender == _project.admin);
         _project.admin = admin;
-        emit ProjectAdminChanged(uniV3Pool, msg.sender, _project.admin);
+        emit ProjectAdminChanged(uniV3Pool, msg.sender, admin);
     }
 
-    /// @notice set time offset for refund if project not launch
-    function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external onlyOwner() {
+    function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external override onlyOwner() {
         emit DefaultDeadlineOffsetChanged(owner(), DEFAULT_DEADLINE_OFFSET, defaultDeadlineOffset);
         DEFAULT_DEADLINE_OFFSET = defaultDeadlineOffset;
     }
 
-    function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external onlyOwner() {
+    function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external override onlyOwner() {
         Project storage _project = _cachedProject[uniV3Pool];
         emit RefundDeadlineChanged(uniV3Pool, _project.refundDeadline, refundDeadline);
         _project.refundDeadline = refundDeadline;

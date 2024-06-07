@@ -268,7 +268,7 @@ contract ILOPool is
 
         emit Claim(ownerOf(tokenId), tokenId,liquidity2Claim, amount0, amount1, position.feeGrowthInside0LastX128, position.feeGrowthInside1LastX128);
 
-        address feeTaker = IILOManager(MANAGER).feeTaker();
+        address feeTaker = IILOManager(MANAGER).FEE_TAKER();
         // transfer fee to fee taker
         TransferHelper.safeTransfer(_cachedPoolKey.token0, feeTaker, amountCollected0-amount0);
         TransferHelper.safeTransfer(_cachedPoolKey.token1, feeTaker, amountCollected1-amount1);

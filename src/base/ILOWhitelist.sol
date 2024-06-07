@@ -20,7 +20,7 @@ abstract contract ILOWhitelist is IILOWhitelist {
 
     /// @inheritdoc IILOWhitelist
     function isWhitelisted(address user) external override view returns (bool) {
-        return EnumerableSet.contains(_whitelisted, user);
+        return _openToAll || EnumerableSet.contains(_whitelisted, user);
     }
 
     /// @inheritdoc IILOWhitelist

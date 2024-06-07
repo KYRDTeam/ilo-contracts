@@ -21,6 +21,8 @@ contract ILOManagerTest is IntegrationTestBase {
         assertEq(uint256(iloPool.PLATFORM_FEE()), 10);
         assertEq(uint256(iloPool.PERFORMANCE_FEE()), 1000);
         assertEq(uint256(iloPool.INVESTOR_SHARES()), 2000);
+        assertEq(iloPool.name(), "KRYSTAL ILOPool V1");
+        assertEq(iloPool.symbol(), "KRYSTAL-ILO-V1");
     }
 
     function testInitPoolNotOwner() external {
@@ -78,5 +80,20 @@ contract ILOManagerTest is IntegrationTestBase {
         vm.warp(LAUNCH_START+1);
         vm.expectRevert();
         iloManager.launch(projectId);
+    }
+
+    function testSetStorage() external {
+        vm.startPrank(MANAGER_OWNER);
+        iloManager.setPlatformFee(50);
+        assertEq(uint256(iloManager.PLATFORM_FEE()), 50);
+        
+        iloManager.setPerformanceFee(5000);
+        assertEq(uint256(iloManager.PERFORMANCE_FEE()), 5000);
+        
+        iloManager.setPerformanceFee(5000);
+        assertEq(uint256(iloManager.PERFORMANCE_FEE()), 5000);
+
+        iloManager.setILOPoolImplementation(DUMMY_ADDRESS);
+        assertEq(iloManager.ILO_POOL_IMPLEMENTATION(), DUMMY_ADDRESS);
     }
 }
