@@ -210,6 +210,8 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     /// @inheritdoc IILOManager
     function launch(address uniV3PoolAddress) external override {
         require(block.timestamp > _cachedProject[uniV3PoolAddress].launchTime);
+        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(pool).slot0();
+        require(_cachedProject[uniV3PoolAddress].initialPoolPriceX96 == sqrtPriceX96);
         address[] memory initializedPools = _initializedILOPools[uniV3PoolAddress];
         require(initializedPools.length > 0);
         for (uint256 i = 0; i < initializedPools.length; i++) {

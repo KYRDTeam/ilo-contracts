@@ -95,5 +95,8 @@ contract ILOManagerTest is IntegrationTestBase {
 
         iloManager.setILOPoolImplementation(DUMMY_ADDRESS);
         assertEq(iloManager.ILO_POOL_IMPLEMENTATION(), DUMMY_ADDRESS);
+        
+        iloManager.setFeeTaker(DUMMY_ADDRESS);
+        assertEq(iloManager.FEE_TAKER(), DUMMY_ADDRESS);
     }
 }
