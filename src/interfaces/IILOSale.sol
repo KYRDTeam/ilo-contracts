@@ -14,9 +14,7 @@ interface IILOSale {
     /// @notice this function is for investor buying ILO
     function buy(uint256 raiseAmount, address recipient) external returns (
             uint256 tokenId,
-            uint128 liquidity,
-            uint256 amountAdded0,
-            uint256 amountAdded1
+            uint128 liquidity
         );
 
     /// @notice returns amount of sale token that has already been sold

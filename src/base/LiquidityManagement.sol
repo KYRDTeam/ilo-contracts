@@ -31,6 +31,7 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, ILOPoolImmutabl
 
     struct AddLiquidityParams {
         IUniswapV3Pool pool;
+        uint128 liquidity;
         uint256 amount0Desired;
         uint256 amount1Desired;
         uint256 amount0Min;
@@ -41,27 +42,15 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, ILOPoolImmutabl
     function addLiquidity(AddLiquidityParams memory params)
         internal
         returns (
-            uint128 liquidity,
             uint256 amount0,
             uint256 amount1
         )
     {
-        // compute the liquidity amount
-        {
-            liquidity = LiquidityAmounts.getLiquidityForAmounts(
-                SQRT_RATIO_X96,
-                SQRT_RATIO_LOWER_X96,
-                SQRT_RATIO_UPPER_X96,
-                params.amount0Desired,
-                params.amount1Desired
-            );
-        }
-
         (amount0, amount1) = params.pool.mint(
             address(this),
             TICK_LOWER,
             TICK_UPPER,
-            liquidity,
+            params.liquidity,
             ""
         );
 

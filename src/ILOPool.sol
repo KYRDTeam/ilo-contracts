@@ -134,9 +134,7 @@ contract ILOPool is
         external override 
         returns (
             uint256 tokenId,
-            uint128 liquidityDelta,
-            uint256 amountAdded0,
-            uint256 amountAdded1
+            uint128 liquidityDelta
         )
     {
         require(_isWhitelisted(recipient), "UA");
@@ -174,12 +172,6 @@ contract ILOPool is
         
         // increase investor's liquidity
         _position.liquidity += liquidityDelta;
-        (amountAdded0, amountAdded1) = LiquidityAmounts.getAmountsForLiquidity(
-            SQRT_RATIO_X96,
-            SQRT_RATIO_LOWER_X96,
-            SQRT_RATIO_UPPER_X96,
-            liquidityDelta
-        );
 
         // update total liquidity locked for vest and assiging vesing schedules
         _positionVests[tokenId].totalLiquidity = _position.liquidity;
@@ -299,15 +291,18 @@ contract ILOPool is
                 amount0 = totalRaised;
                 amount0Min = totalRaised;
                 amount1 = _saleAmountNeeded(totalRaised);
+                liquidity = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, totalRaised);
             } else {
                 amount0 = _saleAmountNeeded(totalRaised);
                 amount1 = totalRaised;
                 amount1Min = totalRaised;
+                liquidity = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, totalRaised);
             }
 
             // actually deploy liquidity to uniswap pool
-            (liquidity, amount0, amount1) = addLiquidity(AddLiquidityParams({
+            (amount0, amount1) = addLiquidity(AddLiquidityParams({
                 pool: IUniswapV3Pool(uniV3PoolAddress),
+                liquidity: liquidity,
                 amount0Desired: amount0,
                 amount1Desired: amount1,
                 amount0Min: amount0Min,
