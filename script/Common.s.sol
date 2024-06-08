@@ -60,7 +60,5 @@ abstract contract CommonScript is Script {
 
     constructor() {
         salt = keccak256(bytes(vm.envString("SALT_SEED")));
-        console.log("SALT:");
-        console.logBytes32(salt);
     }
 }
