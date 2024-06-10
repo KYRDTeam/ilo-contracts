@@ -3,6 +3,30 @@ pragma solidity =0.7.6;
 
 import "./Common.s.sol";
 
+contract VerifyAllContractScript is CommonScript {
+    function run() view external {
+        address iloManagerDeploymentAddress = getILOManagerDeploymentAddress();
+        console.log("iloManager deployment address: ", iloManagerDeploymentAddress);
+
+        address iloPoolDeploymentAddress = getILOPoolDeploymentAddress();
+        console.log("iloPool deployment address: ", iloPoolDeploymentAddress);
+
+        console.log("\nrun script below to verify all contracts: \n");
+
+        console.log(
+            string(abi.encodePacked(
+                "forge verify-contract ", 
+                toHexString(iloManagerDeploymentAddress),
+                " src/ILOManager.sol:ILOManager;",
+
+                "forge verify-contract ", 
+                toHexString(iloPoolDeploymentAddress),
+                " src/ILOPool.sol:ILOPool"
+            ))
+        );
+    }
+}
+
 contract VerifyILOManagerScript is CommonScript {
     function run() view external {
         address deploymentAddress = getILOManagerDeploymentAddress();

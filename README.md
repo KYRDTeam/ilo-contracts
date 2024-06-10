@@ -116,3 +116,4 @@ function launch(address uniV3PoolAddress);
 |  PNL	| Pool Not Launched        |
 |   PL	| Pool Launched            |
 |  IRF	| Pool In Refund state     |
+|  VR	| Invalid Vesting recipient|

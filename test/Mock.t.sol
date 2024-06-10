@@ -48,7 +48,7 @@ contract Mock {
         vestingConfigs = new IILOVest.VestingConfig[](4);
         vestingConfigs[0] = IILOVest.VestingConfig({
                     shares: 2000, // 20%
-                    recipient: INVESTOR,
+                    recipient: address(0),
                     schedule: _getLinearVesting()
             });
         vestingConfigs[1] = IILOVest.VestingConfig({
