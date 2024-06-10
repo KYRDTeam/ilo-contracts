@@ -18,6 +18,11 @@ abstract contract ILOVest is IILOVest {
         uint16 totalShares;
         uint16 BPS = 10000;
         for (uint256 i = 0; i < vestingConfigs.length; i++) {
+            if (i == 0) {
+                require (vestingConfigs[i].recipient == address(0), "VR");
+            } else {
+                require(vestingConfigs[i].recipient != address(0), "VR");
+            }
             // we need to subtract fist in order to avoid int overflow
             require(BPS - totalShares >= vestingConfigs[i].shares, "TS");
             _validateVestSchedule(launchTime, vestingConfigs[i].schedule);

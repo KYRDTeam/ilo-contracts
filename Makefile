@@ -19,6 +19,9 @@ ilo-manager:
 	$(eval CONTRACT=ILOManager)
 ilo-pool:
 	$(eval CONTRACT=ILOPool)
+all:
+	$(eval CONTRACT=AllContract)
+deploy-all:
 deploy-ilo-manager:
 deploy-ilo-pool:
 deploy-ilo-manager-legacy:
@@ -32,6 +35,7 @@ deploy-%-legacy: %
 deploy-%-with-gas-price: %
 	$(DEPLOY_CMD) --legacy --gas-price $(GAS_PRICE)
 
+verify-all:
 verify-ilo-manager:
 verify-ilo-pool:
 verify-%: %

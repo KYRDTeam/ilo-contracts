@@ -33,6 +33,18 @@ contract ILOManagerTest is IntegrationTestBase {
         assertEq(iloPool.symbol(), "KRYSTAL-ILO-V1");
     }
 
+    function testInitPoolInvalidVestingRecipient() external {
+        IILOManager.InitPoolParams memory params = _getInitPoolParams();
+        params.vestingConfigs[0].recipient = INVESTOR;
+        vm.expectRevert(bytes("VR"));
+        IILOPool(_initPool(PROJECT_OWNER, params));
+        
+        params = _getInitPoolParams();
+        params.vestingConfigs[1].recipient = address(0);
+        vm.expectRevert(bytes("VR"));
+        IILOPool(_initPool(PROJECT_OWNER, params));
+    }
+
     function testInitPoolNotOwner() external {
         vm.expectRevert(bytes("UA"));
         _initPool(DUMMY_ADDRESS, _getInitPoolParams());
