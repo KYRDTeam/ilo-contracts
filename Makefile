@@ -3,25 +3,19 @@ ifneq (,$(wildcard ./.env))
     export
 endif
 
-DEPLOY_CMD = forge script script/$(CONTRACT).s.sol:$(CONTRACT)Script --rpc-url $(RPC_URL) --broadcast
+DEPLOY_CMD = forge script script/Deploy.s.sol:$(CONTRACT)Script --rpc-url $(RPC_URL) --broadcast
 
 .PHONY: clean
-
-guard-%:
-    @if [ "${${*}}" = "" ]; then \
-        echo "Environment variable $* not set"; \
-        exit 1; \
-    fi
-
+all: clean deploy-all-contract verify-all-contract
 clean:
 	forge clean && rm -rf cache
 ilo-manager:
 	$(eval CONTRACT=ILOManager)
 ilo-pool:
 	$(eval CONTRACT=ILOPool)
-all:
+all-contract:
 	$(eval CONTRACT=AllContract)
-deploy-all:
+deploy-all-contract:
 deploy-ilo-manager:
 deploy-ilo-pool:
 deploy-ilo-manager-legacy:
@@ -35,7 +29,7 @@ deploy-%-legacy: %
 deploy-%-with-gas-price: %
 	$(DEPLOY_CMD) --legacy --gas-price $(GAS_PRICE)
 
-verify-all:
+verify-all-contract:
 verify-ilo-manager:
 verify-ilo-pool:
 verify-%: %
