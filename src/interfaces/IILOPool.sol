@@ -5,7 +5,6 @@ pragma abicoder v2;
 import '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
 import '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
 
-import './IILOConfig.sol';
 import './IPeripheryPayments.sol';
 import './IILOPoolImmutableState.sol';
 import './IILOSale.sol';
@@ -16,7 +15,6 @@ import '../libraries/PoolAddress.sol';
 /// @notice Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 /// and authorized.
 interface IILOPool is
-    IILOConfig,
     IILOVest,
     IILOSale,
     IPeripheryPayments,
@@ -47,7 +45,7 @@ interface IILOPool is
     /// @param amount1 The amount of token1 owed to the position that was collected
     event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
 
-    event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, uint16 platformFee, uint16 performanceFee, uint16 investorShares, SaleInfo saleInfo, LinearVest[] investorVestConfigs);
+    event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, SaleInfo saleInfo, VestingConfig[] vestingConfig);
 
     event Claim(address indexed user, uint256 tokenId,uint128 liquidity, uint256 amount0, uint256 amount1, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128);
     event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount, uint128 liquidity);
@@ -82,6 +80,24 @@ interface IILOPool is
             uint256 feeGrowthInside0LastX128,
             uint256 feeGrowthInside1LastX128
         );
+
+    struct InitPoolParams {
+        address uniV3Pool;
+        int24 tickLower; 
+        int24 tickUpper;
+        uint160 sqrtRatioLowerX96; 
+        uint160 sqrtRatioUpperX96;
+        uint256 hardCap; // total amount of raise tokens
+        uint256 softCap; // minimum amount of raise token needed for launch pool
+        uint256 maxCapPerUser; // TODO: user tiers
+        uint64 start;
+        uint64 end;
+
+        // config for vests and shares. 
+        // First element is allways for investor 
+        // and will mint nft when investor buy ilo
+        VestingConfig[] vestingConfigs;
+    }
 
     /// @notice Returns number of collected tokens associated with a given token ID.
     function claim(uint256 tokenId) external payable returns (uint256 amount0, uint256 amount1);

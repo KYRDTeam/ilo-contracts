@@ -11,9 +11,6 @@ contract Mock {
         uint24 fee;
         uint160 initialPoolPriceX96;
         uint64 launchTime;
-        uint16 investorShares;  // BPS shares
-        IILOManager.ProjectVestConfig[] projectVestConfigs;
-
     }
 
 
@@ -43,43 +40,43 @@ contract Mock {
             raiseToken: USDC,
             fee: 500,
             initialPoolPriceX96: 158456325028528675187087900672, 
-            launchTime: LAUNCH_START, // Wed Jun 05 2024 17:00:00 GMT+0000
-            investorShares: 2000, // 20%
-            projectVestConfigs: _getProjectVestConfig()
+            launchTime: LAUNCH_START // Wed Jun 05 2024 17:00:00 GMT+0000
         });
     }
 
-    function _getProjectVestConfig() internal pure returns (IILOManager.ProjectVestConfig[] memory projectVestConfigs) {
-        projectVestConfigs = new IILOManager.ProjectVestConfig[](3);
-        projectVestConfigs[0] = IILOManager.ProjectVestConfig({
+    function _getVestingConfigs() internal pure returns (IILOVest.VestingConfig[] memory vestingConfigs) {
+        vestingConfigs = new IILOVest.VestingConfig[](4);
+        vestingConfigs[0] = IILOVest.VestingConfig({
                     shares: 2000, // 20%
-                    name: "dev",
-                    recipient: DEV_RECIPIENT,
-                    vestSchedule: _getLinearVesting()
+                    recipient: INVESTOR,
+                    schedule: _getLinearVesting()
             });
-        projectVestConfigs[1] = IILOManager.ProjectVestConfig({
+        vestingConfigs[1] = IILOVest.VestingConfig({
                     shares: 3000, // 30%
-                    name: "treasury",
                     recipient: TREASURY_RECIPIENT,
-                    vestSchedule: _getLinearVesting()
+                    schedule: _getLinearVesting()
             });
-        projectVestConfigs[2] = IILOManager.ProjectVestConfig({
+        vestingConfigs[2] = IILOVest.VestingConfig({
+                    shares: 2000, // 20%
+                    recipient: DEV_RECIPIENT,
+                    schedule: _getLinearVesting()
+            });
+        vestingConfigs[3] = IILOVest.VestingConfig({
                     shares: 3000, // 30%
-                    name: "liquidity",
                     recipient: LIQUIDITY_RECIPIENT,
-                    vestSchedule: _getLinearVesting()
+                    schedule: _getLinearVesting()
             });
     }
 
-    function _getLinearVesting() internal pure returns (IILOConfig.LinearVest[] memory linearVestConfigs) {
-        linearVestConfigs = new IILOConfig.LinearVest[](2);
-        linearVestConfigs[0] = IILOConfig.LinearVest({
-                    percentage: 3000, // 30% 
+    function _getLinearVesting() internal pure returns (IILOVest.LinearVest[] memory linearVestConfigs) {
+        linearVestConfigs = new IILOVest.LinearVest[](2);
+        linearVestConfigs[0] = IILOVest.LinearVest({
+                    shares: 3000, // 30% 
                     start: VEST_START_0,
                     end: VEST_END_0
             });
-        linearVestConfigs[1] = IILOConfig.LinearVest({
-                    percentage: 7000, // 70% 
+        linearVestConfigs[1] = IILOVest.LinearVest({
+                    shares: 7000, // 70% 
                     start: VEST_START_1,
                     end: VEST_END_1
             });

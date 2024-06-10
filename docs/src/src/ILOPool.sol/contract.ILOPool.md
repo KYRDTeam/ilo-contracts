@@ -1,5 +1,5 @@
 # ILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/ILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/ILOPool.sol)
 
 **Inherits:**
 ERC721, [IILOPool](/src/interfaces/IILOPool.sol/interface.IILOPool.md), [ILOWhitelist](/src/base/ILOWhitelist.sol/abstract.ILOWhitelist.md), [ILOVest](/src/base/ILOVest.sol/abstract.ILOVest.md), [Initializable](/src/base/Initializable.sol/abstract.Initializable.md), [Multicall](/src/base/Multicall.sol/abstract.Multicall.md), [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [LiquidityManagement](/src/base/LiquidityManagement.sol/abstract.LiquidityManagement.md)
@@ -33,19 +33,19 @@ bool private _refundTriggered;
 ```
 
 
-### _investorVestConfigs
-
-```solidity
-LinearVest[] private _investorVestConfigs;
-```
-
-
 ### _positions
 *The token ID position data*
 
 
 ```solidity
 mapping(uint256 => Position) private _positions;
+```
+
+
+### _vestingConfigs
+
+```solidity
+VestingConfig[] private _vestingConfigs;
 ```
 
 
@@ -133,7 +133,7 @@ this function is for investor buying ILO
 function buy(uint256 raiseAmount, address recipient)
     external
     override
-    returns (uint256 tokenId, uint128 liquidityDelta, uint256 amountAdded0, uint256 amountAdded1);
+    returns (uint256 tokenId, uint128 liquidityDelta);
 ```
 
 ### isAuthorizedForToken
@@ -216,7 +216,7 @@ returns amount of sale token that has already been sold
 
 
 ```solidity
-function totalSold() external view override returns (uint256);
+function totalSold() public view override returns (uint256 _totalSold);
 ```
 
 ### _saleAmountNeeded
@@ -227,7 +227,7 @@ return sale token amount needed for the raiseAmount.
 
 
 ```solidity
-function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256 saleAmountNeeded);
+function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256 saleAmountNeeded, uint128 liquidity);
 ```
 
 ### _unlockedLiquidity

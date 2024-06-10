@@ -103,7 +103,7 @@ function launch(address uniV3PoolAddress);
 |   VT	| Invalid Vest Time        |
 |   LT	| Invalid Launch Time      |
 |   ST	| Invalid Sale Time        |
-|   RFT	| Invalid Refund Time      |
+|  RFT	| Invalid Refund Time      |
 |   TS	| Invalid Total Shares     |
 |   VS	| Invalid Vest Shares      |
 |   NP	| No Pools                 |
@@ -114,5 +114,5 @@ function launch(address uniV3PoolAddress);
 |   SA	| Over Sale Amount         |
 |   ZA	| Zero Buy Amount          |
 |  PNL	| Pool Not Launched        |
-|  PL	| Pool Launched            |
+|   PL	| Pool Launched            |
 |  IRF	| Pool In Refund state     |

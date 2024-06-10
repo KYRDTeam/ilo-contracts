@@ -1,8 +1,5 @@
 # IILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/interfaces/IILOManager.sol)
-
-**Inherits:**
-[IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/interfaces/IILOManager.sol)
 
 
 ## Functions
@@ -219,17 +216,6 @@ event ProjectRefund(address indexed project, uint256 refundAmount);
 ```
 
 ## Structs
-### ProjectVestConfig
-
-```solidity
-struct ProjectVestConfig {
-    uint16 shares;
-    string name;
-    address recipient;
-    LinearVest[] vestSchedule;
-}
-```
-
 ### Project
 
 ```solidity
@@ -242,7 +228,6 @@ struct Project {
     uint64 launchTime;
     uint64 refundDeadline;
     uint16 investorShares;
-    ProjectVestConfig[] projectVestConfigs;
     address uniV3PoolAddress;
     PoolAddress.PoolKey _cachedPoolKey;
     uint16 platformFee;
@@ -259,8 +244,22 @@ struct InitProjectParams {
     uint24 fee;
     uint160 initialPoolPriceX96;
     uint64 launchTime;
-    uint16 investorShares;
-    ProjectVestConfig[] projectVestConfigs;
+}
+```
+
+### InitPoolParams
+
+```solidity
+struct InitPoolParams {
+    address uniV3Pool;
+    int24 tickLower;
+    int24 tickUpper;
+    uint256 hardCap;
+    uint256 softCap;
+    uint256 maxCapPerUser;
+    uint64 start;
+    uint64 end;
+    IILOVest.VestingConfig[] vestingConfigs;
 }
 ```
 

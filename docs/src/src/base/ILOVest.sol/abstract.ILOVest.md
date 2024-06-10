@@ -1,8 +1,8 @@
 # ILOVest
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/base/ILOVest.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/base/ILOVest.sol)
 
 **Inherits:**
-[IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md)
+[IILOVest](/src/interfaces/IILOVest.sol/interface.IILOVest.md)
 
 
 ## State Variables
@@ -42,13 +42,17 @@ function _unlockedLiquidity(uint256 tokenId) internal view virtual returns (uint
 function _claimableLiquidity(uint256 tokenId) internal view virtual returns (uint128 claimableLiquidity);
 ```
 
-## Structs
-### PositionVest
+### _validateSharesAndVests
+
 
 ```solidity
-struct PositionVest {
-    uint128 totalLiquidity;
-    LinearVest[] schedule;
-}
+function _validateSharesAndVests(uint64 launchTime, VestingConfig[] memory vestingConfigs) internal pure;
+```
+
+### _validateVestSchedule
+
+
+```solidity
+function _validateVestSchedule(uint64 launchTime, LinearVest[] memory schedule) internal pure;
 ```
 

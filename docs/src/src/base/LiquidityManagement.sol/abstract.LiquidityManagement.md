@@ -1,5 +1,5 @@
 # LiquidityManagement
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/base/LiquidityManagement.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/base/LiquidityManagement.sol)
 
 **Inherits:**
 IUniswapV3MintCallback, [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [PeripheryPayments](/src/base/PeripheryPayments.sol/abstract.PeripheryPayments.md)
@@ -33,9 +33,7 @@ Add liquidity to an initialized pool
 
 
 ```solidity
-function addLiquidity(AddLiquidityParams memory params)
-    internal
-    returns (uint128 liquidity, uint256 amount0, uint256 amount1);
+function addLiquidity(AddLiquidityParams memory params) internal returns (uint256 amount0, uint256 amount1);
 ```
 
 ## Structs
@@ -44,6 +42,7 @@ function addLiquidity(AddLiquidityParams memory params)
 ```solidity
 struct AddLiquidityParams {
     IUniswapV3Pool pool;
+    uint128 liquidity;
     uint256 amount0Desired;
     uint256 amount1Desired;
     uint256 amount0Min;
