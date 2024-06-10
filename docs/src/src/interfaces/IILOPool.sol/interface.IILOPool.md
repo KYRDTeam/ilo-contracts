@@ -1,8 +1,8 @@
 # IILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/interfaces/IILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/interfaces/IILOPool.sol)
 
 **Inherits:**
-[IILOConfig](/src/interfaces/IILOConfig.sol/interface.IILOConfig.md), [IILOVest](/src/interfaces/IILOVest.sol/interface.IILOVest.md), [IILOSale](/src/interfaces/IILOSale.sol/interface.IILOSale.md), [IPeripheryPayments](/src/interfaces/IPeripheryPayments.sol/interface.IPeripheryPayments.md), [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md), IERC721Metadata, IERC721Enumerable
+[IILOVest](/src/interfaces/IILOVest.sol/interface.IILOVest.md), [IILOSale](/src/interfaces/IILOSale.sol/interface.IILOSale.md), [IPeripheryPayments](/src/interfaces/IPeripheryPayments.sol/interface.IPeripheryPayments.md), [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md), IERC721Metadata, IERC721Enumerable
 
 Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 and authorized.
@@ -139,14 +139,7 @@ event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint2
 
 ```solidity
 event ILOPoolInitialized(
-    address indexed univ3Pool,
-    int32 tickLower,
-    int32 tickUpper,
-    uint16 platformFee,
-    uint16 performanceFee,
-    uint16 investorShares,
-    SaleInfo saleInfo,
-    LinearVest[] investorVestConfigs
+    address indexed univ3Pool, int32 tickLower, int32 tickUpper, SaleInfo saleInfo, VestingConfig[] vestingConfig
 );
 ```
 
@@ -197,6 +190,24 @@ struct Position {
     uint256 feeGrowthInside0LastX128;
     uint256 feeGrowthInside1LastX128;
     uint256 raiseAmount;
+}
+```
+
+### InitPoolParams
+
+```solidity
+struct InitPoolParams {
+    address uniV3Pool;
+    int24 tickLower;
+    int24 tickUpper;
+    uint160 sqrtRatioLowerX96;
+    uint160 sqrtRatioUpperX96;
+    uint256 hardCap;
+    uint256 softCap;
+    uint256 maxCapPerUser;
+    uint64 start;
+    uint64 end;
+    VestingConfig[] vestingConfigs;
 }
 ```
 

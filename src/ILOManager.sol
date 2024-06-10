@@ -8,6 +8,7 @@ import "./libraries/ChainId.sol";
 import './base/Initializable.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
+import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import "@openzeppelin/contracts/access/Ownable.sol";
 import '@openzeppelin/contracts/proxy/Clones.sol';
 
@@ -16,7 +17,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     address public override WETH9;
 
     uint64 private DEFAULT_DEADLINE_OFFSET = 7 * 24 * 60 * 60; // 7 days
-    uint16 constant BPS = 10000;
     uint16 public override PLATFORM_FEE;
     uint16 public override PERFORMANCE_FEE;
     address public override FEE_TAKER;
@@ -55,13 +55,12 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function initProject(InitProjectParams calldata params) external override afterInitialize() returns(address uniV3PoolAddress) {
-        _validateSharesAndVests(params.launchTime, params.investorShares, params.projectVestConfigs);
         uint64 refundDeadline = params.launchTime + DEFAULT_DEADLINE_OFFSET;
 
         PoolAddress.PoolKey memory poolKey = PoolAddress.getPoolKey(params.saleToken, params.raiseToken, params.fee);
         uniV3PoolAddress = _initUniV3PoolIfNecessary(poolKey, params.initialPoolPriceX96);
         
-        _cacheProject(uniV3PoolAddress, params.saleToken, params.raiseToken, params.fee, params.initialPoolPriceX96, params.launchTime, refundDeadline, params.investorShares, params.projectVestConfigs);
+        _cacheProject(uniV3PoolAddress, params.saleToken, params.raiseToken, params.fee, params.initialPoolPriceX96, params.launchTime, refundDeadline);
         emit ProjectCreated(uniV3PoolAddress, _cachedProject[uniV3PoolAddress]);
     }
 
@@ -71,20 +70,35 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool) returns (address iloPoolAddress) {
-        // validate time for sale start and end compared to launch time
-        Project storage _project = _cachedProject[params.uniV3Pool];
-        require(_project.uniV3PoolAddress != address(0), "NI");
-        require(params.start < params.end && params.end < _project.launchTime, "PT");
-        _validateVestSchedule(_project.launchTime, params.investorVestConfigs);
-        // this salt make sure that pool address can not be represented in any other chains
-        bytes32 salt = keccak256(abi.encodePacked(
-            ChainId.get(),
-            params.uniV3Pool,
-            _initializedILOPools[params.uniV3Pool].length
-        ));
-        iloPoolAddress = Clones.cloneDeterministic(ILO_POOL_IMPLEMENTATION, salt);
-        emit ILOPoolCreated(_project.uniV3PoolAddress, iloPoolAddress, _initializedILOPools[params.uniV3Pool].length);
-        IILOPool(iloPoolAddress).initialize(params);
+        {
+            // validate time for sale start and end compared to launch time
+            Project storage _project = _cachedProject[params.uniV3Pool];
+            require(_project.uniV3PoolAddress != address(0), "NI");
+            require(params.start < params.end && params.end < _project.launchTime, "PT");
+            // this salt make sure that pool address can not be represented in any other chains
+            bytes32 salt = keccak256(abi.encodePacked(
+                ChainId.get(),
+                params.uniV3Pool,
+                _initializedILOPools[params.uniV3Pool].length
+            ));
+            iloPoolAddress = Clones.cloneDeterministic(ILO_POOL_IMPLEMENTATION, salt);
+            emit ILOPoolCreated(_project.uniV3PoolAddress, iloPoolAddress, _initializedILOPools[params.uniV3Pool].length);
+        }
+
+        IILOPool.InitPoolParams memory initParams = IILOPool.InitPoolParams({
+            uniV3Pool: params.uniV3Pool,
+            tickLower: params.tickLower,
+            tickUpper: params.tickUpper,
+            sqrtRatioLowerX96: TickMath.getSqrtRatioAtTick(params.tickLower),
+            sqrtRatioUpperX96: TickMath.getSqrtRatioAtTick(params.tickUpper),
+            hardCap: params.hardCap,
+            softCap: params.softCap,
+            maxCapPerUser: params.maxCapPerUser,
+            start: params.start,
+            end: params.end,
+            vestingConfigs: params.vestingConfigs
+        });
+        IILOPool(iloPoolAddress).initialize(initParams);
         _initializedILOPools[params.uniV3Pool].push(iloPoolAddress);
     }
 
@@ -110,17 +124,10 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         uint24 fee,
         uint160 initialPoolPriceX96,
         uint64 launchTime,
-        uint64 refundDeadline,
-        uint16 investorShares,
-        ProjectVestConfig[] calldata projectVestConfigs
+        uint64 refundDeadline
     ) internal {
         Project storage _project = _cachedProject[uniV3PoolAddress];
         require(_project.uniV3PoolAddress == address(0), "RE");
-
-        uint256 projectVestConfigsLength = projectVestConfigs.length;
-        for (uint256 index = 0; index < projectVestConfigsLength; index++) {
-            _project.projectVestConfigs.push(projectVestConfigs[index]);
-        }
 
         _project.platformFee = PLATFORM_FEE;
         _project.performanceFee = PERFORMANCE_FEE;
@@ -131,40 +138,8 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         _project.initialPoolPriceX96 = initialPoolPriceX96;
         _project.launchTime = launchTime;
         _project.refundDeadline = refundDeadline;
-        _project.investorShares = investorShares;
         _project.uniV3PoolAddress = uniV3PoolAddress;
         _project._cachedPoolKey = PoolAddress.getPoolKey(saleToken, raiseToken, fee);
-    }
-
-    function _validateSharesAndVests(uint64 launchTime, uint16 investorShares, ProjectVestConfig[] calldata projectVestConfigs) internal pure {
-        require(investorShares <= BPS, "TS");
-        uint16 totalShares = investorShares;
-        uint256 configLength = projectVestConfigs.length;
-        for (uint256 index = 0; index < configLength; index++) {
-            // we need to subtract fist in order to avoid int overflow
-            require(BPS - totalShares >= projectVestConfigs[index].shares, "TS");
-            _validateVestSchedule(launchTime, projectVestConfigs[index].vestSchedule);
-            totalShares += projectVestConfigs[index].shares;
-        }
-        // total shares should be exactly equal BPS
-        require(totalShares == BPS, "TS");
-    }
-
-    function _validateVestSchedule(uint64 launchTime, LinearVest[] memory vestSchedule) internal pure {
-        require(vestSchedule[0].start >= launchTime, "VT");
-        uint16 totalShares;
-        uint64 lastEnd;
-        uint256 vestScheduleLength = vestSchedule.length;
-        for (uint256 index = 0; index < vestScheduleLength; index++) {
-            // vesting schedule must not overlap
-            require(vestSchedule[index].start >= lastEnd, "VT");
-            lastEnd = vestSchedule[index].end;
-            // we need to subtract fist in order to avoid int overflow
-            require(BPS - totalShares >= vestSchedule[index].percentage, "VS");
-            totalShares += vestSchedule[index].percentage;
-        }
-        // total shares should be exactly equal BPS
-        require(totalShares == BPS, "VS");
     }
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools

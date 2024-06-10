@@ -15,7 +15,6 @@
       - [IERC1271](src/interfaces/external/IERC1271.sol/interface.IERC1271.md)
       - [IERC20PermitAllowed](src/interfaces/external/IERC20PermitAllowed.sol/interface.IERC20PermitAllowed.md)
       - [IWETH9](src/interfaces/external/IWETH9.sol/interface.IWETH9.md)
-    - [IILOConfig](src/interfaces/IILOConfig.sol/interface.IILOConfig.md)
     - [IILOManager](src/interfaces/IILOManager.sol/interface.IILOManager.md)
     - [IILOPool](src/interfaces/IILOPool.sol/interface.IILOPool.md)
     - [IILOPoolImmutableState](src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md)

@@ -1,5 +1,5 @@
 # IILOSale
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/interfaces/IILOSale.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/interfaces/IILOSale.sol)
 
 
 ## Functions
@@ -9,9 +9,7 @@ this function is for investor buying ILO
 
 
 ```solidity
-function buy(uint256 raiseAmount, address recipient)
-    external
-    returns (uint256 tokenId, uint128 liquidity, uint256 amountAdded0, uint256 amountAdded1);
+function buy(uint256 raiseAmount, address recipient) external returns (uint256 tokenId, uint128 liquidity);
 ```
 
 ### totalSold

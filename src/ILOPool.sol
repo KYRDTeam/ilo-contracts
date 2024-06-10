@@ -39,10 +39,9 @@ contract ILOPool is
     /// @dev when refund triggered, we can not launch anymore
     bool private _refundTriggered;
 
-    LinearVest[] private _investorVestConfigs;
-
     /// @dev The token ID position data
     mapping(uint256 => Position) private _positions;
+    VestingConfig[] private _vestingConfigs;
 
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId;
@@ -72,14 +71,12 @@ contract ILOPool is
         _cachedPoolKey = _project._cachedPoolKey;
         TICK_LOWER = params.tickLower;
         TICK_UPPER = params.tickUpper;
+        SQRT_RATIO_LOWER_X96 = params.sqrtRatioLowerX96;
+        SQRT_RATIO_UPPER_X96 = params.sqrtRatioUpperX96;
         SQRT_RATIO_X96 = _project.initialPoolPriceX96;
-        SQRT_RATIO_LOWER_X96 = TickMath.getSqrtRatioAtTick(TICK_LOWER);
-        SQRT_RATIO_UPPER_X96 = TickMath.getSqrtRatioAtTick(TICK_UPPER);
 
-        PLATFORM_FEE = _project.platformFee;
-        PERFORMANCE_FEE = _project.performanceFee;
-        INVESTOR_SHARES = _project.investorShares;
-
+        // rounding up to make sure that the number of sale token is enough for sale
+        (uint256 maxSaleAmount,) = _saleAmountNeeded(params.hardCap);
         // initialize sale
         saleInfo = SaleInfo({
             hardCap: params.hardCap,
@@ -87,25 +84,21 @@ contract ILOPool is
             maxCapPerUser: params.maxCapPerUser,
             start: params.start,
             end: params.end,
-            // rounding up to make sure that the number of sale token is enough for sale
-            maxSaleAmount: _saleAmountNeeded(params.hardCap)
+            maxSaleAmount: maxSaleAmount
         });
 
+        _validateSharesAndVests(_project.launchTime, params.vestingConfigs);
         // initialize vesting
-        uint256 vestConfigLength = params.investorVestConfigs.length;
-        for (uint256 index = 0; index < vestConfigLength; index++) {
-            _investorVestConfigs.push(params.investorVestConfigs[index]);
+        for (uint256 index = 0; index < params.vestingConfigs.length; index++) {
+            _vestingConfigs.push(params.vestingConfigs[index]);
         }
 
         emit ILOPoolInitialized(
             params.uniV3Pool,
             TICK_LOWER,
             TICK_UPPER,
-            PLATFORM_FEE,
-            PERFORMANCE_FEE,
-            INVESTOR_SHARES,
             saleInfo,
-            params.investorVestConfigs
+            params.vestingConfigs
         );
     }
 
@@ -143,13 +136,13 @@ contract ILOPool is
         require(saleInfo.hardCap - totalRaised >= raiseAmount, "HC");
         totalRaised += raiseAmount;
 
-        require(_saleAmountNeeded(totalRaised) <= saleInfo.maxSaleAmount, "SA");
+        require(totalSold() <= saleInfo.maxSaleAmount, "SA");
 
         // if investor already have a position, just increase raise amount and liquidity
         // otherwise, mint new nft for investor and assign vesting schedules
         if (balanceOf(recipient) == 0) {
             _mint(recipient, (tokenId = _nextId++));
-            _positionVests[tokenId].schedule = _investorVestConfigs;
+            _positionVests[tokenId].schedule = _vestingConfigs[0].schedule;
         } else {
             tokenId = tokenOfOwnerByIndex(recipient, 0);
         }
@@ -168,7 +161,7 @@ contract ILOPool is
         require(liquidityDelta > 0, "ZA");
 
         // calculate amount of share liquidity investor recieve by INVESTOR_SHARES config
-        liquidityDelta = uint128(FullMath.mulDiv(liquidityDelta, INVESTOR_SHARES, BPS));
+        liquidityDelta = uint128(FullMath.mulDiv(liquidityDelta, _vestingConfigs[0].shares, BPS));
         
         // increase investor's liquidity
         _position.liquidity += liquidityDelta;
@@ -203,6 +196,8 @@ contract ILOPool is
         IUniswapV3Pool pool = IUniswapV3Pool(_cachedUniV3PoolAddress);
         Position storage position = _positions[tokenId];
         {
+            IILOManager.Project memory _project = IILOManager(MANAGER).project(address(pool));
+
             uint128 positionLiquidity = position.liquidity;
             require(positionLiquidity >= liquidity2Claim);
 
@@ -210,7 +205,7 @@ contract ILOPool is
             (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, liquidity2Claim);
 
             // get amount of token0 and token1 after deduct platform fee
-            (amount0, amount1) = _deductFees(amount0, amount1, PLATFORM_FEE);
+            (amount0, amount1) = _deductFees(amount0, amount1, _project.platformFee);
 
             bytes32 positionKey = PositionKey.compute(address(this), TICK_LOWER, TICK_UPPER);
 
@@ -229,7 +224,7 @@ contract ILOPool is
                             );
 
             // amount of fees after deduct performance fee
-            (fees0, fees1) = _deductFees(fees0, fees1, PERFORMANCE_FEE);
+            (fees0, fees1) = _deductFees(fees0, fees1, _project.performanceFee);
 
             // fees is combined with liquidity token amount to return to the user
             amount0 += fees0;
@@ -290,13 +285,11 @@ contract ILOPool is
             if (token0Addr == RAISE_TOKEN) {
                 amount0 = totalRaised;
                 amount0Min = totalRaised;
-                amount1 = _saleAmountNeeded(totalRaised);
-                liquidity = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, totalRaised);
+                (amount1, liquidity) = _saleAmountNeeded(totalRaised);
             } else {
-                amount0 = _saleAmountNeeded(totalRaised);
+                (amount0, liquidity) = _saleAmountNeeded(totalRaised);
                 amount1 = totalRaised;
                 amount1Min = totalRaised;
-                liquidity = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, totalRaised);
             }
 
             // actually deploy liquidity to uniswap pool
@@ -315,10 +308,9 @@ contract ILOPool is
         IILOManager.Project memory _project = IILOManager(MANAGER).project(uniV3PoolAddress);
 
         // assigning vests for the project configuration
-        uint256 vestConfigsLength = _project.projectVestConfigs.length;
-        for (uint256 index = 0; index < vestConfigsLength; index++) {
+        for (uint256 index = 1; index < _vestingConfigs.length; index++) {
             uint256 tokenId;
-            IILOManager.ProjectVestConfig memory projectConfig = _project.projectVestConfigs[index];
+            VestingConfig memory projectConfig = _vestingConfigs[index];
             // mint nft for recipient
             _mint(projectConfig.recipient, (tokenId = _nextId++));
             uint128 liquidityShares = uint128(FullMath.mulDiv(liquidity, projectConfig.shares, BPS));
@@ -329,8 +321,8 @@ contract ILOPool is
 
             // assign vesting schedule
             LinearVest[] storage schedule = _positionVests[tokenId].schedule;
-            for (uint256 i = 0; i < projectConfig.vestSchedule.length; i++) {
-                schedule.push(projectConfig.vestSchedule[i]);
+            for (uint256 i = 0; i < projectConfig.schedule.length; i++) {
+                schedule.push(projectConfig.schedule[i]);
             }
 
             emit Buy(projectConfig.recipient, tokenId, 0, liquidityShares);
@@ -381,22 +373,26 @@ contract ILOPool is
     }
 
     /// @inheritdoc IILOSale
-    function totalSold() external view override returns (uint256) {
-        return _saleAmountNeeded(totalRaised);
+    function totalSold() public view override returns (uint256 _totalSold) {
+        (_totalSold,) =_saleAmountNeeded(totalRaised);
     }
 
     /// @notice return sale token amount needed for the raiseAmount.
     /// @dev sale token amount is rounded up
-    function _saleAmountNeeded(uint256 raiseAmount) internal view returns (uint256 saleAmountNeeded) {
-        if (raiseAmount == 0) return 0;
+    function _saleAmountNeeded(uint256 raiseAmount) internal view returns (
+        uint256 saleAmountNeeded,
+        uint128 liquidity
+    ) {
+        if (raiseAmount == 0) return (0, 0);
 
         if (_cachedPoolKey.token0 == SALE_TOKEN) {
-            // liquidity raised
-            uint128 liquidity1 = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, raiseAmount);
-            saleAmountNeeded = SqrtPriceMathPartial.getAmount0Delta(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, liquidity1, true);
+            // liquidity1 raised
+            liquidity = LiquidityAmounts.getLiquidityForAmount1(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, raiseAmount);
+            saleAmountNeeded = SqrtPriceMathPartial.getAmount0Delta(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, liquidity, true);
         } else {
-            uint128 liquidity0 = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, raiseAmount);
-            saleAmountNeeded = SqrtPriceMathPartial.getAmount1Delta(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, liquidity0, true);
+            // liquidity0 raised
+            liquidity = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, SQRT_RATIO_UPPER_X96, raiseAmount);
+            saleAmountNeeded = SqrtPriceMathPartial.getAmount1Delta(SQRT_RATIO_LOWER_X96, SQRT_RATIO_X96, liquidity, true);
         }
     }
 
@@ -416,17 +412,17 @@ contract ILOPool is
             }
 
             // if vest already end, all the shares are unlocked
-            // otherwise we calculate percentage of unlocked times and get the unlocked share number
+            // otherwise we calculate shares of unlocked times and get the unlocked share number
             // all vest after current unlocking vest is ignored
             if (vest.end < block.timestamp) {
                 liquidityUnlocked += uint128(FullMath.mulDiv(
-                    vest.percentage, 
+                    vest.shares, 
                     totalLiquidity, 
                     BPS
                 ));
             } else {
                 liquidityUnlocked += uint128(FullMath.mulDiv(
-                    vest.percentage * totalLiquidity, 
+                    vest.shares * totalLiquidity, 
                     block.timestamp - vest.start, 
                     (vest.end - vest.start) * BPS
                 ));

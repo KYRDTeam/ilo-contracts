@@ -1,5 +1,5 @@
 # ILOPoolImmutableState
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/base/ILOPoolImmutableState.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/base/ILOPoolImmutableState.sol)
 
 **Inherits:**
 [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md)
@@ -75,27 +75,6 @@ uint160 internal SQRT_RATIO_LOWER_X96;
 
 ```solidity
 uint160 internal SQRT_RATIO_UPPER_X96;
-```
-
-
-### PLATFORM_FEE
-
-```solidity
-uint16 public override PLATFORM_FEE;
-```
-
-
-### PERFORMANCE_FEE
-
-```solidity
-uint16 public override PERFORMANCE_FEE;
-```
-
-
-### INVESTOR_SHARES
-
-```solidity
-uint16 public override INVESTOR_SHARES;
 ```
 
 

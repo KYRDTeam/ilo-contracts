@@ -1,5 +1,5 @@
 # ILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/9e42e9db28c24294412a28a8dafd05701a97c9bc/src/ILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/ILOManager.sol)
 
 **Inherits:**
 [IILOManager](/src/interfaces/IILOManager.sol/interface.IILOManager.md), Ownable, [Initializable](/src/base/Initializable.sol/abstract.Initializable.md)
@@ -24,13 +24,6 @@ address public override WETH9;
 
 ```solidity
 uint64 private DEFAULT_DEADLINE_OFFSET = 7 * 24 * 60 * 60;
-```
-
-
-### BPS
-
-```solidity
-uint16 constant BPS = 10000;
 ```
 
 
@@ -179,28 +172,8 @@ function _cacheProject(
     uint24 fee,
     uint160 initialPoolPriceX96,
     uint64 launchTime,
-    uint64 refundDeadline,
-    uint16 investorShares,
-    ProjectVestConfig[] calldata projectVestConfigs
+    uint64 refundDeadline
 ) internal;
-```
-
-### _validateSharesAndVests
-
-
-```solidity
-function _validateSharesAndVests(
-    uint64 launchTime,
-    uint16 investorShares,
-    ProjectVestConfig[] calldata projectVestConfigs
-) internal pure;
-```
-
-### _validateVestSchedule
-
-
-```solidity
-function _validateVestSchedule(uint64 launchTime, LinearVest[] memory vestSchedule) internal pure;
 ```
 
 ### setPlatformFee

@@ -3,9 +3,9 @@ pragma solidity >=0.7.5;
 pragma abicoder v2;
 
 import '../libraries/PoolAddress.sol';
-import './IILOConfig.sol';
+import '../interfaces/IILOPool.sol';
 
-interface IILOManager is IILOConfig {
+interface IILOManager {
 
     event ProjectCreated(address indexed uniV3PoolAddress, Project project);
     event ILOPoolCreated(address indexed uniV3PoolAddress, address indexed iloPoolAddress, uint256 index);
@@ -16,13 +16,6 @@ interface IILOManager is IILOConfig {
     event ProjectLaunch(address indexed uniV3PoolAddress);
     event ProjectRefund(address indexed project, uint256 refundAmount);
 
-    struct ProjectVestConfig {
-        uint16 shares; // BPS shares
-        string name;
-        address recipient;
-        LinearVest[] vestSchedule;
-    }
-
     struct Project {
         address admin;
         address saleToken;
@@ -32,7 +25,6 @@ interface IILOManager is IILOConfig {
         uint64 launchTime;
         uint64 refundDeadline;
         uint16 investorShares;  // BPS shares
-        ProjectVestConfig[] projectVestConfigs;
 
         // cached info
         address uniV3PoolAddress; // considered as project id
@@ -52,10 +44,6 @@ interface IILOManager is IILOConfig {
         uint160 initialPoolPriceX96;
         // time for lauch all liquidity. Only one launch time for all ilo pools
         uint64 launchTime;
-        // number of liquidity shares after investor invest into ilo pool interm of BPS = 10000
-        uint16 investorShares;  // BPS shares
-        // config for all other shares and vest
-        ProjectVestConfig[] projectVestConfigs;
     }
 
     /// @notice init project with details
@@ -63,6 +51,21 @@ interface IILOManager is IILOConfig {
     /// @return uniV3PoolAddress address of uniswap v3 pool. We use this address as project id
     function initProject(InitProjectParams calldata params) external returns(address uniV3PoolAddress);
 
+    struct InitPoolParams {
+        address uniV3Pool;
+        int24 tickLower; 
+        int24 tickUpper;
+        uint256 hardCap; // total amount of raise tokens
+        uint256 softCap; // minimum amount of raise token needed for launch pool
+        uint256 maxCapPerUser; // TODO: user tiers
+        uint64 start;
+        uint64 end;
+
+        // config for vests and shares. 
+        // First element is allways for investor 
+        // and will mint nft when investor buy ilo
+        IILOVest.VestingConfig[] vestingConfigs;
+    }
     /// @notice this function init an `ILO Pool` which will be used for sale and vest. One project can init many ILO Pool
     /// @notice only project admin can use this function
     /// @param params the parameters for init project

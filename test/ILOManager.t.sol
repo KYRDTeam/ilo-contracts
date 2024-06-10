@@ -10,17 +10,25 @@ contract ILOManagerTest is IntegrationTestBase {
         _setupBase();
     }
 
+    function testInitProject() external {
+        iloManager.initProject(IILOManager.InitProjectParams({
+                    saleToken: mockProject().saleToken,
+                    raiseToken: mockProject().raiseToken,
+                    fee: 10000,
+                    initialPoolPriceX96: mockProject().initialPoolPriceX96+1, 
+                    launchTime: mockProject().launchTime
+                })
+            );
+    }
+
     function testInitPool() external {
-        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
+        IILOManager.InitPoolParams memory params = _getInitPoolParams();
         IILOPool iloPool = IILOPool(_initPool(PROJECT_OWNER, params));
         assertEq(iloPool.MANAGER(), address(iloManager));
         assertEq(iloPool.RAISE_TOKEN(), USDC);
         assertEq(iloPool.SALE_TOKEN(), SALE_TOKEN);
         assertEq(iloPool.TICK_LOWER(), MIN_TICK_500);
         assertEq(iloPool.TICK_UPPER(), -MIN_TICK_500);
-        assertEq(uint256(iloPool.PLATFORM_FEE()), 10);
-        assertEq(uint256(iloPool.PERFORMANCE_FEE()), 1000);
-        assertEq(uint256(iloPool.INVESTOR_SHARES()), 2000);
         assertEq(iloPool.name(), "KRYSTAL ILOPool V1");
         assertEq(iloPool.symbol(), "KRYSTAL-ILO-V1");
     }
@@ -31,21 +39,21 @@ contract ILOManagerTest is IntegrationTestBase {
     }
 
     function testInitPoolWrongInvestorVests() external {
-        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
-        params.investorVestConfigs[0].percentage = 1;
-        vm.expectRevert(bytes("VS"));
+        IILOManager.InitPoolParams memory params = _getInitPoolParams();
+        params.vestingConfigs[0].shares = 1;
+        vm.expectRevert(bytes("TS"));
         _initPool(PROJECT_OWNER, params);
     }
 
     function testInitPoolSaleStartAfterEnd() external {
-        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
+        IILOManager.InitPoolParams memory params = _getInitPoolParams();
         params.start = params.end + 1;
         vm.expectRevert(bytes("PT"));
         _initPool(PROJECT_OWNER, params);
     }
 
     function testInitPoolSaleStartAfterLaunch() external {
-        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
+        IILOManager.InitPoolParams memory params = _getInitPoolParams();
         params.start = LAUNCH_START + 1;
         params.end = LAUNCH_START + 2;
         vm.expectRevert(bytes("PT"));
@@ -53,21 +61,21 @@ contract ILOManagerTest is IntegrationTestBase {
     }
 
     function testInitPoolVestOverlap() external {
-        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
-        params.investorVestConfigs[1].start = params.investorVestConfigs[0].end - 1;
+        IILOManager.InitPoolParams memory params = _getInitPoolParams();
+        params.vestingConfigs[0].schedule[1].start = params.vestingConfigs[0].schedule[0].end - 1;
         vm.expectRevert(bytes("VT"));
         _initPool(PROJECT_OWNER, params);
     }
 
     function testInitPoolVestStartBeforeLaunch() external {
-        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
-        params.investorVestConfigs[0].start = LAUNCH_START - 1;
+        IILOManager.InitPoolParams memory params = _getInitPoolParams();
+        params.vestingConfigs[0].schedule[0].start = LAUNCH_START - 1;
         vm.expectRevert(bytes("VT"));
         _initPool(PROJECT_OWNER, params);
     }
 
     function testLaunchBeforeLaunchStart() external {
-        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
+        IILOManager.InitPoolParams memory params = _getInitPoolParams();
         _initPool(PROJECT_OWNER, params);
         vm.warp(LAUNCH_START-1);
         vm.expectRevert(bytes("LT"));
@@ -75,7 +83,7 @@ contract ILOManagerTest is IntegrationTestBase {
     }
 
     function testLaunchWhenPoolLaunchRevert() external {
-        IILOConfig.InitPoolParams memory params = _getInitPoolParams();
+        IILOManager.InitPoolParams memory params = _getInitPoolParams();
         _initPool(PROJECT_OWNER, params);
         vm.warp(LAUNCH_START+1);
         vm.expectRevert();

@@ -68,16 +68,14 @@ abstract contract IntegrationTestBase is Mock, Test {
                     raiseToken: mockProject().raiseToken,
                     fee: mockProject().fee,
                     initialPoolPriceX96: mockProject().initialPoolPriceX96, 
-                    launchTime: mockProject().launchTime,
-                    investorShares: mockProject().investorShares,
-                    projectVestConfigs: mockProject().projectVestConfigs
+                    launchTime: mockProject().launchTime
                 })
             );
 
     }
 
-    function _getInitPoolParams() internal view returns(IILOConfig.InitPoolParams memory) {
-        return IILOConfig.InitPoolParams({
+    function _getInitPoolParams() internal view returns(IILOManager.InitPoolParams memory) {
+        return IILOManager.InitPoolParams({
             uniV3Pool: projectId,
             tickLower: MIN_TICK_500,
             tickUpper: -MIN_TICK_500,
@@ -86,11 +84,11 @@ abstract contract IntegrationTestBase is Mock, Test {
             maxCapPerUser: 60000 ether,
             start: SALE_START,
             end: SALE_END,
-            investorVestConfigs: _getLinearVesting()
+            vestingConfigs: _getVestingConfigs()
         });
     }
 
-    function _initPool(address initializer, IILOConfig.InitPoolParams memory params) internal returns(address iloPoolAddress) {
+    function _initPool(address initializer, IILOManager.InitPoolParams memory params) internal returns(address iloPoolAddress) {
         vm.prank(initializer);
         iloPoolAddress = iloManager.initILOPool(params);
     }
