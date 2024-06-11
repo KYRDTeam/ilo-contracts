@@ -11,6 +11,10 @@ env can store in `.env` file or export before run command.
 ```bash
     forge build
 ```
+## Test:
+```bash
+    make test
+```
 
 ## Deploy:
 
