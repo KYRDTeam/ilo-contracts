@@ -6,6 +6,8 @@ import "./Common.s.sol";
 contract AllContractScript is CommonScript {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        address uniV3Factory = vm.envAddress("UNIV3_FACTORY");
+        address weth9 = vm.envAddress("WETH9");
         vm.startBroadcast(deployerPrivateKey);
         // create contracts
         {

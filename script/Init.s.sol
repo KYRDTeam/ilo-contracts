@@ -13,6 +13,8 @@ contract ILOManagerInitializeScript is CommonScript {
         address _initialOwner = vm.envAddress("OWNER");
         uint16 platformFee = uint16(vm.envUint("PLATFORM_FEE"));
         uint16 performanceFee = uint16(vm.envUint("PERFORMANCE_FEE"));
+        address uniV3Factory = vm.envAddress("UNIV3_FACTORY");
+        address weth9 = vm.envAddress("WETH9");
 
         vm.startBroadcast(deployerPrivateKey);
         IILOManager iloManager = IILOManager(deploymentAddress);

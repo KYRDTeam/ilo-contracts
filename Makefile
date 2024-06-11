@@ -5,8 +5,10 @@ endif
 
 DEPLOY_CMD = forge script script/Deploy.s.sol:$(CONTRACT)Script --rpc-url $(RPC_URL) --broadcast
 
-.PHONY: clean
+.PHONY: clean test
 all: clean deploy-all-contract verify-all-contract
+test:
+	forge test --gas-report
 clean:
 	forge clean && rm -rf cache
 ilo-manager:

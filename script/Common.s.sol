@@ -11,8 +11,6 @@ abstract contract CommonScript is Script {
 
     bytes32 salt;
     address factory = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
-    address uniV3Factory = vm.envAddress("UNIV3_FACTORY");
-    address weth9 = vm.envAddress("WETH9");
 
     function toHexString(uint256 value, uint256 length) internal pure returns (string memory) {
         uint256 localValue = value;
