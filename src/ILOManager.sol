@@ -70,10 +70,10 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool) returns (address iloPoolAddress) {
+        Project storage _project = _cachedProject[params.uniV3Pool];
         {
-            // validate time for sale start and end compared to launch time
-            Project storage _project = _cachedProject[params.uniV3Pool];
             require(_project.uniV3PoolAddress != address(0), "NI");
+            // validate time for sale start and end compared to launch time
             require(params.start < params.end && params.end < _project.launchTime, "PT");
             // this salt make sure that pool address can not be represented in any other chains
             bytes32 salt = keccak256(abi.encodePacked(
@@ -85,12 +85,16 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             emit ILOPoolCreated(_project.uniV3PoolAddress, iloPoolAddress, _initializedILOPools[params.uniV3Pool].length);
         }
 
+        uint160 sqrtRatioLowerX96 = TickMath.getSqrtRatioAtTick(params.tickLower);
+        uint160 sqrtRatioUpperX96 = TickMath.getSqrtRatioAtTick(params.tickUpper);
+        require(sqrtRatioLowerX96 < _project.initialPoolPriceX96 && sqrtRatioLowerX96 < sqrtRatioUpperX96, "RANGE");
+
         IILOPool.InitPoolParams memory initParams = IILOPool.InitPoolParams({
             uniV3Pool: params.uniV3Pool,
             tickLower: params.tickLower,
             tickUpper: params.tickUpper,
-            sqrtRatioLowerX96: TickMath.getSqrtRatioAtTick(params.tickLower),
-            sqrtRatioUpperX96: TickMath.getSqrtRatioAtTick(params.tickUpper),
+            sqrtRatioLowerX96: sqrtRatioLowerX96,
+            sqrtRatioUpperX96: sqrtRatioUpperX96,
             hardCap: params.hardCap,
             softCap: params.softCap,
             maxCapPerUser: params.maxCapPerUser,
