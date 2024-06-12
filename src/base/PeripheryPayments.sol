@@ -3,32 +3,15 @@ pragma solidity >=0.7.5;
 
 import '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-import '../interfaces/IPeripheryPayments.sol';
 import '../interfaces/external/IWETH9.sol';
 
 import '../libraries/TransferHelper.sol';
 
 import './ILOPoolImmutableState.sol';
 
-abstract contract PeripheryPayments is IPeripheryPayments, ILOPoolImmutableState {
+abstract contract PeripheryPayments is ILOPoolImmutableState {
     receive() external payable {
         require(msg.sender == WETH9, 'Not WETH9');
-    }
-
-    /// @inheritdoc IPeripheryPayments
-    function unwrapWETH9(uint256 amountMinimum, address recipient) public payable override {
-        uint256 balanceWETH9 = IWETH9(WETH9).balanceOf(address(this));
-        require(balanceWETH9 >= amountMinimum, 'IWETH');
-
-        if (balanceWETH9 > 0) {
-            IWETH9(WETH9).withdraw(balanceWETH9);
-            TransferHelper.safeTransferETH(recipient, balanceWETH9);
-        }
-    }
-
-    /// @inheritdoc IPeripheryPayments
-    function refundETH() external payable override {
-        if (address(this).balance > 0) TransferHelper.safeTransferETH(msg.sender, address(this).balance);
     }
 
     /// @param token The token to pay

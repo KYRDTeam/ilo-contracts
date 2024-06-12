@@ -5,7 +5,6 @@ pragma abicoder v2;
 import '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
 import '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
 
-import './IPeripheryPayments.sol';
 import './IILOPoolImmutableState.sol';
 import './IILOSale.sol';
 import './IILOVest.sol';
@@ -17,7 +16,6 @@ import '../libraries/PoolAddress.sol';
 interface IILOPool is
     IILOVest,
     IILOSale,
-    IPeripheryPayments,
     IILOPoolImmutableState,
     IERC721Metadata,
     IERC721Enumerable
