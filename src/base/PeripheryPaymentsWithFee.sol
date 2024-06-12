@@ -33,23 +33,4 @@ abstract contract PeripheryPaymentsWithFee is PeripheryPayments, IPeripheryPayme
         }
     }
 
-    /// @inheritdoc IPeripheryPaymentsWithFee
-    function sweepTokenWithFee(
-        address token,
-        uint256 amountMinimum,
-        address recipient,
-        uint256 feeBips,
-        address feeRecipient
-    ) public payable override {
-        require(feeBips > 0 && feeBips <= 100);
-
-        uint256 balanceToken = IERC20(token).balanceOf(address(this));
-        require(balanceToken >= amountMinimum, 'IT');
-
-        if (balanceToken > 0) {
-            uint256 feeAmount = balanceToken.mul(feeBips) / 10_000;
-            if (feeAmount > 0) TransferHelper.safeTransfer(token, feeRecipient, feeAmount);
-            TransferHelper.safeTransfer(token, recipient, balanceToken - feeAmount);
-        }
-    }
 }

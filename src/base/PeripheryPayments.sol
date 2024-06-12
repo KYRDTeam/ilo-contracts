@@ -27,20 +27,6 @@ abstract contract PeripheryPayments is IPeripheryPayments, ILOPoolImmutableState
     }
 
     /// @inheritdoc IPeripheryPayments
-    function sweepToken(
-        address token,
-        uint256 amountMinimum,
-        address recipient
-    ) public payable override {
-        uint256 balanceToken = IERC20(token).balanceOf(address(this));
-        require(balanceToken >= amountMinimum, 'IT');
-
-        if (balanceToken > 0) {
-            TransferHelper.safeTransfer(token, recipient, balanceToken);
-        }
-    }
-
-    /// @inheritdoc IPeripheryPayments
     function refundETH() external payable override {
         if (address(this).balance > 0) TransferHelper.safeTransferETH(msg.sender, address(this).balance);
     }

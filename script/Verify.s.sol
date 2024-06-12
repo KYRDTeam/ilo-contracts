@@ -16,12 +16,12 @@ contract VerifyAllContractScript is CommonScript {
         console.log(
             string(abi.encodePacked(
                 "forge verify-contract ", 
-                toHexString(iloManagerDeploymentAddress),
-                " src/ILOManager.sol:ILOManager;",
+                toHexString(iloPoolDeploymentAddress),
+                " src/ILOPool.sol:ILOPool;",
 
                 "forge verify-contract ", 
-                toHexString(iloPoolDeploymentAddress),
-                " src/ILOPool.sol:ILOPool"
+                toHexString(iloManagerDeploymentAddress),
+                " src/ILOManager.sol:ILOManager"
             ))
         );
     }
