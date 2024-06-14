@@ -195,6 +195,8 @@ contract ILOPool is
         uint128 liquidity2Claim = _claimableLiquidity(tokenId);
         IUniswapV3Pool pool = IUniswapV3Pool(_cachedUniV3PoolAddress);
         Position storage position = _positions[tokenId];
+        uint256 fees0;
+        uint256 fees1;
         {
             IILOManager.Project memory _project = IILOManager(MANAGER).project(address(pool));
 
@@ -211,13 +213,13 @@ contract ILOPool is
 
             // calculate amount of fees that position generated
             (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
-            uint256 fees0 = FullMath.mulDiv(
+            fees0 = FullMath.mulDiv(
                                 feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
                                 positionLiquidity,
                                 FixedPoint128.Q128
                             );
             
-            uint256 fees1 = FullMath.mulDiv(
+            fees1 = FullMath.mulDiv(
                                 feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
                                 positionLiquidity,
                                 FixedPoint128.Q128
@@ -252,7 +254,7 @@ contract ILOPool is
         TransferHelper.safeTransfer(_cachedPoolKey.token0, ownerOf(tokenId), amount0);
         TransferHelper.safeTransfer(_cachedPoolKey.token1, ownerOf(tokenId), amount1);
 
-        emit Claim(ownerOf(tokenId), tokenId,liquidity2Claim, amount0, amount1, position.feeGrowthInside0LastX128, position.feeGrowthInside1LastX128);
+        emit Claim(ownerOf(tokenId), tokenId,liquidity2Claim, amount0, amount1, position.feeGrowthInside0LastX128, position.feeGrowthInside1LastX128, fees0, fees1);
 
         address feeTaker = IILOManager(MANAGER).FEE_TAKER();
         // transfer fee to fee taker

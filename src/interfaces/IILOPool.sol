@@ -45,7 +45,7 @@ interface IILOPool is
 
     event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, SaleInfo saleInfo, VestingConfig[] vestingConfig);
 
-    event Claim(address indexed user, uint256 tokenId,uint128 liquidity, uint256 amount0, uint256 amount1, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128);
+    event Claim(address indexed user, uint256 tokenId, uint128 liquidity, uint256 amount0WithFee, uint256 amount1WithFee, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint256 fee0Claimed, uint256 fee1Claimed);
     event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount, uint128 liquidity);
     event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
     event UserRefund(address indexed user, uint256 tokenId, uint256 raiseTokenAmount);
