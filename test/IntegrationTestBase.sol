@@ -55,7 +55,8 @@ abstract contract IntegrationTestBase is Mock, Test {
                 FEE_TAKER,
                 address(iloPoolImplementation),
                 UNIV3_FACTORY, 
-                WETH9, 
+                WETH9,
+                1 ether,
                 PLATFORM_FEE,
                 PERFORMANCE_FEE
             );
@@ -63,7 +64,7 @@ abstract contract IntegrationTestBase is Mock, Test {
         vm.stopBroadcast();
 
         hoax(PROJECT_OWNER);
-        projectId =  iloManager.initProject(IILOManager.InitProjectParams({
+        projectId =  iloManager.initProject{value: 1 ether}(IILOManager.InitProjectParams({
                     saleToken: mockProject().saleToken,
                     raiseToken: mockProject().raiseToken,
                     fee: mockProject().fee,

@@ -11,6 +11,7 @@ contract ILOManagerInitializeScript is CommonScript {
 
         address _feeTaker = vm.envAddress("FEE_TAKER");
         address _initialOwner = vm.envAddress("OWNER");
+        uint256 initProjectFee = vm.envUint("INIT_PROJECT_FEE");
         uint16 platformFee = uint16(vm.envUint("PLATFORM_FEE"));
         uint16 performanceFee = uint16(vm.envUint("PERFORMANCE_FEE"));
         address uniV3Factory = vm.envAddress("UNIV3_FACTORY");
@@ -18,7 +19,7 @@ contract ILOManagerInitializeScript is CommonScript {
 
         vm.startBroadcast(deployerPrivateKey);
         IILOManager iloManager = IILOManager(deploymentAddress);
-        iloManager.initialize(_initialOwner, _feeTaker, getILOPoolDeploymentAddress(), uniV3Factory, weth9, platformFee, performanceFee);
+        iloManager.initialize(_initialOwner, _feeTaker, getILOPoolDeploymentAddress(), uniV3Factory, weth9, initProjectFee, platformFee, performanceFee);
 
         vm.stopBroadcast();
     }

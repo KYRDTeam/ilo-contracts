@@ -11,7 +11,19 @@ contract ILOManagerTest is IntegrationTestBase {
     }
 
     function testInitProject() external {
-        iloManager.initProject(IILOManager.InitProjectParams({
+        iloManager.initProject{value: 1 ether}(IILOManager.InitProjectParams({
+                    saleToken: mockProject().saleToken,
+                    raiseToken: mockProject().raiseToken,
+                    fee: 10000,
+                    initialPoolPriceX96: mockProject().initialPoolPriceX96+1, 
+                    launchTime: mockProject().launchTime
+                })
+            );
+    }
+
+    function testInitProjectWrongValue() external {
+        vm.expectRevert(bytes("FEE"));
+        iloManager.initProject{value: 2 ether}(IILOManager.InitProjectParams({
                     saleToken: mockProject().saleToken,
                     raiseToken: mockProject().raiseToken,
                     fee: 10000,
