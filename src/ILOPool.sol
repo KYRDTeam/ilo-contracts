@@ -197,58 +197,75 @@ contract ILOPool is
         Position storage position = _positions[tokenId];
         uint256 fees0;
         uint256 fees1;
+        uint128 amountCollected0;
+        uint128 amountCollected1;
         {
             IILOManager.Project memory _project = IILOManager(MANAGER).project(address(pool));
+            {
+                uint128 positionLiquidity = position.liquidity;
+                require(positionLiquidity >= liquidity2Claim);
 
-            uint128 positionLiquidity = position.liquidity;
-            require(positionLiquidity >= liquidity2Claim);
+                // get amount of token0 and token1 that pool will return for us
+                (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, liquidity2Claim);
+                emit DecreaseLiquidity(tokenId, liquidity2Claim, amount0, amount1);
 
-            // get amount of token0 and token1 that pool will return for us
-            (amount0, amount1) = pool.burn(TICK_LOWER, TICK_UPPER, liquidity2Claim);
+                // calculate amount of fees that position generated
+                bytes32 positionKey = PositionKey.compute(address(this), TICK_LOWER, TICK_UPPER);
+                (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
+                fees0 = FullMath.mulDiv(
+                                    feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
+                                    positionLiquidity,
+                                    FixedPoint128.Q128
+                                );
+                
+                fees1 = FullMath.mulDiv(
+                                    feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
+                                    positionLiquidity,
+                                    FixedPoint128.Q128
+                                );
+                
+                position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
+                position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+            }
 
-            // get amount of token0 and token1 after deduct platform fee
-            (amount0, amount1) = _deductFees(amount0, amount1, _project.platformFee);
+            // to avoid stack too deep, we temparory store amount request into amountCollected
+            amountCollected0 = uint128(amount0 + fees0);
+            amountCollected1 = uint128(amount1 + fees1);
 
-            bytes32 positionKey = PositionKey.compute(address(this), TICK_LOWER, TICK_UPPER);
+            // real amount collected from uintswap pool
+            // some times amountCollected0 < amount0 + fees0, this is due to rounding down in uniswap v3 pool
+            // this diff is really small, so we can ignore it
+            (amountCollected0, amountCollected1) = pool.collect(
+                address(this),
+                TICK_LOWER,
+                TICK_UPPER,
+                amountCollected0,
+                amountCollected1
+            );
 
-            // calculate amount of fees that position generated
-            (, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, , ) = pool.positions(positionKey);
-            fees0 = FullMath.mulDiv(
-                                feeGrowthInside0LastX128 - position.feeGrowthInside0LastX128,
-                                positionLiquidity,
-                                FixedPoint128.Q128
-                            );
-            
-            fees1 = FullMath.mulDiv(
-                                feeGrowthInside1LastX128 - position.feeGrowthInside1LastX128,
-                                positionLiquidity,
-                                FixedPoint128.Q128
-                            );
+            if(_project.platformFee > 0) {
+                // get amount of token0 and token1 after deduct platform fee
+                (amount0, amount1) = _deductFees(amount0, amount1, _project.platformFee);
+            }
 
-            // amount of fees after deduct performance fee
-            (fees0, fees1) = _deductFees(fees0, fees1, _project.performanceFee);
+            if(_project.performanceFee > 0) {
+                // amount of fees after deduct performance fee
+                (fees0, fees1) = _deductFees(fees0, fees1, _project.performanceFee);
+            }
 
             // fees is combined with liquidity token amount to return to the user
             amount0 += fees0;
             amount1 += fees1;
 
-            position.feeGrowthInside0LastX128 = feeGrowthInside0LastX128;
-            position.feeGrowthInside1LastX128 = feeGrowthInside1LastX128;
+            // if platformFee and performanceFee is 0, amountCollected might be smaller than amount due to rounding down in uniswap v3 pool
+            amount0 = amount0 > amountCollected0 ? amountCollected0 : amount0;
+            amount1 = amount1 > amountCollected1 ? amountCollected1 : amount1;
 
             // subtraction is safe because we checked positionLiquidity is gte liquidity2Claim
-            position.liquidity = positionLiquidity - liquidity2Claim;
-            emit DecreaseLiquidity(tokenId, liquidity2Claim, amount0, amount1);
-
+            position.liquidity -= liquidity2Claim;
+            emit Collect(tokenId, address(this), amountCollected0, amountCollected1);
         }
-        // real amount collected from uintswap pool
-        (uint128 amountCollected0, uint128 amountCollected1) = pool.collect(
-            address(this),
-            TICK_LOWER,
-            TICK_UPPER,
-            type(uint128).max,
-            type(uint128).max
-        );
-        emit Collect(tokenId, address(this), amountCollected0, amountCollected1);
+
 
         // transfer token for user
         TransferHelper.safeTransfer(_cachedPoolKey.token0, ownerOf(tokenId), amount0);
