@@ -94,7 +94,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
         uint160 sqrtRatioLowerX96 = TickMath.getSqrtRatioAtTick(params.tickLower);
         uint160 sqrtRatioUpperX96 = TickMath.getSqrtRatioAtTick(params.tickUpper);
-        require(sqrtRatioLowerX96 < _project.initialPoolPriceX96 && sqrtRatioLowerX96 < sqrtRatioUpperX96, "RANGE");
+        require(sqrtRatioLowerX96 < _project.initialPoolPriceX96 && _project.initialPoolPriceX96 < sqrtRatioUpperX96, "RANGE");
 
         IILOPool.InitPoolParams memory initParams = IILOPool.InitPoolParams({
             uniV3Pool: params.uniV3Pool,
