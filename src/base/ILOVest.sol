@@ -41,6 +41,7 @@ abstract contract ILOVest is IILOVest {
         for (uint256 i = 0; i < scheduleLength; i++) {
             // vesting schedule must not overlap
             require(schedule[i].start >= lastEnd, "VT");
+            require(schedule[i].start < schedule[i].end, "VT");
             lastEnd = schedule[i].end;
             // we need to subtract fist in order to avoid int overflow
             require(BPS - totalShares >= schedule[i].shares, "VS");
