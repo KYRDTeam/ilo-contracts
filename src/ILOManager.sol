@@ -21,6 +21,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     uint16 public override PERFORMANCE_FEE;
     address public override FEE_TAKER;
     address public override ILO_POOL_IMPLEMENTATION;
+    uint256 private _initProjectFee;
 
     mapping(address => Project) private _cachedProject; // map uniV3Pool => project (aka projectId => project)
     mapping(address => address[]) private _initializedILOPools; // map uniV3Pool => list of initialized ilo pools
@@ -36,9 +37,11 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         address iloPoolImplementation,
         address uniV3Factory,
         address weth9,
+        uint256 createProjectFee,
         uint16 platformFee,
         uint16 performanceFee
     ) external override whenNotInitialized() {
+        _initProjectFee = createProjectFee;
         PLATFORM_FEE = platformFee;
         PERFORMANCE_FEE = performanceFee;
         FEE_TAKER = _feeTaker;
@@ -54,7 +57,11 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     /// @inheritdoc IILOManager
-    function initProject(InitProjectParams calldata params) external override afterInitialize() returns(address uniV3PoolAddress) {
+    function initProject(InitProjectParams calldata params) external payable override afterInitialize() returns(address uniV3PoolAddress) {
+        require(msg.value == _initProjectFee, "FEE");
+        // transfer fee to fee taker
+        payable(FEE_TAKER).transfer(msg.value);
+
         uint64 refundDeadline = params.launchTime + DEFAULT_DEADLINE_OFFSET;
 
         PoolAddress.PoolKey memory poolKey = PoolAddress.getPoolKey(params.saleToken, params.raiseToken, params.fee);
@@ -204,5 +211,13 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         for (uint256 i = 0; i < initializedPools.length; i++) {
             totalRefundAmount += IILOPool(initializedPools[i]).claimProjectRefund(_cachedProject[uniV3PoolAddress].admin);
         }
+    }
+
+    function initProjectFee() external view returns (uint256) {
+        return _initProjectFee;
+    }
+
+    function setInitProjectFee(uint256 fee) external onlyOwner() {
+        _initProjectFee = fee;
     }
 }

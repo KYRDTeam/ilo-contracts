@@ -49,7 +49,7 @@ interface IILOManager {
     /// @notice init project with details
     /// @param params the parameters to initialize the project
     /// @return uniV3PoolAddress address of uniswap v3 pool. We use this address as project id
-    function initProject(InitProjectParams calldata params) external returns(address uniV3PoolAddress);
+    function initProject(InitProjectParams calldata params) external payable returns(address uniV3PoolAddress);
 
     struct InitPoolParams {
         address uniV3Pool;
@@ -89,6 +89,7 @@ interface IILOManager {
         address iloPoolImplementation,
         address uniV3Factory,
         address weth9,
+        uint256 createProjectFee,
         uint16 platformFee,
         uint16 performanceFee
     ) external;
