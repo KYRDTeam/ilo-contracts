@@ -212,12 +212,28 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             totalRefundAmount += IILOPool(initializedPools[i]).claimProjectRefund(_cachedProject[uniV3PoolAddress].admin);
         }
     }
-
-    function initProjectFee() external view returns (uint256) {
+    
+    /// @inheritdoc IILOManager
+    function initProjectFee() external override view returns (uint256) {
         return _initProjectFee;
     }
-
-    function setInitProjectFee(uint256 fee) external onlyOwner() {
+    
+    /// @inheritdoc IILOManager
+    function setInitProjectFee(uint256 fee) external override onlyOwner() {
         _initProjectFee = fee;
+    }
+
+    /// @inheritdoc IILOManager
+    function setFeesForProject(address uniV3Pool, uint16 platformFee, uint16 performanceFee) external override onlyOwner() {
+        Project storage _project = _cachedProject[uniV3Pool];
+        _project.platformFee = platformFee;
+        _project.performanceFee = performanceFee;
+        emit FeesForProjectSet(uniV3Pool, platformFee, performanceFee);
+    }
+
+    /// @inheritdoc IILOManager
+    function feesForProject(address uniV3Pool) external override view returns (uint16, uint16) {
+        Project storage _project = _cachedProject[uniV3Pool];
+        return (_project.platformFee, _project.performanceFee);
     }
 }
