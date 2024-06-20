@@ -15,6 +15,7 @@ interface IILOManager {
     event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
     event ProjectLaunch(address indexed uniV3PoolAddress);
     event ProjectRefund(address indexed project, uint256 refundAmount);
+    event FeesForProjectSet(address indexed uniV3Pool, uint16 platformFee, uint16 performanceFee);
 
     struct Project {
         address admin;
@@ -109,4 +110,19 @@ interface IILOManager {
 
     /// @notice claim all projects refund
     function claimRefund(address uniV3PoolAddress) external returns(uint256 totalRefundAmount);
+
+    /// @notice get fee when init project
+    function initProjectFee() external view returns (uint256);
+    /// @notice set fee for init project
+    function setInitProjectFee(uint256 fee) external;
+
+    /// @notice get fees for a project
+    function feesForProject(address uniV3PoolAddress) external view returns(uint16 platformFee, uint16 performanceFee);
+
+    /// @notice set fees for project
+    function setFeesForProject(
+        address uniV3PoolAddress,
+        uint16 platformFee,
+        uint16 performanceFee
+    ) external;
 }
