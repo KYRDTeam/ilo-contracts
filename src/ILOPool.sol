@@ -449,6 +449,11 @@ contract ILOPool is
         }
     }
 
+    /// @inheritdoc ERC721
+    function _beforeTokenTransfer(address from, address, uint256) internal view override {
+        require(from == address(0) || block.timestamp > saleInfo.end, "ST");
+    }
+
     /// @notice calculate the amount left after deduct fee
     /// @param amount0 the amount of token0 before deduct fee
     /// @param amount1 the amount of token1 before deduct fee
