@@ -9,8 +9,8 @@ interface IILOPoolImmutableState {
 
     function MANAGER() external view returns (address);
     function RAISE_TOKEN() external view returns (address);
-    function SALE_TOKEN() external view returns (address);
     function TICK_LOWER() external view returns (int24);
     function TICK_UPPER() external view returns (int24);
     function SQRT_RATIO_X96() external view returns (uint160);
+    function PROJECT_ID() external view returns (string memory);
 }

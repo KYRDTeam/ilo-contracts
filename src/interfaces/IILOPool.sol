@@ -43,10 +43,10 @@ interface IILOPool is
     /// @param amount1 The amount of token1 owed to the position that was collected
     event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
 
-    event ILOPoolInitialized(address indexed univ3Pool, int32 tickLower, int32 tickUpper, SaleInfo saleInfo, VestingConfig[] vestingConfig);
+    event ILOPoolInitialized(string projectId, int32 tickLower, int32 tickUpper, SaleInfo saleInfo, VestingConfig[] vestingConfig);
 
     event Claim(address indexed user, uint256 tokenId, uint128 liquidity, uint256 amount0WithFee, uint256 amount1WithFee, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint256 fee0Claimed, uint256 fee1Claimed);
-    event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount, uint128 liquidity);
+    event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount);
     event PoolLaunch(address indexed project, uint128 liquidity, uint256 token0, uint256 token1);
     event UserRefund(address indexed user, uint256 tokenId, uint256 raiseTokenAmount);
     event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
@@ -80,14 +80,12 @@ interface IILOPool is
         );
 
     struct InitPoolParams {
-        address uniV3Pool;
+        string projectId;
         int24 tickLower; 
         int24 tickUpper;
-        uint160 sqrtRatioLowerX96; 
-        uint160 sqrtRatioUpperX96;
-        uint256 hardCap; // total amount of raise tokens
-        uint256 softCap; // minimum amount of raise token needed for launch pool
-        uint256 maxCapPerUser; // TODO: user tiers
+        uint256 maxRaise; // total amount of raise tokens
+        uint256 minRaise; // minimum amount of raise token needed for launch pool
+        uint256 maxRaisePerUser; // TODO: user tiers
         uint64 start;
         uint64 end;
 
@@ -102,10 +100,10 @@ interface IILOPool is
 
     function initialize(InitPoolParams calldata initPoolParams) external;
 
-    function launch() external;
-
-    /// @notice project admin claim refund sale token
-    function claimProjectRefund(address projectAdmin) external returns (uint256 refundAmount);
+    function launch(string calldata projectId, 
+        address uniV3PoolAddress, 
+        PoolAddress.PoolKey calldata poolKey
+    ) external;
 
     /// @notice user claim refund when refund conditions are met
     function claimRefund(uint256 tokenId) external;
