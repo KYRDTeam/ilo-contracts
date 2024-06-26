@@ -49,7 +49,6 @@ contract ILOManagerTest is IntegrationTestBase {
         IILOManager.InitPoolParams memory params = _getInitPoolParams();
         IILOPool iloPool = IILOPool(_initPool(PROJECT_OWNER, params));
         assertEq(address(iloPool.MANAGER()), address(iloManager));
-        assertEq(iloPool.WETH9(), WETH9);
         assertEq(iloPool.RAISE_TOKEN(), USDC);
         assertEq(iloPool.TICK_LOWER(), MIN_TICK_500);
         assertEq(iloPool.TICK_UPPER(), -MIN_TICK_500);
@@ -117,6 +116,7 @@ contract ILOManagerTest is IntegrationTestBase {
         _initPool(PROJECT_OWNER, params);
         vm.warp(LAUNCH_START-1);
         vm.expectRevert(bytes("LT"));
+        vm.prank(PROJECT_OWNER);
         iloManager.launch(PROJECT_ID, SALE_TOKEN);
     }
 

@@ -15,7 +15,6 @@ import '@openzeppelin/contracts/proxy/Clones.sol';
 
 contract ILOManager is IILOManager, Ownable, Initializable {
     address public override UNIV3_FACTORY;
-    address public override WETH9;
 
     uint64 private DEFAULT_DEADLINE_OFFSET = 7 * 24 * 60 * 60; // 7 days
     uint16 public override PLATFORM_FEE;
@@ -37,7 +36,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         address _feeTaker,
         address iloPoolImplementation,
         address uniV3Factory,
-        address weth9,
         uint256 createProjectFee,
         uint16 platformFee,
         uint16 performanceFee
@@ -49,7 +47,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         transferOwnership(initialOwner);
         UNIV3_FACTORY = uniV3Factory;
         ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
-        WETH9 = weth9;
     }
 
     modifier onlyProjectAdmin(string calldata projectId) {

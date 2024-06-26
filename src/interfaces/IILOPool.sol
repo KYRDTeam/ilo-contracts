@@ -97,7 +97,7 @@ interface IILOPool is
     }
 
     /// @notice Returns number of collected tokens associated with a given token ID.
-    function claim(uint256 tokenId) external payable returns (uint256 amount0, uint256 amount1);
+    function claim(uint256 tokenId) external returns (uint256 amount0, uint256 amount1);
 
     function initialize(InitPoolParams calldata initPoolParams) external;
 

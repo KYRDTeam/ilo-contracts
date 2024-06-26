@@ -72,7 +72,6 @@ interface IILOManager {
     function setFeeTaker(address _feeTaker) external;
 
     function UNIV3_FACTORY() external returns(address);
-    function WETH9() external returns(address);
     function PLATFORM_FEE() external returns(uint16);
     function PERFORMANCE_FEE() external returns(uint16);
     function FEE_TAKER() external returns(address);
@@ -83,7 +82,6 @@ interface IILOManager {
         address _feeTaker,
         address iloPoolImplementation,
         address uniV3Factory,
-        address weth9,
         uint256 createProjectFee,
         uint16 platformFee,
         uint16 performanceFee

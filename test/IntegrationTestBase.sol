@@ -60,7 +60,6 @@ abstract contract IntegrationTestBase is Mock, Test {
                 FEE_TAKER,
                 address(iloPoolImplementation),
                 UNIV3_FACTORY, 
-                WETH9,
                 1 ether,
                 PLATFORM_FEE,
                 PERFORMANCE_FEE

@@ -64,7 +64,6 @@ contract ILOPool is
         MANAGER = IILOManager(msg.sender);
         IILOManager.Project memory _project = IILOManager(MANAGER).project(params.projectId);
 
-        WETH9 = IILOManager(MANAGER).WETH9();
         RAISE_TOKEN = _project.raiseToken;
         TICK_LOWER = params.tickLower;
         TICK_UPPER = params.tickUpper;
@@ -159,7 +158,6 @@ contract ILOPool is
     /// @inheritdoc IILOPool
     function claim(uint256 tokenId)
         external
-        payable
         override
         isAuthorizedForToken(tokenId)
         returns (uint256 amount0, uint256 amount1)

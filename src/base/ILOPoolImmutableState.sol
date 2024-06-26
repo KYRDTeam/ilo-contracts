@@ -9,8 +9,6 @@ import 'v3-core/contracts/libraries/TickMath.sol';
 /// @notice Immutable state used by periphery contracts
 abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
     uint16 constant BPS = 10000;
-    /// @inheritdoc IILOPoolImmutableState
-    address public override WETH9;
     string public override PROJECT_ID;
     IILOManager public override MANAGER;
     address public override RAISE_TOKEN;
