@@ -43,7 +43,7 @@ contract ILOPool is
 
     /// @dev The ID of the next token that will be minted. Skips 0
     uint256 private _nextId;
-    uint128 private _totalLiquidity;
+    uint128 private _totalInitialLiquidity;
     uint256 totalRaised;
     constructor() ERC721('', '') {
         _disableInitialize();
@@ -302,7 +302,7 @@ contract ILOPool is
                 projectAdmin: _project.admin
             }));
 
-            _totalLiquidity = liquidity;
+            _totalInitialLiquidity = liquidity;
 
             emit PoolLaunch(uniV3PoolAddress, liquidity, amount0, amount1);
         }
@@ -314,7 +314,7 @@ contract ILOPool is
             VestingConfig memory projectConfig = _vestingConfigs[index];
             // mint nft for recipient
             _mint(projectConfig.recipient, (tokenId = _nextId++));
-            uint128 liquidityShares = uint128(FullMath.mulDiv(liquidity, projectConfig.shares, 10000)); // BPS = 10000
+            uint128 liquidityShares = uint128(FullMath.mulDiv(liquidity, projectConfig.shares, BPS)); // BPS = 10000
 
             Position storage _position = _positions[tokenId];
             _position.liquidity = liquidityShares;
@@ -362,7 +362,6 @@ contract ILOPool is
     /// @param totalLiquidity total liquidity to vest
     /// @param vestingSchedule the vesting schedule
     function _unlockedLiquidity(uint128 totalLiquidity, LinearVest[] storage vestingSchedule) internal view returns (uint128 liquidityUnlocked) {
-        uint256 BPS = 10000;
         for (uint256 index = 0; index < vestingSchedule.length; index++) {
 
             LinearVest storage vest = vestingSchedule[index];
@@ -406,7 +405,6 @@ contract ILOPool is
             uint256 amount0Left, 
             uint256 amount1Left
         ) {
-        uint256 BPS = 10000;
         amount0Left = amount0 - FullMath.mulDiv(amount0, feeBPS, BPS);
         amount1Left = amount1 - FullMath.mulDiv(amount1, feeBPS, BPS);
     }
@@ -429,8 +427,7 @@ contract ILOPool is
     /// this function only can be called after launch
     function _calculateVestingLiquidity(uint256 tokenId) internal view returns(uint128 totalLiquidity) {
         require(_launchSucceeded, "PL");
-        uint256 BPS = 10000;
-        uint128 totalInvestorLiquidity = uint128(FullMath.mulDiv(_totalLiquidity, _vestingConfigs[0].shares, BPS));
+        uint128 totalInvestorLiquidity = uint128(FullMath.mulDiv(_totalInitialLiquidity, _vestingConfigs[0].shares, BPS));
         totalLiquidity = uint128(FullMath.mulDiv(totalInvestorLiquidity, _positions[tokenId].raiseAmount, totalRaised));
     }
 

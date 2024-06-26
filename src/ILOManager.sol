@@ -60,6 +60,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     /// @inheritdoc IILOManager
     function initProject(InitProjectParams calldata params) external payable override afterInitialize() {
         require(msg.value == _initProjectFee, "FEE");
+        require(bytes(params.projectId).length != 0, "ID");
         // transfer fee to fee taker
         payable(FEE_TAKER).transfer(msg.value);
         
@@ -208,9 +209,8 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     /// @inheritdoc IILOManager
-    function launch(string calldata projectId, address saleToken) external override {
+    function launch(string calldata projectId, address saleToken) external override onlyProjectAdmin(projectId) {
         require(block.timestamp > _projects[projectId].launchTime, "LT");
-        require(msg.sender == _projects[projectId].admin, "UA");
 
         uint160 sqrtPriceX96 = _projects[projectId].initialPoolPriceX96;
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(saleToken, _projects[projectId].raiseToken, _projects[projectId].fee);

@@ -3,13 +3,13 @@
 pragma solidity =0.7.6;
 
 import '../interfaces/IILOVest.sol';
+import './ILOPoolImmutableState.sol';
 
-abstract contract ILOVest is IILOVest {
+abstract contract ILOVest is IILOVest, ILOPoolImmutableState {
     mapping(uint256=>PositionVest) _positionVests;
 
     function _validateSharesAndVests(uint64 launchTime, VestingConfig[] memory vestingConfigs) internal pure {
         uint16 totalShares;
-        uint16 BPS = 10000;
         for (uint256 i = 0; i < vestingConfigs.length; i++) {
             if (i == 0) {
                 require (vestingConfigs[i].recipient == address(0), "VR");
@@ -27,7 +27,6 @@ abstract contract ILOVest is IILOVest {
 
     function _validateVestSchedule(uint64 launchTime, LinearVest[] memory schedule) internal pure {
         require(schedule[0].start >= launchTime, "VT");
-        uint16 BPS = 10000;
         uint16 totalShares;
         uint64 lastEnd;
         uint256 scheduleLength = schedule.length;
