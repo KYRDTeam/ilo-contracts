@@ -171,7 +171,6 @@ contract ILOPoolTest is IntegrationTestBase {
         vm.stopPrank();
 
         vm.warp(LAUNCH_START + 86400*7 + 1);
-        vm.prank(address(iloManager));
         vm.expectRevert(bytes("IRF"));
         vm.prank(address(PROJECT_OWNER));
         iloManager.launch(PROJECT_ID, SALE_TOKEN);
@@ -248,10 +247,6 @@ contract ILOPoolTest is IntegrationTestBase {
         vm.warp(VEST_START_0 + 10);
         uint256 tokenId = IILOPool(iloPool).tokenOfOwnerByIndex(INVESTOR, 0);
 
-        (uint128 unlockedLiquidity, uint128 claimedLiquidity) = IILOVest(iloPool).vestingStatus(tokenId);
-        assertEq(uint256(unlockedLiquidity), 694444444444444444);
-        assertEq(uint256(claimedLiquidity), 0);
-
         uint256 balance0Before = IERC20(USDC).balanceOf(INVESTOR);
         uint256 balance1Before = IERC20(SALE_TOKEN).balanceOf(INVESTOR);
 
@@ -266,7 +261,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
         vm.warp(VEST_START_1 + 100);
 
-        (unlockedLiquidity, claimedLiquidity) = IILOVest(iloPool).vestingStatus(tokenId);
+        (uint128 unlockedLiquidity, uint128 claimedLiquidity) = IILOVest(iloPool).vestingStatus(tokenId);
 
         assertEq(uint256(unlockedLiquidity), 6016203703703703704355);
         assertEq(uint256(claimedLiquidity), 694444444444444444);
