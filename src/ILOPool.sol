@@ -258,9 +258,7 @@ contract ILOPool is
     /// @notice this function is used to fill liquidity for the position only in the first time user claim
     function _fillPositionLiquidity(uint256 tokenId) internal {
         if (_positionVests[tokenId].totalLiquidity == 0) {
-            uint256 BPS = 10000;
-            uint128 totalInvestorLiquidity = uint128(FullMath.mulDiv(_totalLiquidity, _vestingConfigs[0].shares, BPS));
-            uint128 positionLiquidity = uint128(FullMath.mulDiv(totalInvestorLiquidity, _positions[tokenId].raiseAmount, totalRaised));
+            uint128 positionLiquidity = _calculateVestingLiquidity(tokenId);
             _positionVests[tokenId].totalLiquidity = positionLiquidity;
             _positions[tokenId].liquidity = positionLiquidity;
         }
@@ -359,13 +357,12 @@ contract ILOPool is
         emit UserRefund(tokenOwner, tokenId,refundAmount);
     }
 
-    /// @inheritdoc ILOVest
-    function _unlockedLiquidity(uint256 tokenId) internal view override returns (uint128 liquidityUnlocked) {
+    
+    /// @notice calculate amount of liquidity unlocked for claim
+    /// @param totalLiquidity total liquidity to vest
+    /// @param vestingSchedule the vesting schedule
+    function _unlockedLiquidity(uint128 totalLiquidity, LinearVest[] storage vestingSchedule) internal view returns (uint128 liquidityUnlocked) {
         uint256 BPS = 10000;
-        PositionVest storage _positionVest = _positionVests[tokenId];
-        LinearVest[] storage vestingSchedule = _positionVest.schedule;
-        uint128 totalLiquidity = _positionVest.totalLiquidity;
-
         for (uint256 index = 0; index < vestingSchedule.length; index++) {
 
             LinearVest storage vest = vestingSchedule[index];
@@ -419,14 +416,27 @@ contract ILOPool is
         uint128 unlockedLiquidity,
         uint128 claimedLiquidity
     ) {
-        unlockedLiquidity = _unlockedLiquidity(tokenId);
+        PositionVest storage _positionVest = _positionVests[tokenId];
+        uint128 totalLiquidity = _positionVest.totalLiquidity;
+        if (totalLiquidity == 0) {
+            totalLiquidity = _calculateVestingLiquidity(tokenId);
+        }
+        unlockedLiquidity = _unlockedLiquidity(totalLiquidity, _positionVest.schedule);
         claimedLiquidity = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
     }
 
-    /// @inheritdoc ILOVest
-    function _claimableLiquidity(uint256 tokenId) internal view override returns (uint128) {
+    /// @notice calculate total liquidity for vesting if user not make any claim
+    /// this function only can be called after launch
+    function _calculateVestingLiquidity(uint256 tokenId) internal view returns(uint128 totalLiquidity) {
+        require(_launchSucceeded, "PL");
+        uint256 BPS = 10000;
+        uint128 totalInvestorLiquidity = uint128(FullMath.mulDiv(_totalLiquidity, _vestingConfigs[0].shares, BPS));
+        totalLiquidity = uint128(FullMath.mulDiv(totalInvestorLiquidity, _positions[tokenId].raiseAmount, totalRaised));
+    }
+
+    function _claimableLiquidity(uint256 tokenId) internal view returns (uint128) {
         uint128 liquidityClaimed = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
-        uint128 liquidityUnlocked = _unlockedLiquidity(tokenId);
+        uint128 liquidityUnlocked = _unlockedLiquidity(_positionVests[tokenId].totalLiquidity, _positionVests[tokenId].schedule);
         return liquidityClaimed < liquidityUnlocked ? liquidityUnlocked - liquidityClaimed : 0;
     }
 

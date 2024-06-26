@@ -7,13 +7,6 @@ import '../interfaces/IILOVest.sol';
 abstract contract ILOVest is IILOVest {
     mapping(uint256=>PositionVest) _positionVests;
 
-    /// @notice calculate amount of liquidity unlocked for claim
-    /// @param tokenId nft token id of position
-    /// @return liquidityUnlocked amount of unlocked liquidity
-    function _unlockedLiquidity(uint256 tokenId) internal view virtual returns (uint128 liquidityUnlocked);
-
-    function _claimableLiquidity(uint256 tokenId) internal view virtual returns (uint128 claimableLiquidity);
-
     function _validateSharesAndVests(uint64 launchTime, VestingConfig[] memory vestingConfigs) internal pure {
         uint16 totalShares;
         uint16 BPS = 10000;
