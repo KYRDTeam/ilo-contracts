@@ -11,11 +11,13 @@ abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
     /// @inheritdoc IILOPoolImmutableState
     address public override WETH9;
     string public override PROJECT_ID;
-    address public override MANAGER;
+    IILOManager public override MANAGER;
     address public override RAISE_TOKEN;
     int24 public override TICK_LOWER;
     int24 public override TICK_UPPER;
     uint160 public override SQRT_RATIO_X96;
+    address public override IMPLEMENTATION;
+    uint256 public override POOL_INDEX;
 
     address internal _cachedUniV3PoolAddress;
     PoolAddress.PoolKey internal _cachedPoolKey;

@@ -3,7 +3,7 @@ pragma solidity >=0.7.5;
 pragma abicoder v2;
 
 import '../libraries/PoolAddress.sol';
-import '../interfaces/IILOPool.sol';
+import './IILOVest.sol';
 
 interface IILOManager {
 
@@ -115,5 +115,14 @@ interface IILOManager {
         string calldata projectId,
         uint16 platformFee,
         uint16 performanceFee
+    ) external;
+
+    function ILOPoolLaunchCallback(
+        string calldata projectId,
+        address poolImplementation,
+        uint256 poolIndex,
+        address saleToken,
+        uint256 amount,
+        address uniswapV3Pool
     ) external;
 }

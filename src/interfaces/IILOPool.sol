@@ -14,7 +14,6 @@ import '../libraries/PoolAddress.sol';
 /// @notice Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 /// and authorized.
 interface IILOPool is
-    IILOVest,
     IILOSale,
     IILOPoolImmutableState,
     IERC721Metadata,
@@ -43,7 +42,7 @@ interface IILOPool is
     /// @param amount1 The amount of token1 owed to the position that was collected
     event Collect(uint256 indexed tokenId, address recipient, uint256 amount0, uint256 amount1);
 
-    event ILOPoolInitialized(string projectId, int32 tickLower, int32 tickUpper, SaleInfo saleInfo, VestingConfig[] vestingConfig);
+    event ILOPoolInitialized(string projectId, int32 tickLower, int32 tickUpper, SaleInfo saleInfo, IILOVest.VestingConfig[] vestingConfig);
 
     event Claim(address indexed user, uint256 tokenId, uint128 liquidity, uint256 amount0WithFee, uint256 amount1WithFee, uint256 feeGrowthInside0LastX128, uint256 feeGrowthInside1LastX128, uint256 fee0Claimed, uint256 fee1Claimed);
     event Buy(address indexed investor, uint256 tokenId, uint256 raiseAmount);
@@ -88,11 +87,13 @@ interface IILOPool is
         uint256 maxRaisePerUser; // TODO: user tiers
         uint64 start;
         uint64 end;
+        address implementation;
+        uint256 poolIndex;
 
         // config for vests and shares. 
         // First element is allways for investor 
         // and will mint nft when investor buy ilo
-        VestingConfig[] vestingConfigs;
+        IILOVest.VestingConfig[] vestingConfigs;
     }
 
     /// @notice Returns number of collected tokens associated with a given token ID.

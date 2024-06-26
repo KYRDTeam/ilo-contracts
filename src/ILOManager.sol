@@ -6,6 +6,7 @@ import "./interfaces/IILOManager.sol";
 import "./interfaces/IILOPool.sol";
 import "./libraries/ChainId.sol";
 import './base/Initializable.sol';
+import './libraries/TransferHelper.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
@@ -87,6 +88,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         // dont need to check if project is exist because only project admin can call this function
         Project storage _project = _projects[params.projectId];
         _checkTicks(params.tickLower, params.tickUpper, _project.fee);
+        uint256 poolIndex = _initializedILOPools[params.projectId].length;
         {
             // validate time for sale start and end compared to launch time
             require(params.start < params.end && params.end < _project.launchTime, "PT");
@@ -94,14 +96,16 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             bytes32 salt = keccak256(abi.encodePacked(
                 ChainId.get(),
                 params.projectId,
-                _initializedILOPools[params.projectId].length
+                poolIndex
             ));
             iloPoolAddress = Clones.cloneDeterministic(ILO_POOL_IMPLEMENTATION, salt);
-            emit ILOPoolCreated(params.projectId, iloPoolAddress, _initializedILOPools[params.projectId].length);
+            emit ILOPoolCreated(params.projectId, iloPoolAddress, poolIndex);
         }
 
         IILOPool.InitPoolParams memory initParams = IILOPool.InitPoolParams({
             projectId: params.projectId,
+            implementation: ILO_POOL_IMPLEMENTATION,
+            poolIndex: poolIndex,
             tickLower: params.tickLower,
             tickUpper: params.tickUpper,
             maxRaise: params.maxRaise,
@@ -113,6 +117,24 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         });
         IILOPool(iloPoolAddress).initialize(initParams);
         _initializedILOPools[params.projectId].push(iloPoolAddress);
+    }
+
+    function ILOPoolLaunchCallback(
+        string calldata projectId,
+        address poolImplementation,
+        uint256 poolIndex,
+        address saleToken,
+        uint256 amount,
+        address uniswapV3Pool
+    ) external override {
+        bytes32 salt = keccak256(abi.encodePacked(
+                ChainId.get(),
+                projectId,
+                poolIndex
+            ));
+        require(msg.sender == Clones.predictDeterministicAddress(poolImplementation, salt), "UA");
+        Project storage _project = _projects[projectId];
+        TransferHelper.safeTransferFrom(saleToken, _project.admin, uniswapV3Pool, amount);
     }
 
     function _checkTicks(int24 tickLower, int24 tickUpper, uint256 fee) internal pure {

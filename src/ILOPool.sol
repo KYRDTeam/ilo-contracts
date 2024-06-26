@@ -9,7 +9,6 @@ import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 
 import './interfaces/IILOPool.sol';
-import './interfaces/IILOManager.sol';
 import './libraries/PositionKey.sol';
 import './libraries/SqrtPriceMathPartial.sol';
 import './base/ILOVest.sol';
@@ -62,7 +61,7 @@ contract ILOPool is
         _nextId = 1;
         // initialize imutable state
         PROJECT_ID = params.projectId;
-        MANAGER = msg.sender;
+        MANAGER = IILOManager(msg.sender);
         IILOManager.Project memory _project = IILOManager(MANAGER).project(params.projectId);
 
         WETH9 = IILOManager(MANAGER).WETH9();
@@ -70,6 +69,8 @@ contract ILOPool is
         TICK_LOWER = params.tickLower;
         TICK_UPPER = params.tickUpper;
         SQRT_RATIO_X96 = _project.initialPoolPriceX96;
+        IMPLEMENTATION = params.implementation;
+        POOL_INDEX = params.poolIndex;
         require(_sqrtRatioLowerX96() <  _project.initialPoolPriceX96 &&  _project.initialPoolPriceX96 < _sqrtRatioUpperX96(), "RANGE");
 
         // rounding up to make sure that the number of sale token is enough for sale
@@ -121,12 +122,12 @@ contract ILOPool is
     function buy(uint256 raiseAmount, address recipient)
         external override 
         returns (
-            uint256 tokenId,
-            uint128 liquidityDelta
+            uint256 tokenId
         )
     {
         require(_isWhitelisted(recipient), "UA");
         require(block.timestamp > saleInfo.start && block.timestamp < saleInfo.end, "ST");
+        require(raiseAmount > 0, "ZA");
         // check if raise amount over capacity
         require(saleInfo.maxRaise - totalRaised >= raiseAmount, "HC");
         totalRaised += raiseAmount;
@@ -266,7 +267,7 @@ contract ILOPool is
     }
 
     modifier OnlyManager() {
-        require(msg.sender == MANAGER, "UA");
+        require(msg.sender == address(MANAGER), "UA");
         _;
     }
 
@@ -288,31 +289,18 @@ contract ILOPool is
         uint128 liquidity;
         IILOManager.Project memory _project = IILOManager(MANAGER).project(projectId);
         {
-            uint256 amount0;
-            uint256 amount1;
-            uint256 amount0Min;
-            uint256 amount1Min;
-
             if (poolKey.token0 == RAISE_TOKEN) {
                 // if token0 is raise token, we need to flip the tick range
                 _flipPriceAndTicks();
-                amount0 = totalRaised;
-                amount0Min = totalRaised;
                 liquidity = LiquidityAmounts.getLiquidityForAmount0(SQRT_RATIO_X96, _sqrtRatioUpperX96(), totalRaised);
             } else {
                 liquidity = LiquidityAmounts.getLiquidityForAmount1(_sqrtRatioLowerX96(), SQRT_RATIO_X96, totalRaised);
-                amount1 = totalRaised;
-                amount1Min = totalRaised;
             }
 
             // actually deploy liquidity to uniswap pool
-            (amount0, amount1) = addLiquidity(AddLiquidityParams({
+            (uint256 amount0, uint256 amount1) = addLiquidity(AddLiquidityParams({
                 pool: IUniswapV3Pool(uniV3PoolAddress),
                 liquidity: liquidity,
-                amount0Desired: amount0,
-                amount1Desired: amount1,
-                amount0Min: amount0Min,
-                amount1Min: amount1Min,
                 projectAdmin: _project.admin
             }));
 

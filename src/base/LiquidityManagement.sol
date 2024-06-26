@@ -6,6 +6,7 @@ import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
 import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol';
 
+import '../interfaces/IILOManager.sol';
 import '../libraries/PoolAddress.sol';
 import '../libraries/LiquidityAmounts.sol';
 import '../libraries/TransferHelper.sol';
@@ -22,24 +23,19 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, ILOPoolImmutabl
         bytes calldata data
     ) external override {
         require(msg.sender == _cachedUniV3PoolAddress);
-        address projectAdmin = abi.decode(data, (address));
 
         if (_cachedPoolKey.token1 == RAISE_TOKEN) {
-            TransferHelper.safeTransferFrom(_cachedPoolKey.token0, projectAdmin, msg.sender, amount0Owed);
+            MANAGER.ILOPoolLaunchCallback(PROJECT_ID, IMPLEMENTATION, POOL_INDEX, _cachedPoolKey.token0, amount0Owed, msg.sender);
             TransferHelper.safeTransfer(_cachedPoolKey.token1, msg.sender, amount1Owed);
         } else {
             TransferHelper.safeTransfer(_cachedPoolKey.token0, msg.sender, amount0Owed);
-            TransferHelper.safeTransferFrom(_cachedPoolKey.token1, projectAdmin, msg.sender, amount1Owed);
+            MANAGER.ILOPoolLaunchCallback(PROJECT_ID, IMPLEMENTATION, POOL_INDEX, _cachedPoolKey.token1, amount1Owed, msg.sender);
         }
     }
 
     struct AddLiquidityParams {
         IUniswapV3Pool pool;
         uint128 liquidity;
-        uint256 amount0Desired;
-        uint256 amount1Desired;
-        uint256 amount0Min;
-        uint256 amount1Min;
         address projectAdmin;
     }
 
@@ -56,9 +52,7 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, ILOPoolImmutabl
             TICK_LOWER,
             TICK_UPPER,
             params.liquidity,
-            abi.encode(params.projectAdmin)
+            ""
         );
-
-        require(amount0 >= params.amount0Min && amount1 >= params.amount1Min, 'Price slippage check');
     }
 }
