@@ -109,8 +109,9 @@ contract ILOPool is
             uint256 feeGrowthInside1LastX128
         )
     {
+        require(_exists(tokenId), "ERC721: operator query for nonexistent token");
         return (
-            _positions[tokenId].liquidity,
+            _positionVests[tokenId].totalLiquidity > 0 ? _positions[tokenId].liquidity : _calculateTotalVestLiquidity(tokenId),
             _positions[tokenId].raiseAmount,
             _positions[tokenId].feeGrowthInside0LastX128,
             _positions[tokenId].feeGrowthInside1LastX128
@@ -256,7 +257,7 @@ contract ILOPool is
     /// @notice this function is used to fill liquidity for the position only in the first time user claim
     function _fillPositionLiquidity(uint256 tokenId) internal {
         if (_positionVests[tokenId].totalLiquidity == 0) {
-            uint128 positionLiquidity = _calculateVestingLiquidity(tokenId);
+            uint128 positionLiquidity = _calculateTotalVestLiquidity(tokenId);
             _positionVests[tokenId].totalLiquidity = positionLiquidity;
             _positions[tokenId].liquidity = positionLiquidity;
         }
@@ -345,13 +346,22 @@ contract ILOPool is
         _;
     }
 
+    function burn(uint256 tokenId) external isAuthorizedForToken(tokenId) {
+        _burn(tokenId);
+    }
+
+    /// @inheritdoc ERC721
+    function _burn(uint256 tokenId) internal override {
+        delete _positions[tokenId];
+        delete _positionVests[tokenId];
+        super._burn(tokenId);
+    }
+
     /// @inheritdoc IILOPool
     function claimRefund(uint256 tokenId) external override refundable() isAuthorizedForToken(tokenId) {
         uint256 refundAmount = _positions[tokenId].raiseAmount;
         address tokenOwner = ownerOf(tokenId);
 
-        delete _positions[tokenId];
-        delete _positionVests[tokenId];
         _burn(tokenId);
 
         TransferHelper.safeTransfer(RAISE_TOKEN, tokenOwner, refundAmount);
@@ -418,7 +428,7 @@ contract ILOPool is
         PositionVest storage _positionVest = _positionVests[tokenId];
         uint128 totalLiquidity = _positionVest.totalLiquidity;
         if (totalLiquidity == 0) {
-            totalLiquidity = _calculateVestingLiquidity(tokenId);
+            totalLiquidity = _calculateTotalVestLiquidity(tokenId);
         }
         unlockedLiquidity = _unlockedLiquidity(totalLiquidity, _positionVest.schedule);
         claimedLiquidity = _positionVests[tokenId].totalLiquidity - _positions[tokenId].liquidity;
@@ -426,7 +436,7 @@ contract ILOPool is
 
     /// @notice calculate total liquidity for vesting if user not make any claim
     /// this function only can be called after launch
-    function _calculateVestingLiquidity(uint256 tokenId) internal view returns(uint128 totalLiquidity) {
+    function _calculateTotalVestLiquidity(uint256 tokenId) internal view returns(uint128 totalLiquidity) {
         require(_launchSucceeded, "PL");
         uint128 totalInvestorLiquidity = uint128(FullMath.mulDiv(_totalInitialLiquidity, _vestingConfigs[0].shares, BPS));
         totalLiquidity = uint128(FullMath.mulDiv(totalInvestorLiquidity, _positions[tokenId].raiseAmount, totalRaised));
