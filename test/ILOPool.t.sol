@@ -87,13 +87,13 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testBuyBeforeSale() external {
         _prepareBuy();
-        vm.expectRevert(bytes("ST"));
+        vm.expectRevert(bytes("SLT"));
         _buy(SALE_START-1, 0.1 ether);
     }
 
     function testBuyAfterSale() external {
         _prepareBuy();
-        vm.expectRevert(bytes("ST"));
+        vm.expectRevert(bytes("SLT"));
         _buy(SALE_END+1, 0.1 ether);
     }
 
@@ -101,29 +101,28 @@ contract ILOPoolTest is IntegrationTestBase {
         _prepareBuy();
         uint256 balanceBefore = IERC20(USDC).balanceOf(iloPool);
         
-        (uint256 tokenId, uint128 liquidity) = _buy(SALE_START+1, 0.1 ether);
+        (uint256 tokenId) = _buy(SALE_START+1, 0.1 ether);
         
         uint256 balanceAfter = IERC20(USDC).balanceOf(iloPool);
 
         assertGt(tokenId, 0);
-        assertEq(uint256(liquidity), 40000000000000000);
         assertEq(balanceAfter - balanceBefore, 0.1 ether);
 
-        (uint128 _liquidity,,,) = IILOPool(iloPool).positions(tokenId);
-        assertEq(uint256(_liquidity), 40000000000000000);
+        (,uint256 raiseAmount,,) = IILOPool(iloPool).positions(tokenId);
+        assertEq(raiseAmount, 0.1 ether);
 
     }
 
     function testLaunchFromNonManager() external {
         vm.expectRevert(bytes("UA"));
-        IILOPool(iloPool).launch();
+        IILOPool(iloPool).launch(PROJECT_ID, UNIV3_POOL_ADDRESS, poolKey);
     }
 
     function testLaunchWhenSoftCapFailed() external {
-        vm.warp(SALE_END + 1);
-        vm.prank(address(iloManager));
+        vm.warp(LAUNCH_START + 1);
         vm.expectRevert(bytes("SC"));
-        IILOPool(iloPool).launch();
+        vm.prank(address(PROJECT_OWNER));
+        iloManager.launch(PROJECT_ID, SALE_TOKEN);
     }
 
     function _launch() internal {
@@ -132,15 +131,18 @@ contract ILOPoolTest is IntegrationTestBase {
         _prepareBuyFor(INVESTOR_2);
         _buyFor(INVESTOR_2, SALE_START+1, 40000 ether);
         _buyFor(INVESTOR, SALE_START+1, 1000 ether);
-        _writeTokenBalance(SALE_TOKEN, iloPool, 95000 * 4 ether);
-        assertEq(IILOPool(iloPool).totalSold(), 360000000000000000029277);
+        _writeTokenBalance(SALE_TOKEN, PROJECT_OWNER, 95000 * 4 ether);
         
+        vm.prank(address(PROJECT_OWNER));
+        // IERC20 approve for iloPool
+        IERC20(SALE_TOKEN).approve(address(iloManager), type(uint256).max);
+
         uint256 balanceBefore = IERC20(SALE_TOKEN).balanceOf(PROJECT_OWNER);
-        vm.warp(SALE_END + 1);
-        vm.prank(address(iloManager));
-        IILOPool(iloPool).launch();
+        vm.warp(LAUNCH_START + 1);
+        vm.prank(address(PROJECT_OWNER));
+        iloManager.launch(PROJECT_ID, SALE_TOKEN);
         uint256 balanceAfter = IERC20(SALE_TOKEN).balanceOf(PROJECT_OWNER);
-        assertEq(balanceAfter - balanceBefore, 19999999999999999970723);
+        assertEq(balanceBefore - balanceAfter, 360000000000000000029277);
 
         assertEq(IILOPool(iloPool).balanceOf(DEV_RECIPIENT), 1);
         assertEq(IILOPool(iloPool).balanceOf(TREASURY_RECIPIENT), 1);
@@ -169,14 +171,16 @@ contract ILOPoolTest is IntegrationTestBase {
         vm.stopPrank();
 
         vm.warp(LAUNCH_START + 86400*7 + 1);
-        vm.prank(address(iloManager));
         vm.expectRevert(bytes("IRF"));
-        IILOPool(iloPool).launch();
+        vm.prank(address(PROJECT_OWNER));
+        iloManager.launch(PROJECT_ID, SALE_TOKEN);
     }
 
     function testRefundBeforeRefundDeadline() external {
-        _prepareBuy();
-        (uint256 tokenId,) = _buy(SALE_START+1, 0.1 ether);
+        _prepareBuyFor(INVESTOR);
+        uint256 tokenId = _buy(SALE_START+1, 60000 ether);
+        _prepareBuyFor(INVESTOR_2);
+        _buyFor(INVESTOR_2,SALE_START+1, 30000 ether);
 
         vm.prank(INVESTOR);
         vm.warp(LAUNCH_START + 86400*7 - 1);
@@ -186,7 +190,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testRefund() external {
         _prepareBuy();
-        (uint256 tokenId,) = _buy(SALE_START+1, 0.1 ether);
+        uint256 tokenId = _buy(SALE_START+1, 0.1 ether);
 
         uint256 balanceBefore = IERC20(USDC).balanceOf(INVESTOR);
 
@@ -200,20 +204,19 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testRefundTwice() external {
         _prepareBuy();
-        (uint256 tokenId,) = _buy(SALE_START+1, 0.1 ether);
+        uint256 tokenId = _buy(SALE_START+1, 0.1 ether);
         console.logUint(tokenId);
         vm.prank(INVESTOR);
         vm.warp(LAUNCH_START + 86400*7 + 1);
         IILOPool(iloPool).claimRefund(tokenId);
-        
+
         vm.prank(INVESTOR);
         vm.expectRevert(bytes("ERC721: operator query for nonexistent token"));
         IILOPool(iloPool).claimRefund(tokenId);
     }
 
     function _buy(uint64 buyTime, uint256 buyAmount) internal returns (
-            uint256 tokenId,
-            uint128 liquidity
+            uint256 tokenId
     ) {
         return _buyFor(INVESTOR, buyTime, buyAmount);
     }
@@ -228,14 +231,13 @@ contract ILOPoolTest is IntegrationTestBase {
 
         vm.prank(investor);
         IERC20(USDC).approve(iloPool, 1000000000 ether);
-        
+
         _writeTokenBalance(USDC, investor, 1000000000 ether);
 
     }
 
     function _buyFor(address investor, uint64 buyTime, uint256 buyAmount) internal returns (
-            uint256 tokenId,
-            uint128 liquidity
+            uint256 tokenId
     ) {
         vm.warp(buyTime);
         vm.prank(investor);

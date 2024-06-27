@@ -7,7 +7,6 @@ contract AllContractScript is CommonScript {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
         address uniV3Factory = vm.envAddress("UNIV3_FACTORY");
-        address weth9 = vm.envAddress("WETH9");
         vm.startBroadcast(deployerPrivateKey);
         // create contracts
         {
@@ -29,7 +28,7 @@ contract AllContractScript is CommonScript {
             uint16 performanceFee = uint16(vm.envUint("PERFORMANCE_FEE"));
 
             IILOManager iloManager = IILOManager(getILOManagerDeploymentAddress());
-            iloManager.initialize(_initialOwner, _feeTaker, getILOPoolDeploymentAddress(), uniV3Factory, weth9, initProjectFee, platformFee, performanceFee);
+            iloManager.initialize(_initialOwner, _feeTaker, getILOPoolDeploymentAddress(), uniV3Factory, initProjectFee, platformFee, performanceFee);
         }
         vm.stopBroadcast();
     }
