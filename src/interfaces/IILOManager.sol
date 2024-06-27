@@ -13,7 +13,7 @@ interface IILOManager {
     event ProjectAdminChanged(string projectId, address oldAdmin, address newAdmin);
     event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
     event RefundDeadlineChanged(string projectId, uint64 oldRefundDeadline, uint64 newRefundDeadline);
-    event ProjectLaunch(string projectId, address uniswapV3Pool);
+    event ProjectLaunch(string projectId, address uniswapV3Pool, address saleToken);
     event FeesForProjectSet(string projectId, uint16 platformFee, uint16 performanceFee);
 
     struct Project {
