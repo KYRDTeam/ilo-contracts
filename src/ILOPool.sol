@@ -334,6 +334,9 @@ contract ILOPool is
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
             require(!_launchSucceeded, "PL");
+            // if sale is not ended or soft cap is reached, we can not refund
+            require(saleInfo.end < block.timestamp && totalRaised < saleInfo.minRaise, "SC");
+            
             IILOManager.Project memory _project = IILOManager(MANAGER).project(PROJECT_ID);
             require(block.timestamp >= _project.refundDeadline, "RFT");
 
