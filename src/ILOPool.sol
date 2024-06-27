@@ -125,7 +125,7 @@ contract ILOPool is
         )
     {
         require(_isWhitelisted(recipient), "UA");
-        require(block.timestamp > saleInfo.start && block.timestamp < saleInfo.end, "ST");
+        require(block.timestamp > saleInfo.start && block.timestamp < saleInfo.end, "SLT");
         require(raiseAmount > 0, "ZA");
         // check if raise amount over capacity
         require(saleInfo.maxRaise - totalRaised >= raiseAmount, "HC");
@@ -334,11 +334,11 @@ contract ILOPool is
         if (!_refundTriggered) {
             // if ilo pool is lauch sucessfully, we can not refund anymore
             require(!_launchSucceeded, "PL");
-            // if sale is not ended or soft cap is reached, we can not refund
-            require(saleInfo.end < block.timestamp && totalRaised < saleInfo.minRaise, "SC");
-            
-            IILOManager.Project memory _project = IILOManager(MANAGER).project(PROJECT_ID);
-            require(block.timestamp >= _project.refundDeadline, "RFT");
+            require(block.timestamp > saleInfo.end, "SLT");
+            if (totalRaised > saleInfo.minRaise) {
+                IILOManager.Project memory _project = IILOManager(MANAGER).project(PROJECT_ID);
+                require(block.timestamp >= _project.refundDeadline, "RFT");
+            }
 
             _refundTriggered = true;
         }
@@ -393,7 +393,7 @@ contract ILOPool is
 
     /// @inheritdoc ERC721
     function _beforeTokenTransfer(address from, address, uint256) internal view override {
-        require(from == address(0) || block.timestamp > saleInfo.end, "ST");
+        require(from == address(0) || block.timestamp > saleInfo.end, "SLT");
     }
 
     /// @notice calculate the amount left after deduct fee

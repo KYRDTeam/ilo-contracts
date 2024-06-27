@@ -87,13 +87,13 @@ contract ILOPoolTest is IntegrationTestBase {
 
     function testBuyBeforeSale() external {
         _prepareBuy();
-        vm.expectRevert(bytes("ST"));
+        vm.expectRevert(bytes("SLT"));
         _buy(SALE_START-1, 0.1 ether);
     }
 
     function testBuyAfterSale() external {
         _prepareBuy();
-        vm.expectRevert(bytes("ST"));
+        vm.expectRevert(bytes("SLT"));
         _buy(SALE_END+1, 0.1 ether);
     }
 
@@ -177,8 +177,10 @@ contract ILOPoolTest is IntegrationTestBase {
     }
 
     function testRefundBeforeRefundDeadline() external {
-        _prepareBuy();
-        uint256 tokenId = _buy(SALE_START+1, 0.1 ether);
+        _prepareBuyFor(INVESTOR);
+        uint256 tokenId = _buy(SALE_START+1, 60000 ether);
+        _prepareBuyFor(INVESTOR_2);
+        _buyFor(INVESTOR_2,SALE_START+1, 30000 ether);
 
         vm.prank(INVESTOR);
         vm.warp(LAUNCH_START + 86400*7 - 1);
