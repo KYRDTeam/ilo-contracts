@@ -226,7 +226,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             IILOPool(initializedPools[i]).launch(projectId, uniV3PoolAddress, poolKey);
         }
 
-        emit ProjectLaunch(projectId, uniV3PoolAddress);
+        emit ProjectLaunch(projectId, uniV3PoolAddress, saleToken);
     }
     
     /// @inheritdoc IILOManager
