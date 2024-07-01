@@ -65,14 +65,14 @@ contract ILOPoolTest is IntegrationTestBase {
         addresses[2] = DUMMY_ADDRESS;
     }
 
-    function _getListAllocations() internal returns(uint256[] memory allocations) {
+    function _getListAllocations() internal pure returns(uint256[] memory allocations) {
         allocations = new uint256[](3);
         allocations[0] = 60000 ether;
         allocations[1] = 60000 ether;
         allocations[2] = 60000 ether;
     }
 
-    function _getListAllocationsZero() internal returns(uint256[] memory allocations) {
+    function _getListAllocationsZero() internal pure returns(uint256[] memory allocations) {
         allocations = new uint256[](3);
         allocations[0] = 0;
         allocations[1] = 0;

@@ -49,11 +49,6 @@ contract ILOPool is
         _disableInitialize();
     }
 
-    modifier beforeSale() override {
-        require(block.timestamp < saleInfo.start, "SLT");
-        _;
-    }
-
     function name() public pure override(ERC721, IERC721Metadata) returns (string memory) {
         return 'KRYSTAL ILOPool V1';
     }
@@ -145,7 +140,13 @@ contract ILOPool is
         }
 
         Position storage _position = _positions[tokenId];
-        require(raiseAmount <= allocation(recipient) - _position.raiseAmount, "UC");
+
+        uint256 _allocation = allocation(recipient);
+        // we need to check `_position.raiseAmount < _allocation`
+        // because project admin can change whitelist during sale. 
+        // so, technicaly, `_position.raiseAmount` can bigger than `_allocation`
+        // second reason is to avoid overflow of subtraction.
+        require(_position.raiseAmount < _allocation && raiseAmount <= _allocation - _position.raiseAmount, "UC");
         _position.raiseAmount += raiseAmount;
 
         // transfer fund into contract

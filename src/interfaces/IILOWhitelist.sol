@@ -13,6 +13,4 @@ interface IILOWhitelist {
     function whitelistedCount() external view returns(uint256);
 
     modifier onlyProjectAdmin virtual;
-    modifier beforeSale virtual;
-
 }

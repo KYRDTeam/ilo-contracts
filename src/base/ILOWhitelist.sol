@@ -11,13 +11,13 @@ abstract contract ILOWhitelist is IILOWhitelist {
     mapping(address => uint256) private _userAllocation;
 
     /// @inheritdoc IILOWhitelist
-    function setPublicAllocation(uint256 _allocation) external override onlyProjectAdmin beforeSale {
+    function setPublicAllocation(uint256 _allocation) external override onlyProjectAdmin {
         PUBLIC_ALLOCATION = _allocation;
         emit SetPublicAllocation(_allocation);
     }
 
     /// @inheritdoc IILOWhitelist
-    function setWhiteList(address[] calldata users, uint256[] calldata allocations) external override onlyProjectAdmin beforeSale {
+    function setWhiteList(address[] calldata users, uint256[] calldata allocations) external override onlyProjectAdmin {
         require(users.length == allocations.length, 'ILOWhitelist: INVALID_LENGTH');
         for (uint256 i = 0; i < users.length; i++) {
             if (allocations[i] == 0) {
