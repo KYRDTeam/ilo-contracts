@@ -13,6 +13,7 @@ abstract contract ILOWhitelist is IILOWhitelist {
     /// @inheritdoc IILOWhitelist
     function setPublicAllocation(uint256 _allocation) external override onlyProjectAdmin beforeSale {
         PUBLIC_ALLOCATION = _allocation;
+        emit SetPublicAllocation(_allocation);
     }
 
     /// @inheritdoc IILOWhitelist
