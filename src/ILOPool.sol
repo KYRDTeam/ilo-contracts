@@ -77,7 +77,6 @@ contract ILOPool is
         saleInfo = SaleInfo({
             maxRaise: params.maxRaise,
             minRaise: params.minRaise,
-            maxRaisePerUser: params.maxRaisePerUser,
             start: params.start,
             end: params.end
         });
@@ -125,7 +124,6 @@ contract ILOPool is
             uint256 tokenId
         )
     {
-        require(_isWhitelisted(recipient), "UA");
         require(block.timestamp > saleInfo.start && block.timestamp < saleInfo.end, "SLT");
         require(raiseAmount > 0, "ZA");
         // check if raise amount over capacity
@@ -142,7 +140,13 @@ contract ILOPool is
         }
 
         Position storage _position = _positions[tokenId];
-        require(raiseAmount <= saleInfo.maxRaisePerUser - _position.raiseAmount, "UC");
+
+        uint256 _allocation = allocation(recipient);
+        // we need to check `_position.raiseAmount < _allocation`
+        // because project admin can change whitelist during sale. 
+        // so, technicaly, `_position.raiseAmount` can bigger than `_allocation`
+        // second reason is to avoid overflow of subtraction.
+        require(_position.raiseAmount < _allocation && raiseAmount <= _allocation - _position.raiseAmount, "UC");
         _position.raiseAmount += raiseAmount;
 
         // transfer fund into contract
@@ -437,7 +441,7 @@ contract ILOPool is
     /// @notice calculate total liquidity for vesting if user not make any claim
     /// this function only can be called after launch
     function _calculateTotalVestLiquidity(uint256 tokenId) internal view returns(uint128 totalLiquidity) {
-        require(_launchSucceeded, "PL");
+        if(!_launchSucceeded) return 0;
         uint128 totalInvestorLiquidity = uint128(FullMath.mulDiv(_totalInitialLiquidity, _vestingConfigs[0].shares, BPS));
         totalLiquidity = uint128(FullMath.mulDiv(totalInvestorLiquidity, _positions[tokenId].raiseAmount, totalRaised));
     }

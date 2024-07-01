@@ -86,7 +86,6 @@ abstract contract IntegrationTestBase is Mock, Test {
             tickUpper: -MIN_TICK_500,
             maxRaise: 100000 ether,
             minRaise: 80000 ether,
-            maxRaisePerUser: 60000 ether,
             start: SALE_START,
             end: SALE_END,
             vestingConfigs: _getVestingConfigs()

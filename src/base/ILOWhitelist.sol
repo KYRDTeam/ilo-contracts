@@ -6,55 +6,51 @@ import '@openzeppelin/contracts/utils/EnumerableSet.sol';
 import '../interfaces/IILOWhitelist.sol';
 
 abstract contract ILOWhitelist is IILOWhitelist {
-    bool private _openToAll;
+    uint256 private _whitelistCount;
+    uint256 public PUBLIC_ALLOCATION;
+    mapping(address => uint256) private _userAllocation;
 
     /// @inheritdoc IILOWhitelist
-    function setOpenToAll(bool openToAll) external override onlyProjectAdmin{
-        _setOpenToAll(openToAll);
+    function setPublicAllocation(uint256 _allocation) external override onlyProjectAdmin {
+        PUBLIC_ALLOCATION = _allocation;
+        emit SetPublicAllocation(_allocation);
     }
 
     /// @inheritdoc IILOWhitelist
-    function isOpenToAll() external override view returns(bool) {
-        return _openToAll;
-    }
-
-    /// @inheritdoc IILOWhitelist
-    function isWhitelisted(address user) external override view returns (bool) {
-        return _isWhitelisted(user);
-    }
-
-    /// @inheritdoc IILOWhitelist
-    function batchWhitelist(address[] calldata users) external override onlyProjectAdmin{
+    function setWhiteList(address[] calldata users, uint256[] calldata allocations) external override onlyProjectAdmin {
+        require(users.length == allocations.length, 'ILOWhitelist: INVALID_LENGTH');
         for (uint256 i = 0; i < users.length; i++) {
-            _setWhitelist(users[i]);
+            if (allocations[i] == 0) {
+                _removeWhitelist(users[i]);
+            } else {
+                _setWhitelist(users[i], allocations[i]);
+            }
         }
     }
 
     /// @inheritdoc IILOWhitelist
-    function batchRemoveWhitelist(address[] calldata users) external override onlyProjectAdmin{
-        for (uint256 i = 0; i < users.length; i++) {
-            _removeWhitelist(users[i]);
-        }
+    function allocation(address user) public override view returns(uint256) {
+        return _userAllocation[user] > PUBLIC_ALLOCATION ? _userAllocation[user] : PUBLIC_ALLOCATION;
     }
 
-    EnumerableSet.AddressSet private _whitelisted;
+    /// @inheritdoc IILOWhitelist
+    function whitelistedCount() external override view returns(uint256) {
+        return _whitelistCount;
+    }
 
-    function _setOpenToAll(bool openToAll) internal {
-        _openToAll = openToAll;
-        emit SetOpenToAll(openToAll);
+    function _setWhitelist(address user, uint256 _allocation) internal {
+        if (_userAllocation[user] == 0) {
+            _whitelistCount++;
+        }
+        _userAllocation[user] = _allocation;
+        emit SetWhitelist(user, _allocation);
     }
 
     function _removeWhitelist(address user) internal {
-        EnumerableSet.remove(_whitelisted, user);
-        emit SetWhitelist(user, false);
-    }
-
-    function _setWhitelist(address user) internal {
-        EnumerableSet.add(_whitelisted, user);
-        emit SetWhitelist(user, true);
-    }
-
-    function _isWhitelisted(address user) internal view returns(bool) {
-        return _openToAll || EnumerableSet.contains(_whitelisted, user);
+        if (_userAllocation[user] != 0) {
+            _whitelistCount--;
+        }
+        _userAllocation[user] = 0;
+        emit SetWhitelist(user, 0);
     }
 }

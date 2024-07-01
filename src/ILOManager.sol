@@ -108,7 +108,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             tickUpper: params.tickUpper,
             maxRaise: params.maxRaise,
             minRaise: params.minRaise,
-            maxRaisePerUser: params.maxRaisePerUser,
             start: params.start,
             end: params.end,
             vestingConfigs: params.vestingConfigs
