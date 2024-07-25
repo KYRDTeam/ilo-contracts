@@ -6,6 +6,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 import {UniswapV3Oracle} from "./base/UniswapV3Oracle.sol";
 import {Initializable} from "./base/Initializable.sol";
 import {IOracleWhitelist} from "./interfaces/IOracleWhitelist.sol";
+import {EnumerableSet} from "@openzeppelin/contracts/utils/EnumerableSet.sol";
 
 /**
  * @title The contract handles whitelist related features
@@ -15,22 +16,29 @@ import {IOracleWhitelist} from "./interfaces/IOracleWhitelist.sol";
  * - Ownable: Set univ3 TWAP oracle
  * - Token contract `_beforeTokenTransfer` hook will call `checkWhitelist` function and this function will check if buyer is eligible
  */
-contract OracleWhitelistWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable, Initializable {
+contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
     /// @dev Maximum quote token amount to contribute
     uint256 private _maxAddressCap;
     /// @dev Flag for locked period
     bool private _locked;
     /// @dev Token token contract address
-    uint256 private _whitelistCount;
-    /// @dev Max index allowed
-    uint256 private _allowedWhitelistIndex;
-    /// @dev Whitelist index for each whitelisted address
-    mapping(address => uint256) private _whitelistIndex;
 
+    EnumerableSet.AddressSet private _whitelistedAddresses;
+    /// @dev Whitelist index for each whitelisted address
     mapping(address => uint256) private _contributed;
 
-    constructor() {
-        _disableInitialize();
+    constructor (
+        address owner,
+        address _pool, 
+        address _quoteToken,
+        bool _lockBuy,
+        uint256 _maxCap
+    ) {
+        transferOwnership(owner);
+        pool = _pool;
+        quoteToken = _quoteToken;
+        _locked = _lockBuy; // Initially, liquidity will be locked
+        _maxAddressCap = _maxCap;
     }
 
     /// @notice Check if called from token contract.
@@ -39,35 +47,9 @@ contract OracleWhitelistWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable,
         _;
     }
 
-    function initialize(InitializeParams calldata params) external override whenNotInitialized() {
-        _maxAddressCap = params.maxAddressCap;
-        token = params.token;
-        pool = params.pool;
-        quoteToken = params.quoteToken;
-        _allowedWhitelistIndex = params.allowedWhitelistIndex;
-        _locked = params.lockBuy; // Initially, liquidity will be locked
-        transferOwnership(params.owner);
-    }
-
     /// @notice Returns max address cap
     function maxAddressCap() external view returns (uint256) {
         return _maxAddressCap;
-    }
-
-    /// @notice Returns the whitelisted index. If not whitelisted, then it will be 0
-    /// @param account The address to be checked
-    function whitelistIndex(address account) external view returns (uint256) {
-        return _whitelistIndex[account];
-    }
-
-    /// @notice Returns current whitelisted address count
-    function whitelistCount() external view returns (uint256) {
-        return _whitelistCount;
-    }
-
-    /// @notice Returns current allowed whitelist index
-    function allowedWhitelistIndex() external view returns (uint256) {
-        return _allowedWhitelistIndex;
     }
 
     /// @notice Returns contributed ETH amount for address
@@ -95,7 +77,7 @@ contract OracleWhitelistWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable,
 
     /// @notice Setter for token
     /// @param newToken New token address
-    function setToken(address newToken) external onlyOwner {
+    function setToken(address newToken) external override onlyOwner {
         token = newToken;
     }
 
@@ -103,12 +85,6 @@ contract OracleWhitelistWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable,
     /// @param newPool New pool address
     function setPool(address newPool) external onlyOwner {
         pool = newPool;
-    }
-
-    /// @notice Setter for allowed whitelist index
-    /// @param newIndex New index for allowed whitelist
-    function setAllowedWhitelistIndex(uint256 newIndex) external onlyOwner {
-        _allowedWhitelistIndex = newIndex;
     }
 
     /// @notice Add whitelisted address
@@ -122,6 +98,20 @@ contract OracleWhitelistWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable,
     function addBatchWhitelist(address[] calldata whitelisted) external onlyOwner {
         for (uint i = 0; i < whitelisted.length; i++) {
             _addWhitelistedAddress(whitelisted[i]);
+        }
+    }
+
+    /// @notice Remove whitelisted address
+    /// @param whitelisted Address to be removed
+    function removeWhitelistedAddress(address whitelisted) external onlyOwner {
+        _removeWhitelistedAddress(whitelisted);
+    }
+
+    /// @notice Remove batch whitelists
+    /// @param whitelisted Array of addresses to be removed
+    function removeBatchWhitelist(address[] calldata whitelisted) external onlyOwner {
+        for (uint i = 0; i < whitelisted.length; i++) {
+            _removeWhitelistedAddress(whitelisted[i]);
         }
     }
 
@@ -139,7 +129,7 @@ contract OracleWhitelistWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable,
             require(!_locked, "locked");
 
             if (
-                _allowedWhitelistIndex == 0 || _whitelistIndex[to] == 0 || _whitelistIndex[to] > _allowedWhitelistIndex
+                EnumerableSet.contains(_whitelistedAddresses, to)
             ) {
                 revert("not whitelisted");
             }
@@ -154,11 +144,15 @@ contract OracleWhitelistWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable,
         }
     }
 
-    /// @notice Internal function used for whitelisting. Only increase whitelist count if address is not whitelisted before
+    /// @notice add whitelist address to the set
     /// @param whitelisted Address to be added
     function _addWhitelistedAddress(address whitelisted) private {
-        if (_whitelistIndex[whitelisted] == 0) {
-            _whitelistIndex[whitelisted] = ++_whitelistCount;
-        }
+        EnumerableSet.add(_whitelistedAddresses, whitelisted);
+    }
+
+    /// @notice remove whitelist address from the set
+    /// @param whitelisted Address to be removed
+    function _removeWhitelistedAddress(address whitelisted) private {
+        EnumerableSet.remove(_whitelistedAddresses, whitelisted);
     }
 }

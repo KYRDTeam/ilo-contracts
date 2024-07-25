@@ -3,16 +3,38 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import {IERC20Whitelist} from "../interfaces/IERC20Whitelist.sol";
-import {IOracleWhitelist} from "../interfaces/IOracleWhitelist.sol";
-
 interface ITokenFactory {
-    event TokenCreated(address indexed tokenAddress, IERC20Whitelist.InitializeParams params);
-    event OracleWhitelistCreated(address indexed whitelistAddress, IOracleWhitelist.InitializeParams params);
+    struct CreateOracleWhitelistParams {
+        address owner;
+        uint256 maxAddressCap;
+        address token;
+        address pool;
+        address quoteToken;
+        bool lockBuy;
+    }
+
+    struct CreateERC20WhitelistTokenParams {
+        address owner;
+        string name;
+        string symbol;
+        uint256 totalSupply;
+        address whitelistContract;
+    }
+
+    struct CreateStarndardERC20TokenParams {
+        address owner;
+        string name;
+        string symbol;
+        uint256 totalSupply;
+    }
+
+    event TokenCreated(address indexed tokenAddress, CreateERC20WhitelistTokenParams params);
+    event OracleWhitelistCreated(address indexed whitelistAddress, CreateOracleWhitelistParams params);
     event ERC20WhitelistImplementationSet(address oldImplementation, address newImplementation);
     event OracleWhitelistImplementationSet(address oldImplementation, address newImplementation);
 
     struct CreateWhitelistContractsParams {
+        address owner;
         string name;
         string symbol;
         uint256 totalSupply;
@@ -25,14 +47,9 @@ interface ITokenFactory {
     }
 
     function uniswapV3Factory() external view returns (address);
-    function erc20WhitelistImplementation() external view returns (address);
-    function oracleWhitelistImplementation() external view returns (address);
 
-    function setERC20WhitelistImplementation(address _erc20WhitelistImplementation) external;
-    function setOracleWhitelistImplementation(address _oracleWhitelistImplementation) external;
-
-    function createERC20WhitelistToken(IERC20Whitelist.InitializeParams calldata params) external returns (address token);
-    function createOracleWhitelist(IOracleWhitelist.InitializeParams calldata params) external returns (address whitelistAddress);
+    function createERC20WhitelistToken(CreateERC20WhitelistTokenParams calldata params) external returns (address token);
+    function createOracleWhitelist(CreateOracleWhitelistParams calldata params) external returns (address whitelistAddress);
     function createWhitelistContracts(CreateWhitelistContractsParams calldata params) external returns (address token, address whitelistAddress);
-    function createStarndardERC20Token(string calldata name, string calldata symbol, uint256 totalSupply) external returns (address token);
+    function createStarndardERC20Token(CreateStarndardERC20TokenParams calldata params) external returns (address token);
 }

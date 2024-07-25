@@ -1,12 +1,11 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
-pragma abicoder v2;
 
 import {IOracleWhitelist} from "./interfaces/IOracleWhitelist.sol";
 import {IApproveAndCallReceiver} from "./interfaces/IApproveAndCallReceiver.sol";
-import {Initializable} from "./base/Initializable.sol";
 import {IERC20Whitelist} from "./interfaces/IERC20Whitelist.sol";
 import {ERC20, ERC20Burnable} from "@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol";
+import {ERC20Permit} from "@openzeppelin/contracts/drafts/ERC20Permit.sol";
 import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
 
 /**
@@ -14,22 +13,23 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  * @notice During whitelist period, `_beforeTokenTransfer` function will call `checkWhitelist` function of whitelist contract
  * @notice If whitelist period is ended, owner will set whitelist contract address back to address(0) and tokens will be transferred freely
  */
-contract ERC20Whitelist is IERC20Whitelist, ERC20Burnable, Ownable, Initializable  {
-    string private _name;
-    string private _symbol;
+contract ERC20Whitelist is IERC20Whitelist, ERC20Burnable, ERC20Permit, Ownable {
     /// @dev whitelist contract address
     address private _whitelistContract;
 
-    constructor() ERC20("", "") {
-        _disableInitialize();
+    constructor(
+        address owner, 
+        string memory name, 
+        string memory symbol, 
+        uint256 _totalSupply
+    ) ERC20(name, symbol)
+        ERC20Permit(name) {
+        transferOwnership(owner);
+        _mint(owner, _totalSupply);
     }
 
-    function initialize(InitializeParams calldata params) external override whenNotInitialized() {
-        _name = params.name;
-        _symbol = params.symbol;
-        _whitelistContract = params.whitelistContract;
-        _mint(params.owner, params.totalSupply);
-        transferOwnership(params.owner);
+    function setWhitelistContract(address whitelistContract) external override onlyOwner {
+        _whitelistContract = whitelistContract;
     }
 
     function approveAndCall(address spender, uint256 amount, bytes calldata extraData) external returns (bool) {
