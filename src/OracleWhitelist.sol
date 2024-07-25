@@ -87,24 +87,12 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
         pool = newPool;
     }
 
-    /// @notice Add whitelisted address
-    /// @param whitelisted Address to be added
-    function addWhitelistedAddress(address whitelisted) external onlyOwner {
-        _addWhitelistedAddress(whitelisted);
-    }
-
     /// @notice Add batch whitelists
     /// @param whitelisted Array of addresses to be added
     function addBatchWhitelist(address[] calldata whitelisted) external onlyOwner {
         for (uint i = 0; i < whitelisted.length; i++) {
             _addWhitelistedAddress(whitelisted[i]);
         }
-    }
-
-    /// @notice Remove whitelisted address
-    /// @param whitelisted Address to be removed
-    function removeWhitelistedAddress(address whitelisted) external onlyOwner {
-        _removeWhitelistedAddress(whitelisted);
     }
 
     /// @notice Remove batch whitelists

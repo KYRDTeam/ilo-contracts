@@ -36,22 +36,21 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         // deploy token
         ERC20Whitelist _token = new ERC20Whitelist{
             salt: salt
-        }(msg.sender, params.name, params.symbol, params.totalSupply);
+        }(address(this), params.name, params.symbol, params.totalSupply);
         token = address(_token);
 
         // deploy whitelist
-        address pool = PoolAddress.computeAddress(uniswapV3Factory ,PoolAddress.PoolKey({
-            token0: token,
-            token1: params.quoteToken,
-            fee: params.fee
-        }));
+        address pool = PoolAddress.computeAddress(uniswapV3Factory ,PoolAddress.getPoolKey(token, params.quoteToken, params.fee));
         OracleWhitelist _whitelist = new OracleWhitelist{
             salt: salt
-        }(msg.sender, pool, params.quoteToken, params.lockBuy, params.maxAddressCap);
+        }(address(this), pool, params.quoteToken, params.lockBuy, params.maxAddressCap);
         whitelistAddress = address(_whitelist);
 
         _token.setWhitelistContract(whitelistAddress);
         _whitelist.setToken(token);
+
+        _token.transferOwnership(msg.sender);
+        _whitelist.transferOwnership(msg.sender);
 
         emit TokenCreated(token, CreateERC20WhitelistTokenParams({
             name: params.name,
