@@ -62,18 +62,15 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         emit OracleWhitelistCreated(whitelistAddress, params);
     }
 
+    /// @notice Create a new ERC20 token and its corresponding whitelist contract
     function createWhitelistContracts(CreateWhitelistContractsParams calldata params) external override returns (address token, address whitelistAddress) {
-        bytes32 saltToken = keccak256(abi.encodePacked(
+        bytes32 salt = keccak256(abi.encodePacked(
                 ChainId.get(),
                 nonce++
             ));
-        token = Clones.cloneDeterministic(erc20WhitelistImplementation, saltToken);
+        token = Clones.cloneDeterministic(erc20WhitelistImplementation, salt);
 
-        bytes32 saltWhitelist = keccak256(abi.encodePacked(
-                ChainId.get(),
-                nonce++
-            ));
-        whitelistAddress = Clones.cloneDeterministic(oracleWhitelistImplementation, saltWhitelist);
+        whitelistAddress = Clones.cloneDeterministic(oracleWhitelistImplementation, salt);
 
         IERC20Whitelist.InitializeParams memory createTokenParams = IERC20Whitelist.InitializeParams({
             name: params.name,
