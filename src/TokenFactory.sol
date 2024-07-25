@@ -50,6 +50,7 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         _whitelist.setToken(token);
 
         _token.transferOwnership(msg.sender);
+        _token.transfer(msg.sender, params.totalSupply);
         _whitelist.transferOwnership(msg.sender);
 
         emit TokenCreated(token, CreateERC20WhitelistTokenParams({

@@ -21,7 +21,6 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
     uint256 private _maxAddressCap;
     /// @dev Flag for locked period
     bool private _locked;
-    /// @dev Token token contract address
 
     EnumerableSet.AddressSet private _whitelistedAddresses;
     /// @dev Whitelist index for each whitelisted address
@@ -43,7 +42,7 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
 
     /// @notice Check if called from token contract.
     modifier onlyToken() {
-        require(_msgSender() == token, "not token");
+        require(_msgSender() == token, "token");
         _;
     }
 
@@ -91,7 +90,7 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
     /// @param whitelisted Array of addresses to be added
     function addBatchWhitelist(address[] calldata whitelisted) external onlyOwner {
         for (uint i = 0; i < whitelisted.length; i++) {
-            _addWhitelistedAddress(whitelisted[i]);
+            EnumerableSet.add(_whitelistedAddresses, whitelisted[i]);
         }
     }
 
@@ -99,7 +98,7 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
     /// @param whitelisted Array of addresses to be removed
     function removeBatchWhitelist(address[] calldata whitelisted) external onlyOwner {
         for (uint i = 0; i < whitelisted.length; i++) {
-            _removeWhitelistedAddress(whitelisted[i]);
+            EnumerableSet.remove(_whitelistedAddresses, whitelisted[i]);
         }
     }
     
@@ -127,31 +126,15 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
             // Still need to ignore WL check if it's owner related actions
             require(!_locked, "locked");
 
-            if (
-                EnumerableSet.contains(_whitelistedAddresses, to)
-            ) {
-                revert("not whitelisted");
-            }
+            require(EnumerableSet.contains(_whitelistedAddresses, to), "whitelist");
 
             // // Calculate rough ETH amount for TK amount
             uint256 estimatedETHAmount = peek(amount);
             if (_contributed[to] + estimatedETHAmount > _maxAddressCap) {
-                revert("exceed cap");
+                revert("cap");
             }
 
             _contributed[to] += estimatedETHAmount;
         }
-    }
-
-    /// @notice add whitelist address to the set
-    /// @param whitelisted Address to be added
-    function _addWhitelistedAddress(address whitelisted) private {
-        EnumerableSet.add(_whitelistedAddresses, whitelisted);
-    }
-
-    /// @notice remove whitelist address from the set
-    /// @param whitelisted Address to be removed
-    function _removeWhitelistedAddress(address whitelisted) private {
-        EnumerableSet.remove(_whitelistedAddresses, whitelisted);
     }
 }

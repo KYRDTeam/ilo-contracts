@@ -45,7 +45,7 @@ contract ERC20Whitelist is IERC20Whitelist, ERC20Burnable, ERC20Permit, Ownable 
     /// @notice Before token transfer hook
     /// @dev It will call `checkWhitelist` function and if it's succsessful, it will transfer tokens, unless revert
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
-        require(to != address(this), "Cannot transfer to the token contract address");
+        require(to != address(this), "ERC20: transfer to token address");
         if (_whitelistContract != address(0)) {
             IOracleWhitelist(_whitelistContract).checkWhitelist(from, to, amount);
         }
