@@ -21,7 +21,7 @@ contract Whitelist is Ownable {
     error Blacklisted();
     error MaxAddressCapOverflow();
 
-    /// @notice Maximum ETH amount to contribute
+    /// @notice Maximum quote token amount to contribute
     uint256 private _maxAddressCap;
     /// @notice Flag for locked period
     bool private _locked;

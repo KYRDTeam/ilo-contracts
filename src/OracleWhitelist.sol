@@ -10,14 +10,13 @@ import {IOracleWhitelist} from "./interfaces/IOracleWhitelist.sol";
 /**
  * @title The contract handles whitelist related features
  * @notice The main functionalities are:
- * - Self whitelist by sending ETH to this contract(only when self whitelist is allowed - controlled by _isSelfWhitelistDisabled flag)
  * - Ownable: Add whitelisted addresses
- * - Ownable: Set max ETH amount to buy(default 3 ETH)
+ * - Ownable: Set max quote token amount to buy(default 3 quote token)
  * - Ownable: Set univ3 TWAP oracle
  * - Token contract `_beforeTokenTransfer` hook will call `checkWhitelist` function and this function will check if buyer is eligible
  */
 contract OracleWhitelistWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable, Initializable {
-    /// @dev Maximum ETH amount to contribute
+    /// @dev Maximum quote token amount to contribute
     uint256 private _maxAddressCap;
     /// @dev Flag for locked period
     bool private _locked;
