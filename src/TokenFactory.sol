@@ -20,45 +20,15 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         transferOwnership(tx.origin);
     }
 
-    function initialize(address _owner, address _uniswapV3Factory) external whenNotInitialized() {
+    function initialize(address _owner, address _uniswapV3Factory) external override whenNotInitialized() {
         transferOwnership(_owner);
         uniswapV3Factory = _uniswapV3Factory;
-    }
-
-    function createERC20WhitelistToken(CreateERC20WhitelistTokenParams calldata params) external override returns (address token) {
-        // adding the salt to the address to make it cross-chain unique
-        bytes32 salt = keccak256(abi.encodePacked(
-                params.owner,
-                ChainId.get(),
-                nonce++
-            ));
-        ERC20Whitelist _token = new ERC20Whitelist{
-            salt: salt
-        }(params.owner, params.name, params.symbol, params.totalSupply);
-        _token.setWhitelistContract(params.whitelistContract);
-        token = address(_token);
-        emit TokenCreated(token, params);
-    }
-
-    function createOracleWhitelist(CreateOracleWhitelistParams calldata params) external override returns (address whitelistAddress) {
-        // adding the salt to the address to make it cross-chain unique
-        bytes32 salt = keccak256(abi.encodePacked(
-                params.owner,
-                ChainId.get(),
-                nonce++
-            ));
-        OracleWhitelist _whitelist = new OracleWhitelist{
-            salt: salt
-        }(params.owner, params.pool, params.quoteToken, params.lockBuy, params.maxAddressCap);
-        _whitelist.setToken(params.token);
-        whitelistAddress = address(_whitelist);
-        emit OracleWhitelistCreated(whitelistAddress, params);
     }
 
     /// @notice Create a new ERC20 token and its corresponding whitelist contract
     function createWhitelistContracts(CreateWhitelistContractsParams calldata params) external override returns (address token, address whitelistAddress) {
         bytes32 salt = keccak256(abi.encodePacked(
-                params.owner,
+                msg.sender,
                 ChainId.get(),
                 nonce++
             ));
@@ -66,7 +36,7 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         // deploy token
         ERC20Whitelist _token = new ERC20Whitelist{
             salt: salt
-        }(params.owner, params.name, params.symbol, params.totalSupply);
+        }(msg.sender, params.name, params.symbol, params.totalSupply);
         token = address(_token);
 
         // deploy whitelist
@@ -77,14 +47,13 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         }));
         OracleWhitelist _whitelist = new OracleWhitelist{
             salt: salt
-        }(params.owner, pool, params.quoteToken, params.lockBuy, params.maxAddressCap);
+        }(msg.sender, pool, params.quoteToken, params.lockBuy, params.maxAddressCap);
         whitelistAddress = address(_whitelist);
 
         _token.setWhitelistContract(whitelistAddress);
         _whitelist.setToken(token);
 
         emit TokenCreated(token, CreateERC20WhitelistTokenParams({
-            owner: params.owner,
             name: params.name,
             symbol: params.symbol,
             totalSupply: params.totalSupply,
@@ -92,7 +61,6 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         }));
 
         emit OracleWhitelistCreated(whitelistAddress, CreateOracleWhitelistParams({
-            owner: params.owner,
             maxAddressCap: params.maxAddressCap,
             token: token,
             pool: pool,
@@ -101,20 +69,19 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         }));
     }
 
-    function createStarndardERC20Token(CreateStarndardERC20TokenParams calldata params) external override returns (address token) {
+    function createStandardERC20Token(CreateStarndardERC20TokenParams calldata params) external override returns (address token) {
         bytes32 salt = keccak256(abi.encodePacked(
-                params.owner,
+                msg.sender,
                 ChainId.get(),
                 nonce++
             ));
         token = address(new ERC20Standard{
             salt: salt
-        }(params.owner, params.name, params.symbol, params.totalSupply));
+        }(msg.sender, params.name, params.symbol, params.totalSupply));
         emit TokenCreated(token, CreateERC20WhitelistTokenParams({
             name: params.name,
             symbol: params.symbol,
             totalSupply: params.totalSupply,
-            owner: params.owner,
             whitelistContract: address(0)
         }));
     }

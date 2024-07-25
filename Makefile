@@ -15,11 +15,15 @@ ilo-manager:
 	$(eval CONTRACT=ILOManager)
 ilo-pool:
 	$(eval CONTRACT=ILOPool)
+token-factory:
+	$(eval CONTRACT=TokenFactory)
 all-contract:
 	$(eval CONTRACT=AllContract)
 deploy-all-contract:
 deploy-ilo-manager:
 deploy-ilo-pool:
+deploy-token-factory:
+deploy-token-factory-legacy:
 deploy-ilo-manager-legacy:
 deploy-ilo-pool-legacy:
 deploy-ilo-manager-with-gas-price:

@@ -59,3 +59,16 @@ contract ILOPoolScript is CommonScript {
         vm.stopBroadcast();
     }
 }
+
+contract TokenFactoryScript is CommonScript {
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint("PRIVATE_KEY");
+        vm.startBroadcast(deployerPrivateKey);
+
+        TokenFactory tokenFactory = new TokenFactory{
+            salt: salt
+        }();
+
+        vm.stopBroadcast();
+    }
+}
