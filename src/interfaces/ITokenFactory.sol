@@ -36,7 +36,6 @@ interface ITokenFactory {
         uint256 totalSupply;
         uint256 maxAddressCap;
         address quoteToken;
-        uint256 allowedWhitelistIndex;
         bool lockBuy;
 
         uint24 fee;
