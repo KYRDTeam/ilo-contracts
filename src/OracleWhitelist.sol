@@ -114,6 +114,17 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
             _removeWhitelistedAddress(whitelisted[i]);
         }
     }
+    
+    /// @notice whitelist count
+    function whitelistCount() external view returns (uint256) {
+        return EnumerableSet.length(_whitelistedAddresses);
+    }
+
+    /// @notice check if address is whitelisted
+    /// @param whitelisted Address to be checked
+    function isWhitelisted(address whitelisted) external view returns (bool) {
+        return EnumerableSet.contains(_whitelistedAddresses, whitelisted);
+    }
 
     /// @notice Check if address to is eligible for whitelist
     /// @param from sender address
