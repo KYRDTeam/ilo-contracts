@@ -5,6 +5,7 @@ import "forge-std/Script.sol";
 import "@openzeppelin/contracts/utils/Create2.sol";
 import "../src/ILOPool.sol";
 import "../src/ILOManager.sol";
+import "../src/TokenFactory.sol";
 
 abstract contract CommonScript is Script {
     bytes16 private constant HEX_DIGITS = "0123456789abcdef";
@@ -50,6 +51,18 @@ abstract contract CommonScript is Script {
             keccak256(
                 abi.encodePacked(
                     type(ILOPool).creationCode
+                )
+            ),
+            factory
+        );
+    }
+
+    function getTokenFactoryDeploymentAddress() internal view returns(address) {
+        return Create2.computeAddress(
+            salt,
+            keccak256(
+                abi.encodePacked(
+                    type(TokenFactory).creationCode
                 )
             ),
             factory

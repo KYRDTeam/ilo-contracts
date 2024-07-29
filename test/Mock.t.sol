@@ -39,7 +39,7 @@ contract Mock {
             saleToken: SALE_TOKEN, 
             raiseToken: USDC,
             fee: 500,
-            initialPoolPriceX96: 158456325028528675187087900672, 
+            initialPoolPriceX96: 39614081257132168796771975168, 
             launchTime: LAUNCH_START // Wed Jun 05 2024 17:00:00 GMT+0000
         });
     }

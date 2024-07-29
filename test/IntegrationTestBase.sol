@@ -21,6 +21,9 @@ abstract contract IntegrationTestBase is Mock, Test {
     uint16 constant PLATFORM_FEE = 10; // 0.1%
     uint16 constant PERFORMANCE_FEE = 1000; // 10%
     int24 constant MIN_TICK_500 = -887270;
+    string constant PROJECT_ID = "PROJECT_ID";
+    PoolAddress.PoolKey poolKey;
+    address UNIV3_POOL_ADDRESS;
 
     ILOManager iloManager;
     address projectId;
@@ -48,6 +51,8 @@ abstract contract IntegrationTestBase is Mock, Test {
         // console.log("sale token:");
         // console.log(SALE_TOKEN);
 
+        poolKey = PoolAddress.getPoolKey(USDC, SALE_TOKEN, 500);
+        UNIV3_POOL_ADDRESS = PoolAddress.computeAddress(UNIV3_FACTORY, poolKey);
 
 
         iloManager.initialize(
@@ -55,7 +60,6 @@ abstract contract IntegrationTestBase is Mock, Test {
                 FEE_TAKER,
                 address(iloPoolImplementation),
                 UNIV3_FACTORY, 
-                WETH9,
                 1 ether,
                 PLATFORM_FEE,
                 PERFORMANCE_FEE
@@ -64,8 +68,8 @@ abstract contract IntegrationTestBase is Mock, Test {
         vm.stopBroadcast();
 
         hoax(PROJECT_OWNER);
-        projectId =  iloManager.initProject{value: 1 ether}(IILOManager.InitProjectParams({
-                    saleToken: mockProject().saleToken,
+        iloManager.initProject{value: 1 ether}(IILOManager.InitProjectParams({
+                    projectId: PROJECT_ID,
                     raiseToken: mockProject().raiseToken,
                     fee: mockProject().fee,
                     initialPoolPriceX96: mockProject().initialPoolPriceX96, 
@@ -75,14 +79,13 @@ abstract contract IntegrationTestBase is Mock, Test {
 
     }
 
-    function _getInitPoolParams() internal view returns(IILOManager.InitPoolParams memory) {
+    function _getInitPoolParams() internal pure returns(IILOManager.InitPoolParams memory) {
         return IILOManager.InitPoolParams({
-            uniV3Pool: projectId,
+            projectId: PROJECT_ID,
             tickLower: MIN_TICK_500,
             tickUpper: -MIN_TICK_500,
-            hardCap: 100000 ether,
-            softCap: 80000 ether,
-            maxCapPerUser: 60000 ether,
+            maxRaise: 100000 ether,
+            minRaise: 80000 ether,
             start: SALE_START,
             end: SALE_END,
             vestingConfigs: _getVestingConfigs()
