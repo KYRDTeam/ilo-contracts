@@ -15,7 +15,7 @@ import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
  */
 contract ERC20Whitelist is IERC20Whitelist, ERC20Burnable, ERC20Permit, Ownable {
     /// @dev whitelist contract address
-    address private _whitelistContract;
+    address public override whitelistContract;
 
     constructor(
         address owner, 
@@ -28,8 +28,8 @@ contract ERC20Whitelist is IERC20Whitelist, ERC20Burnable, ERC20Permit, Ownable 
         _mint(owner, _totalSupply);
     }
 
-    function setWhitelistContract(address whitelistContract) external override onlyOwner {
-        _whitelistContract = whitelistContract;
+    function setWhitelistContract(address _whitelistContract) external override onlyOwner {
+        whitelistContract = _whitelistContract;
     }
 
     function approveAndCall(address spender, uint256 amount, bytes calldata extraData) external returns (bool) {
@@ -45,9 +45,9 @@ contract ERC20Whitelist is IERC20Whitelist, ERC20Burnable, ERC20Permit, Ownable 
     /// @notice Before token transfer hook
     /// @dev It will call `checkWhitelist` function and if it's succsessful, it will transfer tokens, unless revert
     function _beforeTokenTransfer(address from, address to, uint256 amount) internal override {
-        require(to != address(this), "ERC20: transfer to token address");
-        if (_whitelistContract != address(0)) {
-            IOracleWhitelist(_whitelistContract).checkWhitelist(from, to, amount);
+        require(to != address(this));
+        if (whitelistContract != address(0)) {
+            IOracleWhitelist(whitelistContract).checkWhitelist(from, to, amount);
         }
         super._beforeTokenTransfer(from, to, amount);
     }
