@@ -56,3 +56,18 @@ contract VerifyILOPoolScript is CommonScript {
         );    
     }
 }
+
+contract VerifyTokenFactoryScript is CommonScript {
+    function run() view external {
+        address deploymentAddress = getTokenFactoryDeploymentAddress();
+        console.log("deployment address: ", deploymentAddress);
+        console.log("\nrun script below to verify contract: \n");
+        console.log(
+            string(abi.encodePacked(
+                "forge verify-contract ", 
+                toHexString(deploymentAddress),
+                " src/TokenFactory.sol:TokenFactory"
+            ))
+        );    
+    }
+}

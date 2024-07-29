@@ -4,15 +4,13 @@ pragma solidity =0.7.6;
 
 interface IILOWhitelist {
 
-    event SetWhitelist(address indexed user, bool isWhitelist);
-    event SetOpenToAll(bool openToAll);
+    event SetWhitelist(address indexed user, uint256 allocation);
+    event SetPublicAllocation(uint256 allocation);
 
-    function setOpenToAll(bool openToAll) external;
-    function isOpenToAll() external returns(bool);
-    function isWhitelisted(address user) external returns (bool);
-    function batchWhitelist(address[] calldata users) external;
-    function batchRemoveWhitelist(address[] calldata users) external;
+    function setPublicAllocation(uint256 _allocation) external;
+    function setWhiteList(address[] calldata users, uint256[] calldata allocations) external;
+    function allocation(address user) external view returns(uint256);
+    function whitelistedCount() external view returns(uint256);
 
     modifier onlyProjectAdmin virtual;
-
 }

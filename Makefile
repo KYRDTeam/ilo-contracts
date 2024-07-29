@@ -15,11 +15,15 @@ ilo-manager:
 	$(eval CONTRACT=ILOManager)
 ilo-pool:
 	$(eval CONTRACT=ILOPool)
+token-factory:
+	$(eval CONTRACT=TokenFactory)
 all-contract:
 	$(eval CONTRACT=AllContract)
 deploy-all-contract:
 deploy-ilo-manager:
 deploy-ilo-pool:
+deploy-token-factory:
+deploy-token-factory-legacy:
 deploy-ilo-manager-legacy:
 deploy-ilo-pool-legacy:
 deploy-ilo-manager-with-gas-price:
@@ -33,10 +37,11 @@ deploy-%-with-gas-price: %
 
 verify-all-contract:
 verify-ilo-manager:
+verify-token-factory:
 verify-ilo-pool:
 verify-%: %
 	forge script script/Verify.s.sol:Verify$(CONTRACT)Script | awk 'END{print}' | bash
 init-ilo-manager:
-init-ilo-pool:
-init-ilo-manager:
-	forge script script/Init.s.sol:ILOManagerInitializeScript --rpc-url $(RPC_URL) --broadcast
+init-token-factory:
+init-%: %
+	forge script script/Init.s.sol:$(CONTRACT)InitializeScript --rpc-url $(RPC_URL) --broadcast
