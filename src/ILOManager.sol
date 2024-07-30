@@ -224,7 +224,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         for (uint256 i = 0; i < initializedPools.length; i++) {
             IILOPool(initializedPools[i]).launch(projectId, uniV3PoolAddress, poolKey);
         }
-
+        IUniswapV3Pool(uniV3PoolAddress).increaseObservationCardinalityNext(10);
         emit ProjectLaunch(projectId, uniV3PoolAddress, saleToken);
     }
     
