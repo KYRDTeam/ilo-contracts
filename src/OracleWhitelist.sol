@@ -7,7 +7,6 @@ import {UniswapV3Oracle} from "./base/UniswapV3Oracle.sol";
 import {Initializable} from "./base/Initializable.sol";
 import {IOracleWhitelist} from "./interfaces/IOracleWhitelist.sol";
 import {EnumerableSet} from "@openzeppelin/contracts/utils/EnumerableSet.sol";
-import {IUniswapV3Pool} from "@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol";
 
 /**
  * @title The contract handles whitelist related features
@@ -123,7 +122,6 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
     /// @dev Update contributed amount
     function checkWhitelist(address from, address to, uint256 amount) external override onlyToken {
         if (from == pool && to != owner()) {
-            IUniswapV3Pool(pool).increaseObservationCardinalityNext(10);
             // We only add limitations for buy actions via uniswap v3 pool
             // Still need to ignore WL check if it's owner related actions
             require(!_locked, "locked");
