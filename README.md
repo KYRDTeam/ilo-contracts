@@ -179,6 +179,7 @@ function launch(address uniV3PoolAddress);
 ### Production: 0x0d781106DA1da95f76150e16D1c6fCCf1e41B762
 - [arbitrum](https://arbiscan.io/address/0x0d781106DA1da95f76150e16D1c6fCCf1e41B762)
 - [base](https://basescan.org/address/0x0d781106DA1da95f76150e16D1c6fCCf1e41B762)
+- [ethereum](https://etherscan.io/address/0x0d781106DA1da95f76150e16D1c6fCCf1e41B762)
 
 ### Dev: 0x11754143Ab82385fafc669d041D80f52F503064d
 - [arbitrum](https://arbiscan.io/address/0x11754143Ab82385fafc669d041D80f52F503064d)
@@ -187,6 +188,7 @@ function launch(address uniV3PoolAddress);
 ## ILOPool Implementation:
 - [arbitrum](https://arbiscan.io/address/0x103F1E72e38B11304d47BEA96eA673d63E0C7261)
 - [base](https://basescan.org/address/0x103F1E72e38B11304d47BEA96eA673d63E0C7261)
+- [ethereum](https://etherscan.io/address/0x103F1E72e38B11304d47BEA96eA673d63E0C7261)
 
 ## Token Factory
 - [arbitrum](https://arbiscan.io/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5)
