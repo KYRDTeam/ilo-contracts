@@ -193,3 +193,4 @@ function launch(address uniV3PoolAddress);
 ## Token Factory
 - [arbitrum](https://arbiscan.io/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5)
 - [base](https://basescan.org/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5)
+- [ethereum](https://etherscan.io/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5)
