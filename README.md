@@ -1,6 +1,14 @@
 # Overview:
 https://docs.liquidpad.io/
 
+# Deployment Address
+
+| | ILOManager | ILOPool Implementation | Token Factory | ILOManager(Dev env) |
+|--- |--- |--- |--- |--- |
+| Arbitrum | [0x0d781106DA1da95f76150e16D1c6fCCf1e41B762](https://arbiscan.io/address/0x0d781106DA1da95f76150e16D1c6fCCf1e41B762) | [0x103F1E72e38B11304d47BEA96eA673d63E0C7261](https://arbiscan.io/address/0x103F1E72e38B11304d47BEA96eA673d63E0C7261) | [0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5](https://arbiscan.io/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5) | [0x11754143Ab82385fafc669d041D80f52F503064d](https://arbiscan.io/address/0x11754143Ab82385fafc669d041D80f52F503064d) |
+| Base | [0x0d781106DA1da95f76150e16D1c6fCCf1e41B762](https://basescan.org/address/0x0d781106DA1da95f76150e16D1c6fCCf1e41B762) | [0x103F1E72e38B11304d47BEA96eA673d63E0C7261](https://basescan.org/address/0x103F1E72e38B11304d47BEA96eA673d63E0C7261) | [0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5](https://basescan.org/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5) | [0x11754143Ab82385fafc669d041D80f52F503064d](https://basescan.org/address/0x11754143Ab82385fafc669d041D80f52F503064d) |
+| Ethereum | [0x0d781106DA1da95f76150e16D1c6fCCf1e41B762](https://etherscan.io/address/0x0d781106DA1da95f76150e16D1c6fCCf1e41B762) | [0x103F1E72e38B11304d47BEA96eA673d63E0C7261](https://etherscan.io/address/0x103F1E72e38B11304d47BEA96eA673d63E0C7261) | [0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5](https://etherscan.io/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5) |  |
+
 # Build and deploy:
 
 TL;DR: `make all`. this command require all env below. (see `sample.env` file)
@@ -171,26 +179,3 @@ function launch(address uniV3PoolAddress);
 |   PL	| Pool Launched            |
 |  IRF	| Pool In Refund state     |
 |  VR	| Invalid Vesting recipient|
-
-# Deployment Address
-
-## ILOManager
-
-### Production: 0x0d781106DA1da95f76150e16D1c6fCCf1e41B762
-- [arbitrum](https://arbiscan.io/address/0x0d781106DA1da95f76150e16D1c6fCCf1e41B762)
-- [base](https://basescan.org/address/0x0d781106DA1da95f76150e16D1c6fCCf1e41B762)
-- [ethereum](https://etherscan.io/address/0x0d781106DA1da95f76150e16D1c6fCCf1e41B762)
-
-### Dev: 0x11754143Ab82385fafc669d041D80f52F503064d
-- [arbitrum](https://arbiscan.io/address/0x11754143Ab82385fafc669d041D80f52F503064d)
-- [base](https://basescan.org/address/0x11754143Ab82385fafc669d041D80f52F503064d)
-
-## ILOPool Implementation:
-- [arbitrum](https://arbiscan.io/address/0x103F1E72e38B11304d47BEA96eA673d63E0C7261)
-- [base](https://basescan.org/address/0x103F1E72e38B11304d47BEA96eA673d63E0C7261)
-- [ethereum](https://etherscan.io/address/0x103F1E72e38B11304d47BEA96eA673d63E0C7261)
-
-## Token Factory
-- [arbitrum](https://arbiscan.io/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5)
-- [base](https://basescan.org/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5)
-- [ethereum](https://etherscan.io/address/0x7bBe253CC047CE08D19c2aFEfbE48E121c9e65c5)
