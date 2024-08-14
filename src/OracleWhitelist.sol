@@ -2,11 +2,11 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import {Ownable} from "@openzeppelin/contracts/access/Ownable.sol";
-import {UniswapV3Oracle} from "./base/UniswapV3Oracle.sol";
-import {Initializable} from "./base/Initializable.sol";
-import {IOracleWhitelist} from "./interfaces/IOracleWhitelist.sol";
-import {EnumerableSet} from "@openzeppelin/contracts/utils/EnumerableSet.sol";
+import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import {UniswapV3Oracle} from './base/UniswapV3Oracle.sol';
+import {Initializable} from './base/Initializable.sol';
+import {IOracleWhitelist} from './interfaces/IOracleWhitelist.sol';
+import {EnumerableSet} from '@openzeppelin/contracts/utils/EnumerableSet.sol';
 
 /**
  * @title The contract handles whitelist related features
@@ -26,9 +26,9 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
     /// @dev Whitelist index for each whitelisted address
     mapping(address => uint256) private _contributed;
 
-    constructor (
+    constructor(
         address owner,
-        address _pool, 
+        address _pool,
         address _quoteToken,
         bool _lockBuy,
         uint256 _maxCap
@@ -42,7 +42,7 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
 
     /// @notice Check if called from token contract.
     modifier onlyToken() {
-        require(_msgSender() == token, "token");
+        require(_msgSender() == token, 'token');
         _;
     }
 
@@ -88,7 +88,9 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
 
     /// @notice Add batch whitelists
     /// @param whitelisted Array of addresses to be added
-    function addBatchWhitelist(address[] calldata whitelisted) external onlyOwner {
+    function addBatchWhitelist(
+        address[] calldata whitelisted
+    ) external onlyOwner {
         for (uint i = 0; i < whitelisted.length; i++) {
             EnumerableSet.add(_whitelistedAddresses, whitelisted[i]);
         }
@@ -96,12 +98,14 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
 
     /// @notice Remove batch whitelists
     /// @param whitelisted Array of addresses to be removed
-    function removeBatchWhitelist(address[] calldata whitelisted) external onlyOwner {
+    function removeBatchWhitelist(
+        address[] calldata whitelisted
+    ) external onlyOwner {
         for (uint i = 0; i < whitelisted.length; i++) {
             EnumerableSet.remove(_whitelistedAddresses, whitelisted[i]);
         }
     }
-    
+
     /// @notice whitelist count
     function whitelistCount() external view returns (uint256) {
         return EnumerableSet.length(_whitelistedAddresses);
@@ -120,18 +124,25 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
     /// @dev Check WL should be applied only
     /// @dev Revert if locked, not whitelisted or already contributed more than capped amount
     /// @dev Update contributed amount
-    function checkWhitelist(address from, address to, uint256 amount) external override onlyToken {
+    function checkWhitelist(
+        address from,
+        address to,
+        uint256 amount
+    ) external override onlyToken {
         if (from == pool && to != owner()) {
             // We only add limitations for buy actions via uniswap v3 pool
             // Still need to ignore WL check if it's owner related actions
-            require(!_locked, "locked");
+            require(!_locked, 'locked');
 
-            require(EnumerableSet.contains(_whitelistedAddresses, to), "whitelist");
+            require(
+                EnumerableSet.contains(_whitelistedAddresses, to),
+                'whitelist'
+            );
 
             // // Calculate rough ETH amount for TK amount
             uint256 estimatedETHAmount = peek(amount);
             if (_contributed[to] + estimatedETHAmount > _maxAddressCap) {
-                revert("cap");
+                revert('cap');
             }
 
             _contributed[to] += estimatedETHAmount;

@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
 
-import {OracleLibrary} from "../libraries/OracleLibrary.sol";
-import {IUniswapV3Oracle} from "../interfaces/IUniswapV3Oracle.sol";
+import {OracleLibrary} from '../libraries/OracleLibrary.sol';
+import {IUniswapV3Oracle} from '../interfaces/IUniswapV3Oracle.sol';
 
 /**
  * @title UniswapV3Oracle
@@ -25,10 +25,17 @@ abstract contract UniswapV3Oracle is IUniswapV3Oracle {
 
     /// @notice Returns TWAP price for 1 TK for the last 30 mins
     function peek(uint256 baseAmount) internal view returns (uint256) {
-        uint32 longestPeriod = OracleLibrary.getOldestObservationSecondsAgo(pool);
+        uint32 longestPeriod = OracleLibrary.getOldestObservationSecondsAgo(
+            pool
+        );
         uint32 period = PERIOD < longestPeriod ? PERIOD : longestPeriod;
         int24 tick = OracleLibrary.consult(pool, period);
-        uint256 quotedAmount = OracleLibrary.getQuoteAtTick(tick, BASE_AMOUNT, token, quoteToken);
+        uint256 quotedAmount = OracleLibrary.getQuoteAtTick(
+            tick,
+            BASE_AMOUNT,
+            token,
+            quoteToken
+        );
         // Apply 5% slippage
         return (quotedAmount * baseAmount * 95) / 1e20; // 100 / 1e18
     }
