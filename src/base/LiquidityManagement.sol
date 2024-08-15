@@ -2,9 +2,9 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import { IUniswapV3Factory } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
 import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import { IUniswapV3MintCallback } from '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol';
+import { ILOPoolImmutableState } from './ILOPoolImmutableState.sol';
 
 /// @title Liquidity management functions
 /// @notice Internal functions for safely managing liquidity in Uniswap V3
