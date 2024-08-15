@@ -1,12 +1,12 @@
 // SPDX-License-Identifier: MIT
 pragma solidity =0.7.6;
 
-import {IOracleWhitelist} from './interfaces/IOracleWhitelist.sol';
-import {IApproveAndCallReceiver} from './interfaces/IApproveAndCallReceiver.sol';
-import {IERC20Whitelist} from './interfaces/IERC20Whitelist.sol';
-import {ERC20, ERC20Burnable} from '@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol';
-import {ERC20Permit} from '@openzeppelin/contracts/drafts/ERC20Permit.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
+import { IOracleWhitelist } from './interfaces/IOracleWhitelist.sol';
+import { IApproveAndCallReceiver } from './interfaces/IApproveAndCallReceiver.sol';
+import { IERC20Whitelist } from './interfaces/IERC20Whitelist.sol';
+import { ERC20, ERC20Burnable } from '@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol';
+import { ERC20Permit } from '@openzeppelin/contracts/drafts/ERC20Permit.sol';
+import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
 /**
  * @title Extended token contract with whitelist contract interactions

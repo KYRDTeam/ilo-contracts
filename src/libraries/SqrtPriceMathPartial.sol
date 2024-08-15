@@ -1,9 +1,9 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
 
-import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
-import '@uniswap/v3-core/contracts/libraries/UnsafeMath.sol';
-import '@uniswap/v3-core/contracts/libraries/FixedPoint96.sol';
+import { FullMath } from '@uniswap/v3-core/contracts/libraries/FullMath.sol';
+import { UnsafeMath } from '@uniswap/v3-core/contracts/libraries/UnsafeMath.sol';
+import { FixedPoint96 } from '@uniswap/v3-core/contracts/libraries/FixedPoint96.sol';
 
 /// @title Functions based on Q64.96 sqrt price and liquidity
 /// @notice Exposes two functions from @uniswap/v3-core SqrtPriceMath
@@ -23,7 +23,8 @@ library SqrtPriceMathPartial {
         uint128 liquidity,
         bool roundUp
     ) internal pure returns (uint256 amount0) {
-        if (sqrtRatioAX96 > sqrtRatioBX96) (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
+        if (sqrtRatioAX96 > sqrtRatioBX96)
+            (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
 
         uint256 numerator1 = uint256(liquidity) << FixedPoint96.RESOLUTION;
         uint256 numerator2 = sqrtRatioBX96 - sqrtRatioAX96;
@@ -33,10 +34,15 @@ library SqrtPriceMathPartial {
         return
             roundUp
                 ? UnsafeMath.divRoundingUp(
-                    FullMath.mulDivRoundingUp(numerator1, numerator2, sqrtRatioBX96),
+                    FullMath.mulDivRoundingUp(
+                        numerator1,
+                        numerator2,
+                        sqrtRatioBX96
+                    ),
                     sqrtRatioAX96
                 )
-                : FullMath.mulDiv(numerator1, numerator2, sqrtRatioBX96) / sqrtRatioAX96;
+                : FullMath.mulDiv(numerator1, numerator2, sqrtRatioBX96) /
+                    sqrtRatioAX96;
     }
 
     /// @notice Gets the amount1 delta between two prices
@@ -52,11 +58,20 @@ library SqrtPriceMathPartial {
         uint128 liquidity,
         bool roundUp
     ) internal pure returns (uint256 amount1) {
-        if (sqrtRatioAX96 > sqrtRatioBX96) (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
+        if (sqrtRatioAX96 > sqrtRatioBX96)
+            (sqrtRatioAX96, sqrtRatioBX96) = (sqrtRatioBX96, sqrtRatioAX96);
 
         return
             roundUp
-                ? FullMath.mulDivRoundingUp(liquidity, sqrtRatioBX96 - sqrtRatioAX96, FixedPoint96.Q96)
-                : FullMath.mulDiv(liquidity, sqrtRatioBX96 - sqrtRatioAX96, FixedPoint96.Q96);
+                ? FullMath.mulDivRoundingUp(
+                    liquidity,
+                    sqrtRatioBX96 - sqrtRatioAX96,
+                    FixedPoint96.Q96
+                )
+                : FullMath.mulDiv(
+                    liquidity,
+                    sqrtRatioBX96 - sqrtRatioAX96,
+                    FixedPoint96.Q96
+                );
     }
 }

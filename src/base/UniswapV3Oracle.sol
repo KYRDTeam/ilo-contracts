@@ -1,8 +1,8 @@
 // SPDX-License-Identifier: UNLICENSED
 pragma solidity =0.7.6;
 
-import {OracleLibrary} from '../libraries/OracleLibrary.sol';
-import {IUniswapV3Oracle} from '../interfaces/IUniswapV3Oracle.sol';
+import { OracleLibrary } from '../libraries/OracleLibrary.sol';
+import { IUniswapV3Oracle } from '../interfaces/IUniswapV3Oracle.sol';
 
 /**
  * @title UniswapV3Oracle
@@ -24,7 +24,7 @@ abstract contract UniswapV3Oracle is IUniswapV3Oracle {
     address public override quoteToken;
 
     /// @notice Returns TWAP price for 1 TK for the last 30 mins
-    function peek(uint256 baseAmount) internal view returns (uint256) {
+    function _peek(uint256 baseAmount) internal view returns (uint256) {
         uint32 longestPeriod = OracleLibrary.getOldestObservationSecondsAgo(
             pool
         );

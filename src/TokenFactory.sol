@@ -3,17 +3,17 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import {ITokenFactory} from './interfaces/ITokenFactory.sol';
-import {ChainId} from './libraries/ChainId.sol';
-import {PoolAddress} from './libraries/PoolAddress.sol';
-import {Initializable} from './base/Initializable.sol';
-import {ERC20Standard} from './base/ERC20Standard.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {ERC20Whitelist} from './ERC20Whitelist.sol';
-import {OracleWhitelist} from './OracleWhitelist.sol';
+import { ITokenFactory } from './interfaces/ITokenFactory.sol';
+import { ChainId } from './libraries/ChainId.sol';
+import { PoolAddress } from './libraries/PoolAddress.sol';
+import { Initializable } from './base/Initializable.sol';
+import { ERC20Standard } from './base/ERC20Standard.sol';
+import { ERC20Whitelist } from './ERC20Whitelist.sol';
+import { OracleWhitelist } from './OracleWhitelist.sol';
+import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
 contract TokenFactory is Ownable, ITokenFactory, Initializable {
-    uint256 private nonce = 1;
+    uint256 private _nonce = 1;
     address public override uniswapV3Factory;
 
     constructor() {
@@ -33,11 +33,11 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         CreateWhitelistContractsParams calldata params
     ) external override returns (address token, address whitelistAddress) {
         bytes32 salt = keccak256(
-            abi.encodePacked(msg.sender, ChainId.get(), nonce++)
+            abi.encodePacked(msg.sender, ChainId.get(), _nonce++)
         );
 
         // deploy token
-        ERC20Whitelist _token = new ERC20Whitelist{salt: salt}(
+        ERC20Whitelist _token = new ERC20Whitelist{ salt: salt }(
             address(this),
             params.name,
             params.symbol,
@@ -50,7 +50,7 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
             uniswapV3Factory,
             PoolAddress.getPoolKey(token, params.quoteToken, params.fee)
         );
-        OracleWhitelist _whitelist = new OracleWhitelist{salt: salt}(
+        OracleWhitelist _whitelist = new OracleWhitelist{ salt: salt }(
             address(this),
             pool,
             params.quoteToken,
@@ -92,10 +92,10 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         CreateStarndardERC20TokenParams calldata params
     ) external override returns (address token) {
         bytes32 salt = keccak256(
-            abi.encodePacked(msg.sender, ChainId.get(), nonce++)
+            abi.encodePacked(msg.sender, ChainId.get(), _nonce++)
         );
         token = address(
-            new ERC20Standard{salt: salt}(
+            new ERC20Standard{ salt: salt }(
                 msg.sender,
                 params.name,
                 params.symbol,

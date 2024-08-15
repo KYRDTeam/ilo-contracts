@@ -2,16 +2,38 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
-import '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
+import { IERC721Metadata } from '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
+import { IERC721Enumerable } from '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
 
-import './IILOVest.sol';
-import '../libraries/PoolAddress.sol';
+import { IILOVest } from './IILOVest.sol';
+import { PoolAddress } from '../libraries/PoolAddress.sol';
 
 /// @title Non-fungible token for positions
 /// @notice Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 /// and authorized.
 interface IILOPoolBase is IERC721Metadata, IERC721Enumerable {
+    // details about the uniswap position
+    struct Position {
+        // the liquidity of the position
+        uint128 liquidity;
+        // the fee growth of the aggregate position as of the last action on the individual position
+        uint256 feeGrowthInside0LastX128;
+        uint256 feeGrowthInside1LastX128;
+        // the raise amount of position
+        uint256 raiseAmount;
+    }
+
+    struct InitPoolParams {
+        string projectId;
+        uint256 tokenAmount;
+        address pairToken;
+        int24 tickLower;
+        int24 tickUpper;
+        address implementation;
+        uint256 projectNonce;
+        // config for vests and shares.
+        IILOVest.VestingConfig[] vestingConfigs;
+    }
     /// @notice Emitted when liquidity is increased for a position NFT
     /// @dev Also emitted when a token is minted
     /// @param tokenId The ID of the token for which liquidity was increased
@@ -68,38 +90,17 @@ interface IILOPoolBase is IERC721Metadata, IERC721Enumerable {
         uint256 token0,
         uint256 token1
     );
-    event UserRefund(
-        address indexed user,
-        uint256 tokenId,
-        uint256 raiseTokenAmount
-    );
+    event Refund(address indexed owner, uint256 tokenId, uint256 refundAmount);
     event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
-
-    // details about the uniswap position
-    struct Position {
-        // the liquidity of the position
-        uint128 liquidity;
-        // the fee growth of the aggregate position as of the last action on the individual position
-        uint256 feeGrowthInside0LastX128;
-        uint256 feeGrowthInside1LastX128;
-        // the raise amount of position
-        uint256 raiseAmount;
-    }
-
-    struct InitPoolParams {
-        string projectId;
-        uint256 tokenAmount;
-        address pairToken;
-        int24 tickLower;
-        int24 tickUpper;
-        address implementation;
-        uint256 projectNonce;
-        // config for vests and shares.
-        IILOVest.VestingConfig[] vestingConfigs;
-    }
 
     /// @notice Returns number of collected tokens associated with a given token ID.
     function claim(
         uint256 tokenId
     ) external returns (uint256 amount0, uint256 amount1);
+
+    function launch(
+        address uniV3PoolAddress,
+        PoolAddress.PoolKey calldata poolKey,
+        uint160 sqrtPriceX96
+    ) external;
 }

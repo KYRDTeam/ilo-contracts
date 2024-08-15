@@ -2,19 +2,22 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
-import '@uniswap/v3-core/contracts/libraries/FixedPoint128.sol';
-import '@uniswap/v3-core/contracts/libraries/FullMath.sol';
-import '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import { IILOPoolBase } from '../interfaces/IILOPoolBase.sol';
+import { PositionKey } from '../libraries/PositionKey.sol';
+import { ILOVest } from './ILOVest.sol';
+import { LiquidityManagement } from './LiquidityManagement.sol';
+import { ILOPoolImmutableState } from './ILOPoolImmutableState.sol';
+import { Initializable } from './Initializable.sol';
+import { Multicall } from './Multicall.sol';
+import { PoolAddress } from '../libraries/PoolAddress.sol';
+import { IILOManager } from '../interfaces/IILOManager.sol';
+import { TransferHelper } from '../libraries/TransferHelper.sol';
+import { LiquidityAmounts } from '../libraries/LiquidityAmounts.sol';
 
-import '../interfaces/IILOPoolBase.sol';
-import '../libraries/PositionKey.sol';
-import '../libraries/SqrtPriceMathPartial.sol';
-import './ILOVest.sol';
-import './LiquidityManagement.sol';
-import './ILOPoolImmutableState.sol';
-import './Initializable.sol';
-import './Multicall.sol';
+import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
+import { FixedPoint128 } from '@uniswap/v3-core/contracts/libraries/FixedPoint128.sol';
+import { FullMath } from '@uniswap/v3-core/contracts/libraries/FullMath.sol';
+import { ERC721 } from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 
 /// @title NFT positions
 /// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
@@ -34,6 +37,14 @@ abstract contract ILOPoolBase is
     uint256 internal _nextId;
     uint256 internal _tokenAmount;
     uint128 internal _totalInitialLiquidity;
+
+    modifier onlyInitializedProject() {
+        IILOManager.Project memory _project = IILOManager(MANAGER).project(
+            PROJECT_ID
+        );
+        require(_project.status == IILOManager.ProjectStatus.INITIALIZED, 'PL');
+        _;
+    }
 
     modifier isAuthorizedForToken(uint256 tokenId) {
         require(_isApprovedOrOwner(msg.sender, tokenId), 'UA');
@@ -57,12 +68,14 @@ abstract contract ILOPoolBase is
         _disableInitialize();
     }
 
-    /// @inheritdoc IILOPoolBase
-    function claim(
+    function burn(uint256 tokenId) external isAuthorizedForToken(tokenId) {
+        _burn(tokenId);
+    }
+
+    function _claim(
         uint256 tokenId
     )
-        external
-        override
+        internal
         isAuthorizedForToken(tokenId)
         afterLaunch
         returns (uint256 amount0, uint256 amount1)
@@ -216,15 +229,67 @@ abstract contract ILOPoolBase is
         );
     }
 
-    function burn(uint256 tokenId) external isAuthorizedForToken(tokenId) {
-        _burn(tokenId);
-    }
-
     /// @inheritdoc ERC721
     function _burn(uint256 tokenId) internal override {
         delete _positions[tokenId];
         delete _positionVests[tokenId];
         super._burn(tokenId);
+    }
+
+    function _initialize(
+        InitPoolParams calldata params
+    ) internal whenNotInitialized {
+        _nextId = 1;
+        _tokenAmount = params.tokenAmount;
+        // initialize imutable state
+        _initializeImmutableState(
+            params.projectId,
+            IILOManager(msg.sender),
+            params.pairToken,
+            params.tickLower,
+            params.tickUpper,
+            params.implementation,
+            params.projectNonce
+        );
+
+        _validateSharesAndVests(params.vestingConfigs);
+    }
+
+    function _launchLiquidity(
+        address uniV3PoolAddress,
+        PoolAddress.PoolKey calldata poolKey,
+        uint160 sqrtPriceX96,
+        uint256 tokenAmount
+    ) internal returns (uint128 liquidity) {
+        _cachedUniV3PoolAddress = uniV3PoolAddress;
+        _cachedPoolKey = poolKey;
+        if (poolKey.token0 == PAIR_TOKEN) {
+            // if token0 is raise token, we need to flip the tick range
+            _flipTicks();
+            liquidity = LiquidityAmounts.getLiquidityForAmount1(
+                _sqrtRatioLowerX96(),
+                sqrtPriceX96,
+                tokenAmount
+            );
+        } else {
+            liquidity = LiquidityAmounts.getLiquidityForAmount0(
+                sqrtPriceX96,
+                _sqrtRatioUpperX96(),
+                tokenAmount
+            );
+        }
+
+        // actually deploy liquidity to uniswap pool
+        (uint256 amount0, uint256 amount1) = _addLiquidity(
+            AddLiquidityParams({
+                pool: IUniswapV3Pool(uniV3PoolAddress),
+                liquidity: liquidity
+            })
+        );
+
+        _totalInitialLiquidity = liquidity;
+
+        emit PoolLaunch(uniV3PoolAddress, liquidity, amount0, amount1);
     }
 
     /// @notice calculate amount of liquidity unlocked for claim
@@ -261,20 +326,6 @@ abstract contract ILOPoolBase is
         }
     }
 
-    /// @notice calculate the amount left after deduct fee
-    /// @param amount0 the amount of token0 before deduct fee
-    /// @param amount1 the amount of token1 before deduct fee
-    /// @return amount0Left the amount of token0 after deduct fee
-    /// @return amount1Left the amount of token1 after deduct fee
-    function _deductFees(
-        uint256 amount0,
-        uint256 amount1,
-        uint16 feeBPS
-    ) internal pure returns (uint256 amount0Left, uint256 amount1Left) {
-        amount0Left = amount0 - FullMath.mulDiv(amount0, feeBPS, BPS);
-        amount1Left = amount1 - FullMath.mulDiv(amount1, feeBPS, BPS);
-    }
-
     function _claimableLiquidity(
         uint256 tokenId
     ) internal view returns (uint128) {
@@ -290,62 +341,17 @@ abstract contract ILOPoolBase is
                 : 0;
     }
 
-    function _launchLiquidity(
-        address uniV3PoolAddress,
-        PoolAddress.PoolKey calldata poolKey,
-        uint160 sqrtPriceX96,
-        uint256 tokenAmount
-    ) internal returns (uint128 liquidity) {
-        _cachedUniV3PoolAddress = uniV3PoolAddress;
-        _cachedPoolKey = poolKey;
-        IILOManager.Project memory _project = IILOManager(MANAGER).project(
-            PROJECT_ID
-        );
-        if (poolKey.token0 == PAIR_TOKEN) {
-            // if token0 is raise token, we need to flip the tick range
-            _flipTicks();
-            liquidity = LiquidityAmounts.getLiquidityForAmount1(
-                _sqrtRatioLowerX96(),
-                sqrtPriceX96,
-                tokenAmount
-            );
-        } else {
-            liquidity = LiquidityAmounts.getLiquidityForAmount0(
-                sqrtPriceX96,
-                _sqrtRatioUpperX96(),
-                tokenAmount
-            );
-        }
-
-        // actually deploy liquidity to uniswap pool
-        (uint256 amount0, uint256 amount1) = addLiquidity(
-            AddLiquidityParams({
-                pool: IUniswapV3Pool(uniV3PoolAddress),
-                liquidity: liquidity
-            })
-        );
-
-        _totalInitialLiquidity = liquidity;
-
-        emit PoolLaunch(uniV3PoolAddress, liquidity, amount0, amount1);
-    }
-
-    function _initialize(
-        InitPoolParams calldata params
-    ) internal whenNotInitialized {
-        _nextId = 1;
-        _tokenAmount = params.tokenAmount;
-        // initialize imutable state
-        _initializeImmutableState(
-            params.projectId,
-            IILOManager(msg.sender),
-            params.pairToken,
-            params.tickLower,
-            params.tickUpper,
-            params.implementation,
-            params.projectNonce
-        );
-
-        _validateSharesAndVests(params.vestingConfigs);
+    /// @notice calculate the amount left after deduct fee
+    /// @param amount0 the amount of token0 before deduct fee
+    /// @param amount1 the amount of token1 before deduct fee
+    /// @return amount0Left the amount of token0 after deduct fee
+    /// @return amount1Left the amount of token1 after deduct fee
+    function _deductFees(
+        uint256 amount0,
+        uint256 amount1,
+        uint16 feeBPS
+    ) internal pure returns (uint256 amount0Left, uint256 amount1Left) {
+        amount0Left = amount0 - FullMath.mulDiv(amount0, feeBPS, BPS);
+        amount1Left = amount1 - FullMath.mulDiv(amount1, feeBPS, BPS);
     }
 }

@@ -1,9 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
 
-import '../interfaces/IILOPoolImmutableState.sol';
-import '../libraries/PoolAddress.sol';
-import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
+import { IILOManager } from '../interfaces/IILOManager.sol';
+import { IILOPoolImmutableState } from '../interfaces/IILOPoolImmutableState.sol';
+import { PoolAddress } from '../libraries/PoolAddress.sol';
+import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 
 /// @title Immutable state
 /// @notice Immutable state used by periphery contracts
@@ -38,6 +39,10 @@ abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
         PROJECT_NONCE = projectNonce;
     }
 
+    function _flipTicks() internal {
+        (TICK_LOWER, TICK_UPPER) = (-TICK_UPPER, -TICK_LOWER);
+    }
+
     function _sqrtRatioLowerX96()
         internal
         view
@@ -52,9 +57,5 @@ abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
         returns (uint160 sqrtRatioUpperX96)
     {
         return TickMath.getSqrtRatioAtTick(TICK_UPPER);
-    }
-
-    function _flipTicks() internal {
-        (TICK_LOWER, TICK_UPPER) = (-TICK_UPPER, -TICK_LOWER);
     }
 }

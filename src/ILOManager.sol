@@ -2,20 +2,19 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import {IILOManager} from './interfaces/IILOManager.sol';
-import {IILOPoolBase} from './interfaces/IILOPoolBase.sol';
-import {IILOPool} from './interfaces/IILOPool.sol';
-import {ChainId} from './libraries/ChainId.sol';
-import {Initializable} from './base/Initializable.sol';
-import {TransferHelper} from './libraries/TransferHelper.sol';
-import {PoolAddress} from './libraries/PoolAddress.sol';
-import {IILOPoolSale} from './interfaces/IILOPoolSale.sol';
-import {IUniswapV3Factory} from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
-import {IUniswapV3Pool} from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
-import {TickMath} from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
-import {Ownable} from '@openzeppelin/contracts/access/Ownable.sol';
-import {Clones} from '@openzeppelin/contracts/proxy/Clones.sol';
-import {EnumerableSet} from '@openzeppelin/contracts/utils/EnumerableSet.sol';
+import { IILOManager } from './interfaces/IILOManager.sol';
+import { IILOPoolBase } from './interfaces/IILOPoolBase.sol';
+import { IILOPool } from './interfaces/IILOPool.sol';
+import { ChainId } from './libraries/ChainId.sol';
+import { Initializable } from './base/Initializable.sol';
+import { TransferHelper } from './libraries/TransferHelper.sol';
+import { PoolAddress } from './libraries/PoolAddress.sol';
+import { IILOPoolSale } from './interfaces/IILOPoolSale.sol';
+import { IUniswapV3Factory } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
+import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
+import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
+import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
+import { EnumerableSet } from '@openzeppelin/contracts/utils/EnumerableSet.sol';
 contract ILOManager is IILOManager, Ownable, Initializable {
     address public override UNIV3_FACTORY;
 
@@ -28,6 +27,11 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     mapping(string => Project) private _projects; // map projectId => project)
     mapping(string => EnumerableSet.AddressSet) private _initializedILOPools; // map projectId => list of initialized ilo pools
+
+    modifier onlyProjectAdmin(string calldata projectId) {
+        require(_projects[projectId].admin == msg.sender, 'UA');
+        _;
+    }
 
     /// @dev since deploy via deployer so we need to claim ownership
     constructor() {
@@ -52,11 +56,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
     }
 
-    modifier onlyProjectAdmin(string calldata projectId) {
-        require(_projects[projectId].admin == msg.sender, 'UA');
-        _;
-    }
-
     /// @inheritdoc IILOManager
     function initProject(
         InitProjectParams calldata params
@@ -79,12 +78,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         _project.status = ProjectStatus.INITIALIZED;
 
         emit ProjectCreated(params.projectId, _project);
-    }
-
-    function project(
-        string calldata projectId
-    ) external view override returns (Project memory) {
-        return _projects[projectId];
     }
 
     /// @inheritdoc IILOManager
@@ -130,7 +123,17 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         );
     }
 
-    function ILOPoolLaunchCallback(
+    function onPoolSaleFail(string calldata projectId) external override {
+        Project storage _project = _projects[projectId];
+        require(
+            EnumerableSet.contains(_initializedILOPools[projectId], msg.sender),
+            'NP'
+        );
+        _project.status = ProjectStatus.CANCELLED;
+        emit ProjectCancelled(projectId);
+    }
+
+    function iloPoolLaunchCallback(
         string calldata projectId,
         address poolImplementation,
         uint256 poolIndex,
@@ -161,54 +164,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             uniswapV3Pool,
             amount1
         );
-    }
-
-    function _checkTicks(
-        int24 tickLower,
-        int24 tickUpper,
-        uint256 fee
-    ) internal pure {
-        require(tickLower < tickUpper, 'TLU');
-
-        if (fee == 500) {
-            require(tickLower % 10 == 0, 'TL5');
-            require(tickUpper % 10 == 0, 'TU5');
-        } else if (fee == 3000) {
-            require(tickLower % 60 == 0, 'TL3');
-            require(tickUpper % 60 == 0, 'TU3');
-        } else if (fee == 10000) {
-            require(tickLower % 200 == 0, 'TL10');
-            require(tickUpper % 200 == 0, 'TU10');
-        } else {
-            require(fee == 100, 'FEE');
-        }
-    }
-
-    function _initUniV3PoolIfNecessary(
-        PoolAddress.PoolKey memory poolKey,
-        uint160 sqrtPriceX96
-    ) internal returns (address pool) {
-        pool = IUniswapV3Factory(UNIV3_FACTORY).getPool(
-            poolKey.token0,
-            poolKey.token1,
-            poolKey.fee
-        );
-        if (pool == address(0)) {
-            pool = IUniswapV3Factory(UNIV3_FACTORY).createPool(
-                poolKey.token0,
-                poolKey.token1,
-                poolKey.fee
-            );
-            IUniswapV3Pool(pool).initialize(sqrtPriceX96);
-        } else {
-            (uint160 sqrtPriceX96Existing, , , , , , ) = IUniswapV3Pool(pool)
-                .slot0();
-            if (sqrtPriceX96Existing == 0) {
-                IUniswapV3Pool(pool).initialize(sqrtPriceX96);
-            } else {
-                require(sqrtPriceX96Existing == sqrtPriceX96, 'UV3P');
-            }
-        }
     }
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
@@ -274,7 +229,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         uint256 length = EnumerableSet.length(initializedPools);
         require(length > 0, 'NP');
         for (uint256 i = 0; i < length; i++) {
-            IILOPool(EnumerableSet.at(initializedPools, i)).launch(
+            IILOPoolBase(EnumerableSet.at(initializedPools, i)).launch(
                 uniV3PoolAddress,
                 poolKey,
                 sqrtPriceX96
@@ -322,14 +277,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         emit FeesForProjectSet(projectId, platformFee, performanceFee);
     }
 
-    /// @inheritdoc IILOManager
-    function feesForProject(
-        string calldata projectId
-    ) external view override returns (uint16, uint16) {
-        Project storage _project = _projects[projectId];
-        return (_project.platformFee, _project.performanceFee);
-    }
-
     function setILOSalePoolImplementation(
         address iloSalePoolImplementation
     ) external override onlyOwner {
@@ -338,5 +285,67 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             iloSalePoolImplementation
         );
         ILO_POOL_SALE_IMPLEMENTATION = iloSalePoolImplementation;
+    }
+
+    function project(
+        string calldata projectId
+    ) external view override returns (Project memory) {
+        return _projects[projectId];
+    }
+
+    /// @inheritdoc IILOManager
+    function feesForProject(
+        string calldata projectId
+    ) external view override returns (uint16, uint16) {
+        Project storage _project = _projects[projectId];
+        return (_project.platformFee, _project.performanceFee);
+    }
+
+    function _initUniV3PoolIfNecessary(
+        PoolAddress.PoolKey memory poolKey,
+        uint160 sqrtPriceX96
+    ) internal returns (address pool) {
+        pool = IUniswapV3Factory(UNIV3_FACTORY).getPool(
+            poolKey.token0,
+            poolKey.token1,
+            poolKey.fee
+        );
+        if (pool == address(0)) {
+            pool = IUniswapV3Factory(UNIV3_FACTORY).createPool(
+                poolKey.token0,
+                poolKey.token1,
+                poolKey.fee
+            );
+            IUniswapV3Pool(pool).initialize(sqrtPriceX96);
+        } else {
+            (uint160 sqrtPriceX96Existing, , , , , , ) = IUniswapV3Pool(pool)
+                .slot0();
+            if (sqrtPriceX96Existing == 0) {
+                IUniswapV3Pool(pool).initialize(sqrtPriceX96);
+            } else {
+                require(sqrtPriceX96Existing == sqrtPriceX96, 'UV3P');
+            }
+        }
+    }
+
+    function _checkTicks(
+        int24 tickLower,
+        int24 tickUpper,
+        uint256 fee
+    ) internal pure {
+        require(tickLower < tickUpper, 'TLU');
+
+        if (fee == 500) {
+            require(tickLower % 10 == 0, 'TL5');
+            require(tickUpper % 10 == 0, 'TU5');
+        } else if (fee == 3000) {
+            require(tickLower % 60 == 0, 'TL3');
+            require(tickUpper % 60 == 0, 'TU3');
+        } else if (fee == 10000) {
+            require(tickLower % 200 == 0, 'TL10');
+            require(tickUpper % 200 == 0, 'TU10');
+        } else {
+            require(fee == 100, 'FEE');
+        }
     }
 }

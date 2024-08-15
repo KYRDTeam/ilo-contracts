@@ -2,7 +2,7 @@
 
 pragma solidity =0.7.6;
 
-import {IILOWhitelist} from '../interfaces/IILOWhitelist.sol';
+import { IILOWhitelist } from '../interfaces/IILOWhitelist.sol';
 
 abstract contract ILOWhitelist is IILOWhitelist {
     uint256 private _whitelistCount;
@@ -36,16 +36,16 @@ abstract contract ILOWhitelist is IILOWhitelist {
     }
 
     /// @inheritdoc IILOWhitelist
+    function whitelistedCount() external view override returns (uint256) {
+        return _whitelistCount;
+    }
+
+    /// @inheritdoc IILOWhitelist
     function allocation(address user) public view override returns (uint256) {
         return
             _userAllocation[user] > PUBLIC_ALLOCATION
                 ? _userAllocation[user]
                 : PUBLIC_ALLOCATION;
-    }
-
-    /// @inheritdoc IILOWhitelist
-    function whitelistedCount() external view override returns (uint256) {
-        return _whitelistCount;
     }
 
     function _setWhitelist(address user, uint256 _allocation) internal {

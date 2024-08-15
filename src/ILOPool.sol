@@ -2,16 +2,13 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import {ILOPoolBase, IILOManager, FullMath, IUniswapV3Pool, LiquidityAmounts} from './base/ILOPoolBase.sol';
-import {IILOPool, PoolAddress} from './interfaces/IILOPool.sol';
+import { ILOPoolBase, FullMath, IILOPoolBase } from './base/ILOPoolBase.sol';
+import { IILOPool } from './interfaces/IILOPool.sol';
+import { PoolAddress } from './libraries/PoolAddress.sol';
 /// @title NFT positions
 /// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
 contract ILOPool is ILOPoolBase, IILOPool {
     VestingConfig[] private _vestingConfigs;
-
-    function name() public pure override returns (string memory) {
-        return 'KRYSTAL ILOPool V3';
-    }
 
     function initialize(
         InitPoolParams calldata params
@@ -23,16 +20,12 @@ contract ILOPool is ILOPoolBase, IILOPool {
         }
     }
 
-    function symbol() public pure override returns (string memory) {
-        return 'KRYSTAL-ILO-V3';
-    }
-
-    /// @inheritdoc IILOPool
+    /// @inheritdoc IILOPoolBase
     function launch(
         address uniV3PoolAddress,
         PoolAddress.PoolKey calldata poolKey,
         uint160 sqrtPriceX96
-    ) external override OnlyManager {
+    ) external override OnlyManager onlyInitializedProject {
         uint256 liquidity = _launchLiquidity(
             uniV3PoolAddress,
             poolKey,
@@ -62,5 +55,20 @@ contract ILOPool is ILOPoolBase, IILOPool {
 
             emit Buy(projectConfig.recipient, tokenId, 0);
         }
+    }
+
+    /// @inheritdoc IILOPoolBase
+    function claim(
+        uint256 tokenId
+    ) external override returns (uint256 amount0, uint256 amount1) {
+        return _claim(tokenId);
+    }
+
+    function name() public pure override returns (string memory) {
+        return 'KRYSTAL ILOPool V3';
+    }
+
+    function symbol() public pure override returns (string memory) {
+        return 'KRYSTAL-ILO-V3';
     }
 }

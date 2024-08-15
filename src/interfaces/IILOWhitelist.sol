@@ -6,6 +6,8 @@ interface IILOWhitelist {
     event SetWhitelist(address indexed user, uint256 allocation);
     event SetPublicAllocation(uint256 allocation);
 
+    modifier onlyProjectAdmin() virtual;
+
     function setPublicAllocation(uint256 _allocation) external;
     function setWhiteList(
         address[] calldata users,
@@ -13,6 +15,4 @@ interface IILOWhitelist {
     ) external;
     function allocation(address user) external view returns (uint256);
     function whitelistedCount() external view returns (uint256);
-
-    modifier onlyProjectAdmin() virtual;
 }

@@ -2,8 +2,8 @@
 
 pragma solidity =0.7.6;
 
-import '../interfaces/IILOVest.sol';
-import './BasisPoint.sol';
+import { IILOVest } from '../interfaces/IILOVest.sol';
+import { BasisPoint } from './BasisPoint.sol';
 
 abstract contract ILOVest is IILOVest, BasisPoint {
     mapping(uint256 => PositionVest) internal _positionVests;

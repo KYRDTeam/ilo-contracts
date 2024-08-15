@@ -2,9 +2,8 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import '../libraries/PoolAddress.sol';
-import {IILOVest} from './IILOVest.sol';
-import {IILOPoolBase} from './IILOPoolBase.sol';
+import { IILOVest } from './IILOVest.sol';
+import { IILOPoolBase } from './IILOPoolBase.sol';
 
 interface IILOPool {
     event ILOPoolInitialized(
@@ -15,10 +14,4 @@ interface IILOPool {
     );
 
     function initialize(IILOPoolBase.InitPoolParams calldata params) external;
-
-    function launch(
-        address uniV3PoolAddress,
-        PoolAddress.PoolKey calldata poolKey,
-        uint160 sqrtPriceX96
-    ) external;
 }

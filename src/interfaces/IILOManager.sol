@@ -2,38 +2,9 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import '../libraries/PoolAddress.sol';
-import './IILOVest.sol';
+import { IILOVest } from './IILOVest.sol';
 
 interface IILOManager {
-    event ProjectCreated(string projectId, Project project);
-    event ILOPoolCreated(string projectId, address indexed pool);
-    event PoolImplementationChanged(
-        address indexed oldPoolImplementation,
-        address indexed newPoolImplementation
-    );
-    event ProjectAdminChanged(
-        string projectId,
-        address oldAdmin,
-        address newAdmin
-    );
-    event ProjectLaunch(
-        string projectId,
-        address uniswapV3Pool,
-        address saleToken
-    );
-    event FeesForProjectSet(
-        string projectId,
-        uint16 platformFee,
-        uint16 performanceFee
-    );
-    event ProjectCancelled(string projectId);
-    event PoolCancelled(string projectId, address pool);
-    event SalePoolImplementationChanged(
-        address indexed oldSalePoolImplementation,
-        address indexed newSalePoolImplementation
-    );
-
     enum ProjectStatus {
         INVALID,
         INITIALIZED,
@@ -64,10 +35,6 @@ interface IILOManager {
         uint24 fee;
     }
 
-    /// @notice init project with details
-    /// @param params the parameters to initialize the project
-    function initProject(InitProjectParams calldata params) external payable;
-
     struct InitPoolParams {
         string projectId;
         uint256 tokenAmount;
@@ -76,16 +43,45 @@ interface IILOManager {
         // config for vests and shares.
         IILOVest.VestingConfig[] vestingConfigs;
     }
+
+    event ProjectCreated(string projectId, Project project);
+    event ILOPoolCreated(string projectId, address indexed pool);
+    event PoolImplementationChanged(
+        address indexed oldPoolImplementation,
+        address indexed newPoolImplementation
+    );
+    event ProjectAdminChanged(
+        string projectId,
+        address oldAdmin,
+        address newAdmin
+    );
+    event ProjectLaunch(
+        string projectId,
+        address uniswapV3Pool,
+        address saleToken
+    );
+    event FeesForProjectSet(
+        string projectId,
+        uint16 platformFee,
+        uint16 performanceFee
+    );
+    event ProjectCancelled(string projectId);
+    event PoolCancelled(string projectId, address pool);
+    event SalePoolImplementationChanged(
+        address indexed oldSalePoolImplementation,
+        address indexed newSalePoolImplementation
+    );
+
+    /// @notice init project with details
+    /// @param params the parameters to initialize the project
+    function initProject(InitProjectParams calldata params) external payable;
+
     /// @notice this function init an `ILO Pool` which will be used for sale and vest. One project can init many ILO Pool
     /// @notice only project admin can use this function
     /// @param params the parameters for init project
     function initILOPool(
         InitPoolParams calldata params
     ) external returns (address iloPoolAddress);
-
-    function project(
-        string memory projectId
-    ) external view returns (Project memory);
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setFeeTaker(address _feeTaker) external;
@@ -133,10 +129,7 @@ interface IILOManager {
 
     function setInitProjectFee(uint256 fee) external;
 
-    /// @notice get fees for a project
-    function feesForProject(
-        string calldata projectId
-    ) external view returns (uint16 platformFee, uint16 performanceFee);
+    function onPoolSaleFail(string calldata projectId) external;
 
     /// @notice set fees for project
     function setFeesForProject(
@@ -145,7 +138,7 @@ interface IILOManager {
         uint16 performanceFee
     ) external;
 
-    function ILOPoolLaunchCallback(
+    function iloPoolLaunchCallback(
         string calldata projectId,
         address poolImplementation,
         uint256 projectNonce,
@@ -155,4 +148,13 @@ interface IILOManager {
         uint256 amount1,
         address uniswapV3Pool
     ) external;
+
+    /// @notice get fees for a project
+    function feesForProject(
+        string calldata projectId
+    ) external view returns (uint16 platformFee, uint16 performanceFee);
+
+    function project(
+        string memory projectId
+    ) external view returns (Project memory);
 }
