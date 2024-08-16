@@ -34,10 +34,23 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         _;
     }
 
-    modifier onlyInitializedProject(string calldata projectId) {
+    modifier onlyInitializedPool(string calldata projectId) {
         require(
             EnumerableSet.contains(_initializedILOPools[projectId], msg.sender),
             'NP'
+        );
+        _;
+    }
+
+    modifier onlyInitializedProject(string calldata projectId) {
+        require(_projects[projectId].status == ProjectStatus.INITIALIZED, 'NA');
+        _;
+    }
+
+    modifier ownerOrProjectAdmin(string calldata projectId) {
+        require(
+            msg.sender == owner() || _projects[projectId].admin == msg.sender,
+            'UA'
         );
         _;
     }
@@ -128,10 +141,13 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     function onPoolSaleFail(
         string calldata projectId
-    ) external override onlyInitializedProject(projectId) {
+    ) external override onlyInitializedPool(projectId) {
         _cancelProject(_projects[projectId]);
     }
 
+    /// @notice this function takes params from ILOPools
+    /// and transfer token driectly to uniswap v3 pool
+    /// without temparory holding in ILOPool
     function iloPoolLaunchCallback(
         string calldata projectId,
         address token0,
@@ -237,7 +253,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     function cancelProject(
         string calldata projectId
-    ) external override onlyOwner onlyInitializedProject(projectId) {
+    ) external override ownerOrProjectAdmin onlyInitializedProject(projectId) {
         _cancelProject(_projects[projectId]);
     }
 
@@ -253,8 +269,8 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         EnumerableSet.AddressSet
             storage initializedPools = _initializedILOPools[projectId];
         require(EnumerableSet.contains(initializedPools, pool), 'NP');
-        EnumerableSet.remove(initializedPools, pool);
         IILOPoolBase(pool).cancel();
+        EnumerableSet.remove(initializedPools, pool);
         emit PoolCancelled(projectId, pool);
     }
 

@@ -10,8 +10,14 @@ import { IILOManager } from './interfaces/IILOManager.sol';
 import { TransferHelper } from './libraries/TransferHelper.sol';
 import { PoolAddress } from './libraries/PoolAddress.sol';
 import { FullMath } from '@uniswap/v3-core/contracts/libraries/FullMath.sol';
+import { ReentrancyGuard } from '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 
-contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
+contract ILOPoolSale is
+    ILOPoolBase,
+    IILOPoolSale,
+    ILOWhitelist,
+    ReentrancyGuard
+{
     uint64 public override SALE_START;
     uint64 public override SALE_END;
     uint256 public override MIN_RAISE;
@@ -49,13 +55,27 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
     function buy(
         uint256 raiseAmount,
         address recipient
-    ) external override duringSale whenNotCancelled returns (uint256 tokenId) {
+    )
+        external
+        override
+        duringSale
+        whenNotCancelled
+        nonReentrant
+        returns (uint256 tokenId)
+    {
         require(raiseAmount > 0, 'ZA');
+
+        // transfer fund into contract
+        TransferHelper.safeTransferFrom(
+            PAIR_TOKEN,
+            msg.sender,
+            address(this),
+            raiseAmount
+        );
+
         // check if raise amount over capacity
-        uint256 totalRaised = TOTAL_RAISED;
-        require(MAX_RAISE - totalRaised >= raiseAmount, 'MR');
-        totalRaised += raiseAmount;
-        TOTAL_RAISED = totalRaised;
+        require(MAX_RAISE - TOTAL_RAISED >= raiseAmount, 'MR');
+        TOTAL_RAISED += raiseAmount;
 
         // if investor already have a position, just increase raise amount and liquidity
         // otherwise, mint new nft for investor and assign vesting schedules
@@ -80,14 +100,6 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
         );
         _position.raiseAmount += raiseAmount;
 
-        // transfer fund into contract
-        TransferHelper.safeTransferFrom(
-            PAIR_TOKEN,
-            msg.sender,
-            address(this),
-            raiseAmount
-        );
-
         emit Buy(recipient, tokenId, raiseAmount);
     }
 
@@ -111,7 +123,13 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
 
     function claim(
         uint256 tokenId
-    ) external override afterLaunch returns (uint256 amount0, uint256 amount1) {
+    )
+        external
+        override
+        afterLaunch
+        nonReentrant
+        returns (uint256 amount0, uint256 amount1)
+    {
         _fillLiquidityForPosition(tokenId);
         return _claim(tokenId);
     }
@@ -122,6 +140,7 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
         external
         override
         isAuthorizedForToken(tokenId)
+        nonReentrant
         returns (uint256 refundAmount)
     {
         require(_refundable(), 'NR');
