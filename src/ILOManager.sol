@@ -5,6 +5,7 @@ pragma abicoder v2;
 import { IILOManager } from './interfaces/IILOManager.sol';
 import { IILOPoolBase } from './interfaces/IILOPoolBase.sol';
 import { IILOPool } from './interfaces/IILOPool.sol';
+import { IILOPoolSale } from './interfaces/IILOPoolSale.sol';
 import { ChainId } from './libraries/ChainId.sol';
 import { Initializable } from './base/Initializable.sol';
 import { TransferHelper } from './libraries/TransferHelper.sol';
@@ -97,36 +98,31 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         external
         override
         onlyProjectAdmin(params.projectId)
-        returns (address iloPoolAddress)
+        returns (address poolAddress)
     {
-        // dont need to check if project is exist because only project admin can call this function
-        Project storage _project = _projects[params.projectId];
-        _checkTicks(params.tickLower, params.tickUpper, _project.fee);
-        uint256 projectNonce = ++_project.nonce;
-        {
-            // this salt make sure that pool address can not be represented in any other chains
-            bytes32 salt = keccak256(
-                abi.encodePacked(ChainId.get(), params.projectId, projectNonce)
-            );
-            iloPoolAddress = Clones.cloneDeterministic(
-                ILO_POOL_IMPLEMENTATION,
-                salt
-            );
-            emit ILOPoolCreated(params.projectId, iloPoolAddress);
-        }
+        poolAddress = _deployIloPool(params, ILO_POOL_IMPLEMENTATION);
+        IILOPool(poolAddress).initialize(params);
+        EnumerableSet.add(_initializedILOPools[params.projectId], poolAddress);
+    }
 
-        IILOPool(iloPoolAddress).initialize(
-            IILOPoolBase.InitPoolParams({
-                projectId: params.projectId,
-                tokenAmount: params.tokenAmount,
-                tickLower: params.tickLower,
-                tickUpper: params.tickUpper,
-                vestingConfigs: params.vestingConfigs
-            })
+    /// @inheritdoc IILOManager
+    function initILOPoolSale(
+        IILOPoolSale.InitParams calldata params
+    )
+        external
+        override
+        onlyProjectAdmin(params.poolParams.projectId)
+        returns (address poolAddress)
+    {
+        poolAddress = _deployIloPool(
+            params.poolParams,
+            ILO_POOL_SALE_IMPLEMENTATION
         );
+
+        IILOPoolSale(poolAddress).initialize(params);
         EnumerableSet.add(
-            _initializedILOPools[params.projectId],
-            iloPoolAddress
+            _initializedILOPools[params.poolParams.projectId],
+            poolAddress
         );
     }
 
@@ -302,6 +298,23 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     ) external view override returns (uint16, uint16) {
         Project storage _project = _projects[projectId];
         return (_project.platformFee, _project.performanceFee);
+    }
+
+    function _deployIloPool(
+        IILOPoolBase.InitPoolParams calldata params,
+        address implementation
+    ) internal returns (address deployedAddress) {
+        // dont need to check if project is exist because only project admin can call this function
+        Project storage _project = _projects[params.projectId];
+        _checkTicks(params.tickLower, params.tickUpper, _project.fee);
+        uint256 projectNonce = ++_project.nonce;
+
+        // this salt make sure that pool address can not be represented in any other chains
+        bytes32 salt = keccak256(
+            abi.encodePacked(ChainId.get(), params.projectId, projectNonce)
+        );
+        deployedAddress = Clones.cloneDeterministic(implementation, salt);
+        emit ILOPoolCreated(params.projectId, deployedAddress);
     }
 
     function _initUniV3PoolIfNecessary(

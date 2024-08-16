@@ -3,6 +3,7 @@ pragma solidity >=0.7.5;
 pragma abicoder v2;
 
 import { IILOPoolBase } from './IILOPoolBase.sol';
+import { IILOPoolSale } from './IILOPoolSale.sol';
 
 interface IILOManager {
     enum ProjectStatus {
@@ -78,9 +79,9 @@ interface IILOManager {
         IILOPoolBase.InitPoolParams calldata params
     ) external returns (address iloPoolAddress);
 
-    // function initILOPoolSale(
-    //     IILOPoolSale.InitParams calldata params
-    // ) external returns (address iloPoolAddress);
+    function initILOPoolSale(
+        IILOPoolSale.InitParams calldata params
+    ) external returns (address iloPoolSaleAddress);
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setFeeTaker(address _feeTaker) external;
