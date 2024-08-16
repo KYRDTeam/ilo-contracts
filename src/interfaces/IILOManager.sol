@@ -62,6 +62,10 @@ interface IILOManager {
         address indexed oldSalePoolImplementation,
         address indexed newSalePoolImplementation
     );
+    event InitProjectFeeChanged(uint256 oldFee, uint256 newFee);
+    event FeeTakerChanged(address oldFeeTaker, address newFeeTaker);
+    event PlatformFeeChanged(uint16 oldFee, uint16 newFee);
+    event PerformanceFeeChanged(uint16 oldFee, uint16 newFee);
 
     /// @notice init project with details
     /// @param params the parameters to initialize the project
@@ -117,6 +121,8 @@ interface IILOManager {
 
     function setInitProjectFee(uint256 fee) external;
 
+    /// @notice callback when pool sale fail
+    /// cancel all pool of project, same as cancel project
     function onPoolSaleFail(string calldata projectId) external;
 
     /// @notice set fees for project

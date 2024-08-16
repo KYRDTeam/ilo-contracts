@@ -254,6 +254,8 @@ abstract contract ILOPoolBase is
     function _initialize(
         InitPoolParams calldata params
     ) internal whenNotInitialized {
+        _validateSharesAndVests(params.vestingConfigs);
+
         _nextId = 1;
         _tokenAmount = params.tokenAmount;
         // initialize imutable state
@@ -264,8 +266,6 @@ abstract contract ILOPoolBase is
             params.tickLower,
             params.tickUpper
         );
-
-        _validateSharesAndVests(params.vestingConfigs);
     }
 
     function _launchLiquidity(

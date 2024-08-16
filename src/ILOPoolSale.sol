@@ -159,6 +159,7 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
             _cancel();
 
             // callback is optional, depends on design
+            // this callback cancel all pool of the project
             MANAGER.onPoolSaleFail(PROJECT_ID);
             return true;
         }

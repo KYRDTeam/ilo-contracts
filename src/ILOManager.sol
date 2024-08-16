@@ -9,7 +9,6 @@ import { ChainId } from './libraries/ChainId.sol';
 import { Initializable } from './base/Initializable.sol';
 import { TransferHelper } from './libraries/TransferHelper.sol';
 import { PoolAddress } from './libraries/PoolAddress.sol';
-import { IILOPoolSale } from './interfaces/IILOPoolSale.sol';
 import { IUniswapV3Factory } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
 import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
@@ -166,16 +165,19 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setPlatformFee(uint16 _platformFee) external onlyOwner {
+        emit PlatformFeeChanged(PERFORMANCE_FEE, _platformFee);
         PLATFORM_FEE = _platformFee;
     }
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setPerformanceFee(uint16 _performanceFee) external onlyOwner {
+        emit PerformanceFeeChanged(PERFORMANCE_FEE, _performanceFee);
         PERFORMANCE_FEE = _performanceFee;
     }
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setFeeTaker(address _feeTaker) external override onlyOwner {
+        emit FeeTakerChanged(FEE_TAKER, _feeTaker);
         FEE_TAKER = _feeTaker;
     }
 
@@ -262,6 +264,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function setInitProjectFee(uint256 fee) external override onlyOwner {
+        emit InitProjectFeeChanged(INIT_PROJECT_FEE, fee);
         INIT_PROJECT_FEE = fee;
     }
 
