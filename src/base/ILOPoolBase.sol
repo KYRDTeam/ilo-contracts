@@ -52,7 +52,7 @@ abstract contract ILOPoolBase is
         _;
     }
 
-    modifier OnlyManager() {
+    modifier onlyManager() {
         require(msg.sender == address(MANAGER), 'UA');
         _;
     }
@@ -83,7 +83,7 @@ abstract contract ILOPoolBase is
         _burn(tokenId);
     }
 
-    function cancel() external override OnlyManager whenNotCancelled {
+    function cancel() external override onlyManager whenNotCancelled {
         _cancel();
     }
 

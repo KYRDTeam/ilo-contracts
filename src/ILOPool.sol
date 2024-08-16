@@ -12,7 +12,7 @@ contract ILOPool is ILOPoolBase, IILOPool {
 
     function initialize(
         InitPoolParams calldata params
-    ) external override OnlyManager {
+    ) external override onlyManager {
         _initialize(params);
         // initialize vesting
         for (uint256 index = 0; index < params.vestingConfigs.length; index++) {
@@ -25,7 +25,7 @@ contract ILOPool is ILOPoolBase, IILOPool {
         address uniV3PoolAddress,
         PoolAddress.PoolKey calldata poolKey,
         uint160 sqrtPriceX96
-    ) external override OnlyManager onlyInitializedProject {
+    ) external override onlyManager onlyInitializedProject {
         uint256 liquidity = _launchLiquidity(
             uniV3PoolAddress,
             poolKey,

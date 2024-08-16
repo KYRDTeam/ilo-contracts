@@ -96,7 +96,7 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
         address uniV3PoolAddress,
         PoolAddress.PoolKey calldata poolKey,
         uint160 sqrtPriceX96
-    ) external override OnlyManager onlyInitializedProject whenNotCancelled {
+    ) external override onlyManager onlyInitializedProject whenNotCancelled {
         if (block.timestamp < SALE_END) {
             revert('ST');
         }
