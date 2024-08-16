@@ -23,7 +23,7 @@ contract ILOPool is ILOPoolBase, IILOPool {
           params.tokenAmount,
           params.tickLower,
           params.tickUpper,
-          params.vestingConfig
+          params.vestingConfigs
         );
     }
 
