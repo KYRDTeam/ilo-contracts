@@ -15,6 +15,7 @@ import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3
 import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
 import { EnumerableSet } from '@openzeppelin/contracts/utils/EnumerableSet.sol';
+
 contract ILOManager is IILOManager, Ownable, Initializable {
     address public override UNIV3_FACTORY;
 
@@ -33,6 +34,14 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         _;
     }
 
+    modifier onlyInitializedProject(string calldata projectId) {
+        require(
+            EnumerableSet.contains(_initializedILOPools[projectId], msg.sender),
+            'NP'
+        );
+        _;
+    }
+
     /// @dev since deploy via deployer so we need to claim ownership
     constructor() {
         transferOwnership(tx.origin);
@@ -42,6 +51,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         address initialOwner,
         address _feeTaker,
         address iloPoolImplementation,
+        address iloPoolSaleImplementation,
         address uniV3Factory,
         uint256 createProjectFee,
         uint16 platformFee,
@@ -54,6 +64,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         transferOwnership(initialOwner);
         UNIV3_FACTORY = uniV3Factory;
         ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
+        ILO_POOL_SALE_IMPLEMENTATION = iloPoolSaleImplementation;
     }
 
     /// @inheritdoc IILOManager
@@ -82,7 +93,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     /// @inheritdoc IILOManager
     function initILOPool(
-        InitPoolParams calldata params
+        IILOPoolBase.InitPoolParams calldata params
     )
         external
         override
@@ -109,9 +120,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
             IILOPoolBase.InitPoolParams({
                 projectId: params.projectId,
                 tokenAmount: params.tokenAmount,
-                pairToken: _project.pairToken,
-                implementation: ILO_POOL_IMPLEMENTATION,
-                projectNonce: projectNonce,
                 tickLower: params.tickLower,
                 tickUpper: params.tickUpper,
                 vestingConfigs: params.vestingConfigs
@@ -123,32 +131,22 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         );
     }
 
-    function onPoolSaleFail(string calldata projectId) external override {
-        Project storage _project = _projects[projectId];
-        require(
-            EnumerableSet.contains(_initializedILOPools[projectId], msg.sender),
-            'NP'
-        );
-        _project.status = ProjectStatus.CANCELLED;
-        emit ProjectCancelled(projectId);
+    function onPoolSaleFail(
+        string calldata projectId
+    ) external override onlyInitializedProject(projectId) {
+        _cancelProject(_projects[projectId]);
     }
 
     function iloPoolLaunchCallback(
         string calldata projectId,
-        address poolImplementation,
-        uint256 poolIndex,
         address token0,
         uint256 amount0,
         address token1,
         uint256 amount1,
         address uniswapV3Pool
     ) external override {
-        bytes32 salt = keccak256(
-            abi.encodePacked(ChainId.get(), projectId, poolIndex)
-        );
         require(
-            msg.sender ==
-                Clones.predictDeterministicAddress(poolImplementation, salt),
+            EnumerableSet.contains(_initializedILOPools[projectId], msg.sender),
             'UA'
         );
         Project storage _project = _projects[projectId];
@@ -241,22 +239,24 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     function cancelProject(
         string calldata projectId
-    ) external override onlyOwner {
-        Project storage _project = _projects[projectId];
-        require(_project.status == ProjectStatus.INITIALIZED, 'NA');
-        _project.status = ProjectStatus.CANCELLED;
-        emit ProjectCancelled(projectId);
+    ) external override onlyOwner onlyInitializedProject(projectId) {
+        _cancelProject(_projects[projectId]);
     }
 
-    function cancelPoolSale(
+    function removePool(
         string calldata projectId,
         address pool
-    ) external override onlyProjectAdmin(projectId) {
+    )
+        external
+        override
+        onlyInitializedProject(projectId)
+        onlyProjectAdmin(projectId)
+    {
         EnumerableSet.AddressSet
             storage initializedPools = _initializedILOPools[projectId];
         require(EnumerableSet.contains(initializedPools, pool), 'NP');
         EnumerableSet.remove(initializedPools, pool);
-        IILOPoolSale(pool).cancel();
+        IILOPoolBase(pool).cancel();
         emit PoolCancelled(projectId, pool);
     }
 
@@ -326,6 +326,19 @@ contract ILOManager is IILOManager, Ownable, Initializable {
                 require(sqrtPriceX96Existing == sqrtPriceX96, 'UV3P');
             }
         }
+    }
+
+    function _cancelProject(Project storage _project) internal {
+        _project.status = ProjectStatus.CANCELLED;
+        uint256 length = EnumerableSet.length(
+            _initializedILOPools[_project.projectId]
+        );
+        for (uint256 i = 0; i < length; i++) {
+            IILOPoolBase(
+                EnumerableSet.at(_initializedILOPools[_project.projectId], i)
+            ).cancel();
+        }
+        emit ProjectCancelled(_project.projectId);
     }
 
     function _checkTicks(

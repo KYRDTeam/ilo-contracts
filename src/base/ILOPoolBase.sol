@@ -30,6 +30,7 @@ abstract contract ILOPoolBase is
     Multicall,
     LiquidityManagement
 {
+    bool public override CANCELLED;
     /// @dev The token ID position data
     mapping(uint256 => Position) internal _positions;
 
@@ -64,12 +65,26 @@ abstract contract ILOPoolBase is
         _;
     }
 
+    modifier whenCancelled() {
+        require(CANCELLED, 'NOT_CANCELLED');
+        _;
+    }
+
+    modifier whenNotCancelled() {
+        require(!CANCELLED, 'CANCELLED');
+        _;
+    }
+
     constructor() ERC721('', '') {
         _disableInitialize();
     }
 
     function burn(uint256 tokenId) external isAuthorizedForToken(tokenId) {
         _burn(tokenId);
+    }
+
+    function cancel() external override OnlyManager whenNotCancelled {
+        _cancel();
     }
 
     function _claim(
@@ -242,14 +257,12 @@ abstract contract ILOPoolBase is
         _nextId = 1;
         _tokenAmount = params.tokenAmount;
         // initialize imutable state
+        IILOManager _manager = IILOManager(msg.sender);
         _initializeImmutableState(
             params.projectId,
-            IILOManager(msg.sender),
-            params.pairToken,
+            _manager,
             params.tickLower,
-            params.tickUpper,
-            params.implementation,
-            params.projectNonce
+            params.tickUpper
         );
 
         _validateSharesAndVests(params.vestingConfigs);
@@ -290,6 +303,11 @@ abstract contract ILOPoolBase is
         _totalInitialLiquidity = liquidity;
 
         emit PoolLaunch(uniV3PoolAddress, liquidity, amount0, amount1);
+    }
+
+    function _cancel() internal {
+        CANCELLED = true;
+        emit PoolCancelled();
     }
 
     /// @notice calculate amount of liquidity unlocked for claim

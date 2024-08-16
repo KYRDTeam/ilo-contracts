@@ -26,14 +26,12 @@ interface IILOPoolBase is IERC721Metadata, IERC721Enumerable {
     struct InitPoolParams {
         string projectId;
         uint256 tokenAmount;
-        address pairToken;
         int24 tickLower;
         int24 tickUpper;
-        address implementation;
-        uint256 projectNonce;
         // config for vests and shares.
         IILOVest.VestingConfig[] vestingConfigs;
     }
+
     /// @notice Emitted when liquidity is increased for a position NFT
     /// @dev Also emitted when a token is minted
     /// @param tokenId The ID of the token for which liquidity was increased
@@ -90,6 +88,7 @@ interface IILOPoolBase is IERC721Metadata, IERC721Enumerable {
         uint256 token0,
         uint256 token1
     );
+    event PoolCancelled();
     event Refund(address indexed owner, uint256 tokenId, uint256 refundAmount);
     event ProjectRefund(address indexed projectAdmin, uint256 saleTokenAmount);
 
@@ -103,4 +102,8 @@ interface IILOPoolBase is IERC721Metadata, IERC721Enumerable {
         PoolAddress.PoolKey calldata poolKey,
         uint160 sqrtPriceX96
     ) external;
+
+    function cancel() external;
+
+    function CANCELLED() external view returns (bool);
 }

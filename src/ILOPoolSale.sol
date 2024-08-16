@@ -12,7 +12,6 @@ import { PoolAddress } from './libraries/PoolAddress.sol';
 import { FullMath } from '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 
 contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
-    bool public override CANCELLED;
     uint64 public override SALE_START;
     uint64 public override SALE_END;
     uint256 public override MIN_RAISE;
@@ -32,16 +31,6 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
     modifier duringSale() {
         require(SALE_START <= block.timestamp, 'BS');
         require(SALE_END > block.timestamp, 'ES');
-        _;
-    }
-
-    modifier whenCancelled() {
-        require(CANCELLED, 'NOT_CANCELLED');
-        _;
-    }
-
-    modifier whenNotCancelled() {
-        require(!CANCELLED, 'CANCELLED');
         _;
     }
 
@@ -108,12 +97,7 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
         PoolAddress.PoolKey calldata poolKey,
         uint160 sqrtPriceX96
     ) external override OnlyManager onlyInitializedProject whenNotCancelled {
-        if (block.timestamp > SALE_END) {
-            if (TOTAL_RAISED < MIN_RAISE) {
-                cancel();
-                MANAGER.onPoolSaleFail(PROJECT_ID);
-            }
-        } else {
+        if (block.timestamp < SALE_END) {
             revert('ST');
         }
         uint128 liquidity = _launchLiquidity(
@@ -138,9 +122,9 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
         external
         override
         isAuthorizedForToken(tokenId)
-        whenCancelled
         returns (uint256 refundAmount)
     {
+        require(_refundable(), 'NR');
         Position storage _position = _positions[tokenId];
         refundAmount = _position.raiseAmount;
         require(refundAmount > 0, 'ZA');
@@ -148,11 +132,6 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
         _burn(tokenId);
         TransferHelper.safeTransfer(PAIR_TOKEN, recipient, refundAmount);
         emit Refund(recipient, tokenId, refundAmount);
-    }
-
-    function cancel() public override OnlyManager whenNotCancelled {
-        CANCELLED = true;
-        emit PoolSaleCancelled();
     }
 
     function tokenSoldAmount() public view override returns (uint256) {
@@ -164,6 +143,26 @@ contract ILOPoolSale is ILOPoolBase, IILOPoolSale, ILOWhitelist {
 
     function symbol() public pure override returns (string memory) {
         return 'KRYSTAL-ILO-SALE-V3';
+    }
+
+    function _initImplementation() internal override {
+        IMPLEMENTATION = MANAGER.ILO_POOL_SALE_IMPLEMENTATION();
+    }
+
+    function _refundable() internal returns (bool) {
+        if (CANCELLED) {
+            return true;
+        }
+
+        // not cancelled, but sale end and not reach min raise
+        if (block.timestamp > SALE_END && TOTAL_RAISED < MIN_RAISE) {
+            _cancel();
+
+            // callback is optional, depends on design
+            MANAGER.onPoolSaleFail(PROJECT_ID);
+            return true;
+        }
+        return false;
     }
 
     function _fillLiquidityForPosition(uint256 tokenId) private {

@@ -28,7 +28,6 @@ interface IILOPoolSale {
 
     function initialize(InitParams calldata params) external;
 
-    function cancel() external;
     /// @notice this function is for investor buying ILO
     function buy(
         uint256 raiseAmount,
@@ -39,7 +38,6 @@ interface IILOPoolSale {
         uint256 tokenId
     ) external returns (uint256 refundAmount);
 
-    function CANCELLED() external view returns (bool);
     function SALE_START() external view returns (uint64);
     function SALE_END() external view returns (uint64);
     function MIN_RAISE() external view returns (uint256);

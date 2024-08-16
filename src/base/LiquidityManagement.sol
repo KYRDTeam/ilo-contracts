@@ -27,8 +27,6 @@ abstract contract LiquidityManagement is
         require(msg.sender == _cachedUniV3PoolAddress);
         MANAGER.iloPoolLaunchCallback(
             PROJECT_ID,
-            IMPLEMENTATION,
-            PROJECT_NONCE,
             _cachedPoolKey.token0,
             amount0Owed,
             _cachedPoolKey.token1,

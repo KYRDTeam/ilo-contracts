@@ -1,5 +1,6 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity =0.7.6;
+pragma abicoder v2;
 
 import { IILOManager } from '../interfaces/IILOManager.sol';
 import { IILOPoolImmutableState } from '../interfaces/IILOPoolImmutableState.sol';
@@ -23,21 +24,22 @@ abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
     function _initializeImmutableState(
         string memory projectId,
         IILOManager manager,
-        address pairToken,
         int24 tickLower,
-        int24 tickUpper,
-        address implementation,
-        uint256 projectNonce
+        int24 tickUpper
     ) internal {
+        IILOManager.Project memory _project = manager.project(projectId);
         require(TICK_LOWER < TICK_UPPER, 'RANGE');
         PROJECT_ID = projectId;
         MANAGER = manager;
-        PAIR_TOKEN = pairToken;
+        PAIR_TOKEN = _project.pairToken;
         TICK_LOWER = tickLower;
         TICK_UPPER = tickUpper;
-        IMPLEMENTATION = implementation;
-        PROJECT_NONCE = projectNonce;
+        _initImplementation();
     }
+
+    /// @notice this function to be implemented in the ilo pool and ilo pool sale
+    /// each contract will have its own implementation
+    function _initImplementation() internal virtual;
 
     function _flipTicks() internal {
         (TICK_LOWER, TICK_UPPER) = (-TICK_UPPER, -TICK_LOWER);

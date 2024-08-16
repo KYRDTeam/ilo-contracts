@@ -2,7 +2,7 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import { IILOVest } from './IILOVest.sol';
+import { IILOPoolBase } from './IILOPoolBase.sol';
 
 interface IILOManager {
     enum ProjectStatus {
@@ -33,15 +33,6 @@ interface IILOManager {
         uint160 initialPoolPriceX96;
         // uniswap v3 fee tier
         uint24 fee;
-    }
-
-    struct InitPoolParams {
-        string projectId;
-        uint256 tokenAmount;
-        int24 tickLower;
-        int24 tickUpper;
-        // config for vests and shares.
-        IILOVest.VestingConfig[] vestingConfigs;
     }
 
     event ProjectCreated(string projectId, Project project);
@@ -80,24 +71,21 @@ interface IILOManager {
     /// @notice only project admin can use this function
     /// @param params the parameters for init project
     function initILOPool(
-        InitPoolParams calldata params
+        IILOPoolBase.InitPoolParams calldata params
     ) external returns (address iloPoolAddress);
+
+    // function initILOPoolSale(
+    //     IILOPoolSale.InitParams calldata params
+    // ) external returns (address iloPoolAddress);
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setFeeTaker(address _feeTaker) external;
-
-    function UNIV3_FACTORY() external returns (address);
-    function PLATFORM_FEE() external returns (uint16);
-    function PERFORMANCE_FEE() external returns (uint16);
-    function FEE_TAKER() external returns (address);
-    function ILO_POOL_IMPLEMENTATION() external returns (address);
-    function ILO_POOL_SALE_IMPLEMENTATION() external returns (address);
-    function INIT_PROJECT_FEE() external returns (uint256);
 
     function initialize(
         address initialOwner,
         address _feeTaker,
         address iloPoolImplementation,
+        address iloPoolSaleImplementation,
         address uniV3Factory,
         uint256 createProjectFee,
         uint16 platformFee,
@@ -125,7 +113,7 @@ interface IILOManager {
     function cancelProject(string calldata projectId) external;
 
     /// @notice cancel pool
-    function cancelPoolSale(string calldata projectId, address pool) external;
+    function removePool(string calldata projectId, address pool) external;
 
     function setInitProjectFee(uint256 fee) external;
 
@@ -140,8 +128,6 @@ interface IILOManager {
 
     function iloPoolLaunchCallback(
         string calldata projectId,
-        address poolImplementation,
-        uint256 projectNonce,
         address token0,
         uint256 amount0,
         address token1,
@@ -157,4 +143,12 @@ interface IILOManager {
     function project(
         string memory projectId
     ) external view returns (Project memory);
+
+    function UNIV3_FACTORY() external view returns (address);
+    function PLATFORM_FEE() external view returns (uint16);
+    function PERFORMANCE_FEE() external view returns (uint16);
+    function FEE_TAKER() external view returns (address);
+    function ILO_POOL_IMPLEMENTATION() external view returns (address);
+    function ILO_POOL_SALE_IMPLEMENTATION() external view returns (address);
+    function INIT_PROJECT_FEE() external view returns (uint256);
 }
