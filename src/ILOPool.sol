@@ -18,6 +18,13 @@ contract ILOPool is ILOPoolBase, IILOPool {
         for (uint256 index = 0; index < params.vestingConfigs.length; index++) {
             _vestingConfigs.push(params.vestingConfigs[index]);
         }
+        emit ILOPoolInitialized(
+          params.projectId,
+          params.tokenAmount,
+          params.tickLower,
+          params.tickUpper,
+          params.vestingConfig
+        );
     }
 
     /// @inheritdoc IILOPoolBase

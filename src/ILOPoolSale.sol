@@ -50,6 +50,18 @@ contract ILOPoolSale is
             params.saleParams.minRaise,
             params.saleParams.maxRaise
         );
+
+        emit ILOPoolSaleInitialized(
+          params.poolParams.projectId,
+          params.poolParams.tokenAmount,
+          params.poolParams.tickLower,
+          params.poolParams.tickUpper,
+          params.poolParams.vestingConfigs,
+          params.saleParams.start,
+          params.saleParams.end,
+          params.saleParams.minRaise,
+          params.saleParams.maxRaise
+        );
     }
 
     function buy(
