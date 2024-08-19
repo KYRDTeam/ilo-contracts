@@ -155,11 +155,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         address token1,
         uint256 amount1,
         address uniswapV3Pool
-    ) external override {
-        require(
-            EnumerableSet.contains(_initializedILOPools[projectId], msg.sender),
-            'UA'
-        );
+    ) external override onlyInitializedPool(projectId) {
         Project storage _project = _projects[projectId];
         TransferHelper.safeTransferFrom(
             token0,
@@ -253,7 +249,12 @@ contract ILOManager is IILOManager, Ownable, Initializable {
 
     function cancelProject(
         string calldata projectId
-    ) external override ownerOrProjectAdmin onlyInitializedProject(projectId) {
+    )
+        external
+        override
+        ownerOrProjectAdmin(projectId)
+        onlyInitializedProject(projectId)
+    {
         _cancelProject(_projects[projectId]);
     }
 

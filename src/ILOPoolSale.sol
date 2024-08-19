@@ -116,7 +116,7 @@ contract ILOPoolSale is
             uniV3PoolAddress,
             poolKey,
             sqrtPriceX96,
-            TOTAL_RAISED
+            FullMath.mulDiv(_tokenAmount, TOTAL_RAISED, MAX_RAISE)
         );
         emit PoolSaleLaunched(TOTAL_RAISED, liquidity);
     }

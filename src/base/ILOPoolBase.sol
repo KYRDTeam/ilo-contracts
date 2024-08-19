@@ -65,11 +65,6 @@ abstract contract ILOPoolBase is
         _;
     }
 
-    modifier whenCancelled() {
-        require(CANCELLED, 'NOT_CANCELLED');
-        _;
-    }
-
     modifier whenNotCancelled() {
         require(!CANCELLED, 'CANCELLED');
         _;
