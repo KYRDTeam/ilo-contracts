@@ -4,7 +4,7 @@ pragma solidity =0.7.6;
 import { CommonScript } from './Common.s.sol';
 import { console } from 'forge-std/Script.sol';
 
-contract VerifyAllContractScript is CommonScript {
+contract VerifyAllContractsScript is CommonScript {
     function run() external view {
         address iloManagerDeploymentAddress = getILOManagerDeploymentAddress();
         console.log(
@@ -15,6 +15,12 @@ contract VerifyAllContractScript is CommonScript {
         address iloPoolDeploymentAddress = getILOPoolDeploymentAddress();
         console.log('iloPool deployment address: ', iloPoolDeploymentAddress);
 
+        address iloPoolSaleDeploymentAddress = getILOPoolSaleDeploymentAddress();
+        console.log(
+            'iloPoolSale deployment address: ',
+            iloPoolSaleDeploymentAddress
+        );
+
         console.log('\nrun script below to verify all contracts: \n');
 
         console.log(
@@ -23,6 +29,9 @@ contract VerifyAllContractScript is CommonScript {
                     'forge verify-contract ',
                     toHexString(iloPoolDeploymentAddress),
                     ' src/ILOPool.sol:ILOPool;',
+                    'forge verify-contract ',
+                    toHexString(iloPoolSaleDeploymentAddress),
+                    ' src/ILOPoolSale.sol:ILOPoolSale;',
                     'forge verify-contract ',
                     toHexString(iloManagerDeploymentAddress),
                     ' src/ILOManager.sol:ILOManager'
@@ -60,6 +69,23 @@ contract VerifyILOPoolScript is CommonScript {
                     'forge verify-contract ',
                     toHexString(deploymentAddress),
                     ' src/ILOPool.sol:ILOPool'
+                )
+            )
+        );
+    }
+}
+
+contract VerifyILOPoolSaleScript is CommonScript {
+    function run() external view {
+        address deploymentAddress = getILOPoolSaleDeploymentAddress();
+        console.log('deployment address: ', deploymentAddress);
+        console.log('\nrun script below to verify contract: \n');
+        console.log(
+            string(
+                abi.encodePacked(
+                    'forge verify-contract ',
+                    toHexString(deploymentAddress),
+                    ' src/ILOPoolSale.sol:ILOPoolSale'
                 )
             )
         );

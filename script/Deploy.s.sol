@@ -5,6 +5,7 @@ import { IILOManager } from '../src/interfaces/IILOManager.sol';
 import { CommonScript } from './Common.s.sol';
 import { ILOPool } from '../src/ILOPool.sol';
 import { ILOManager } from '../src/ILOManager.sol';
+import { ILOPoolSale } from '../src/ILOPoolSale.sol';
 import { TokenFactory } from '../src/TokenFactory.sol';
 
 contract AllContractScript is CommonScript {
@@ -15,7 +16,7 @@ contract AllContractScript is CommonScript {
         // create contracts
         {
             ILOPool iloPool = new ILOPool{ salt: salt }();
-
+            ILOPoolSale iloPoolSale = new ILOPoolSale{ salt: salt }();
             ILOManager ilo = new ILOManager{ salt: salt }();
         }
 
