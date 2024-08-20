@@ -111,6 +111,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         external
         override
         onlyProjectAdmin(params.baseParams.projectId)
+        onlyInitializedProject(params.baseParams.projectId)
         returns (address poolAddress)
     {
         poolAddress = _deployIloPool(
@@ -131,6 +132,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         external
         override
         onlyProjectAdmin(params.baseParams.projectId)
+        onlyInitializedProject(params.baseParams.projectId)
         returns (address poolAddress)
     {
         poolAddress = _deployIloPool(
@@ -217,9 +219,13 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     function launch(
         string calldata projectId,
         address token
-    ) external override onlyProjectAdmin(projectId) {
+    )
+        external
+        override
+        onlyProjectAdmin(projectId)
+        onlyInitializedProject(projectId)
+    {
         Project memory _project = _projects[projectId];
-        require(_project.status == ProjectStatus.INITIALIZED, 'NA');
         _project.status = ProjectStatus.LAUNCHED;
         uint160 sqrtPriceX96 = _project.initialPoolPriceX96;
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(
@@ -369,6 +375,9 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     function _cancelProject(Project storage _project) internal {
+        // dont need to check if project is canceled or not
+        // because when project is canceled, all of its pools are canceled
+        // and calling pool cancel() below will revert
         _project.status = ProjectStatus.CANCELLED;
         uint256 length = EnumerableSet.length(
             _initializedILOPools[_project.projectId]
