@@ -10,9 +10,7 @@ import { PoolAddress } from './libraries/PoolAddress.sol';
 contract ILOPool is ILOPoolBase, IILOPool {
     VestingConfig[] private _vestingConfigs;
 
-    function initialize(
-        InitPoolParams calldata params
-    ) external override onlyManager {
+    function initialize(InitPoolParams calldata params) external override {
         _initialize(params);
         // initialize vesting
         for (uint256 index = 0; index < params.vestingConfigs.length; index++) {

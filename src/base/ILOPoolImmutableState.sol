@@ -28,7 +28,7 @@ abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
         int24 tickUpper
     ) internal {
         IILOManager.Project memory _project = manager.project(projectId);
-        require(TICK_LOWER < TICK_UPPER, 'RANGE');
+        require(tickLower < tickUpper, 'RANGE');
         PROJECT_ID = projectId;
         MANAGER = manager;
         PAIR_TOKEN = _project.pairToken;

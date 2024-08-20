@@ -24,6 +24,7 @@ all-contracts:
 deploy-all-contract:
 deploy-ilo-manager:
 deploy-ilo-pool:
+deploy-ilo-pool-sale:
 deploy-token-factory:
 deploy-token-factory-legacy:
 deploy-ilo-manager-legacy:

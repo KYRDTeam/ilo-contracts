@@ -51,10 +51,7 @@ contract ILOPoolSale is
             params.saleParams.maxRaise
         );
 
-        emit ILOPoolSaleInitialized(
-          params.poolParams,
-          params.saleParams
-        );
+        emit ILOPoolSaleInitialized(params.poolParams, params.saleParams);
     }
 
     function buy(
@@ -116,6 +113,9 @@ contract ILOPoolSale is
     ) external override onlyManager onlyInitializedProject whenNotCancelled {
         if (block.timestamp < SALE_END) {
             revert('ST');
+        }
+        if (TOTAL_RAISED < MIN_RAISE) {
+            revert('MR');
         }
         uint128 liquidity = _launchLiquidity(
             uniV3PoolAddress,

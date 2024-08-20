@@ -68,6 +68,17 @@ contract ILOPoolScript is CommonScript {
     }
 }
 
+contract ILOPoolSaleScript is CommonScript {
+    function run() external {
+        uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
+        vm.startBroadcast(deployerPrivateKey);
+
+        ILOPoolSale iloPoolSale = new ILOPoolSale{ salt: salt }();
+
+        vm.stopBroadcast();
+    }
+}
+
 contract TokenFactoryScript is CommonScript {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
