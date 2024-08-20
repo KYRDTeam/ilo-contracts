@@ -220,6 +220,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     ) external override onlyProjectAdmin(projectId) {
         Project memory _project = _projects[projectId];
         require(_project.status == ProjectStatus.INITIALIZED, 'NA');
+        _project.status = ProjectStatus.LAUNCHED;
         uint160 sqrtPriceX96 = _project.initialPoolPriceX96;
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(
             token,
