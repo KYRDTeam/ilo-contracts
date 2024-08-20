@@ -152,7 +152,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     /// @notice this function takes params from ILOPools
-    /// and transfer token driectly to uniswap v3 pool
+    /// and transfer token directly to uniswap v3 pool
     /// without temparory holding in ILOPool
     function iloPoolLaunchCallback(
         string calldata projectId,
