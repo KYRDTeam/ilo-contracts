@@ -24,7 +24,7 @@ contract ILOPoolSale is
     uint256 public override MAX_RAISE;
     uint256 public override TOTAL_RAISED;
 
-    VestingConfig private _vestingConfig;
+    LinearVest[] private _vestingSchedule;
 
     modifier onlyProjectAdmin() override {
         IILOManager.Project memory _project = IILOManager(MANAGER).project(
@@ -41,9 +41,13 @@ contract ILOPoolSale is
     }
 
     function initialize(InitParams calldata params) external override {
-        _initialize(params.poolParams);
-        require(params.poolParams.vestingConfigs.length == 1, 'VC');
-        _vestingConfig = params.poolParams.vestingConfigs[0];
+        _validateVestSchedule(params.vestingSchedule);
+        _initialize(params.baseParams);
+
+        for (uint256 i = 0; i < params.vestingSchedule.length; i++) {
+            _vestingSchedule.push(params.vestingSchedule[i]);
+        }
+
         (SALE_START, SALE_END, MIN_RAISE, MAX_RAISE) = (
             params.saleParams.start,
             params.saleParams.end,
@@ -51,7 +55,11 @@ contract ILOPoolSale is
             params.saleParams.maxRaise
         );
 
-        emit ILOPoolSaleInitialized(params.poolParams, params.saleParams);
+        emit ILOPoolSaleInitialized(
+            params.baseParams,
+            params.saleParams,
+            params.vestingSchedule
+        );
     }
 
     function buy(
@@ -83,7 +91,7 @@ contract ILOPoolSale is
         // otherwise, mint new nft for investor and assign vesting schedules
         if (balanceOf(recipient) == 0) {
             _mint(recipient, (tokenId = _nextId++));
-            _positionVests[tokenId].schedule = _vestingConfig.schedule;
+            _positionVests[tokenId].schedule = _vestingSchedule;
         } else {
             tokenId = tokenOfOwnerByIndex(recipient, 0);
         }

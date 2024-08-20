@@ -110,12 +110,18 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     )
         external
         override
-        onlyProjectAdmin(params.projectId)
+        onlyProjectAdmin(params.baseParams.projectId)
         returns (address poolAddress)
     {
-        poolAddress = _deployIloPool(params, ILO_POOL_IMPLEMENTATION);
+        poolAddress = _deployIloPool(
+            params.baseParams,
+            ILO_POOL_IMPLEMENTATION
+        );
         IILOPool(poolAddress).initialize(params);
-        EnumerableSet.add(_initializedILOPools[params.projectId], poolAddress);
+        EnumerableSet.add(
+            _initializedILOPools[params.baseParams.projectId],
+            poolAddress
+        );
     }
 
     /// @inheritdoc IILOManager
@@ -124,17 +130,17 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     )
         external
         override
-        onlyProjectAdmin(params.poolParams.projectId)
+        onlyProjectAdmin(params.baseParams.projectId)
         returns (address poolAddress)
     {
         poolAddress = _deployIloPool(
-            params.poolParams,
+            params.baseParams,
             ILO_POOL_SALE_IMPLEMENTATION
         );
 
         IILOPoolSale(poolAddress).initialize(params);
         EnumerableSet.add(
-            _initializedILOPools[params.poolParams.projectId],
+            _initializedILOPools[params.baseParams.projectId],
             poolAddress
         );
     }
@@ -318,7 +324,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     function _deployIloPool(
-        IILOPoolBase.InitPoolParams calldata params,
+        IILOPoolBase.InitPoolBaseParams calldata params,
         address implementation
     ) internal returns (address deployedAddress) {
         // dont need to check if project is exist because only project admin can call this function

@@ -11,17 +11,18 @@ contract ILOPool is ILOPoolBase, IILOPool {
     VestingConfig[] private _vestingConfigs;
 
     function initialize(InitPoolParams calldata params) external override {
-        _initialize(params);
+        _validateSharesAndVests(params.vestingConfigs);
+        _initialize(params.baseParams);
         // initialize vesting
         for (uint256 index = 0; index < params.vestingConfigs.length; index++) {
             _vestingConfigs.push(params.vestingConfigs[index]);
         }
         emit ILOPoolInitialized(
-          params.projectId,
-          params.tokenAmount,
-          params.tickLower,
-          params.tickUpper,
-          params.vestingConfigs
+            params.baseParams.projectId,
+            params.baseParams.tokenAmount,
+            params.baseParams.tickLower,
+            params.baseParams.tickUpper,
+            params.vestingConfigs
         );
     }
 

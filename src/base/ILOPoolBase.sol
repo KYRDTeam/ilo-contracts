@@ -247,10 +247,8 @@ abstract contract ILOPoolBase is
     }
 
     function _initialize(
-        InitPoolParams calldata params
+        InitPoolBaseParams calldata params
     ) internal whenNotInitialized {
-        _validateSharesAndVests(params.vestingConfigs);
-
         _nextId = 1;
         _tokenAmount = params.tokenAmount;
         // initialize imutable state

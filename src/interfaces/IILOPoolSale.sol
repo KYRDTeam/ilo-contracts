@@ -3,6 +3,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import { IILOPoolBase } from './IILOPoolBase.sol';
+import { IILOVest } from './IILOVest.sol';
 
 interface IILOPoolSale {
     struct SaleParams {
@@ -13,13 +14,15 @@ interface IILOPoolSale {
     }
 
     struct InitParams {
-        IILOPoolBase.InitPoolParams poolParams;
+        IILOPoolBase.InitPoolBaseParams baseParams;
         SaleParams saleParams;
+        IILOVest.LinearVest[] vestingSchedule;
     }
 
     event ILOPoolSaleInitialized(
-        IILOPoolBase.InitPoolParams poolParams,
-        IILOPoolSale.SaleParams saleParams
+        IILOPoolBase.InitPoolBaseParams baseParams,
+        IILOPoolSale.SaleParams saleParams,
+        IILOVest.LinearVest[] vestingSchedule
     );
 
     event PoolSaleCancelled();

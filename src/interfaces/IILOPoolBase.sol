@@ -23,11 +23,15 @@ interface IILOPoolBase is IERC721Metadata, IERC721Enumerable {
         uint256 raiseAmount;
     }
 
-    struct InitPoolParams {
+    struct InitPoolBaseParams {
         string projectId;
         uint256 tokenAmount;
         int24 tickLower;
         int24 tickUpper;
+    }
+
+    struct InitPoolParams {
+        InitPoolBaseParams baseParams;
         // config for vests and shares.
         IILOVest.VestingConfig[] vestingConfigs;
     }

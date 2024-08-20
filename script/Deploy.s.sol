@@ -8,7 +8,7 @@ import { ILOManager } from '../src/ILOManager.sol';
 import { ILOPoolSale } from '../src/ILOPoolSale.sol';
 import { TokenFactory } from '../src/TokenFactory.sol';
 
-contract AllContractScript is CommonScript {
+contract AllContractsScript is CommonScript {
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         address uniV3Factory = vm.envAddress('UNIV3_FACTORY');
