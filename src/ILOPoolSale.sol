@@ -26,14 +26,6 @@ contract ILOPoolSale is
 
     LinearVest[] private _vestingSchedule;
 
-    modifier onlyProjectAdmin() override {
-        IILOManager.Project memory _project = IILOManager(MANAGER).project(
-            PROJECT_ID
-        );
-        require(msg.sender == _project.admin, 'UA');
-        _;
-    }
-
     modifier duringSale() {
         require(SALE_START <= block.timestamp, 'BS');
         require(SALE_END > block.timestamp, 'ES');
@@ -161,7 +153,7 @@ contract ILOPoolSale is
     function cancel()
         external
         override
-        onlyProjectAdmin
+        onlyManager
         whenNotCancelled
         beforeSale
     {
