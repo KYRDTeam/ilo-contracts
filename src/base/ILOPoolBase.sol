@@ -78,10 +78,6 @@ abstract contract ILOPoolBase is
         _burn(tokenId);
     }
 
-    function cancel() external override onlyManager whenNotCancelled {
-        _cancel();
-    }
-
     function _claim(
         uint256 tokenId
     )

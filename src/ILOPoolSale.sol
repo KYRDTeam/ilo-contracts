@@ -40,6 +40,11 @@ contract ILOPoolSale is
         _;
     }
 
+    modifier beforeSale() {
+        require(SALE_START > block.timestamp, 'BS');
+        _;
+    }
+
     function initialize(InitParams calldata params) external override {
         _validateVestSchedule(params.vestingSchedule);
         _initialize(params.baseParams);
@@ -125,6 +130,12 @@ contract ILOPoolSale is
         if (TOTAL_RAISED < MIN_RAISE) {
             revert('MR');
         }
+
+        // transfer all raised fund to project admin
+        IILOManager.Project memory _project = MANAGER.project(PROJECT_ID);
+        TransferHelper.safeTransfer(PAIR_TOKEN, _project.admin, TOTAL_RAISED);
+
+        // launch liquidity
         uint128 liquidity = _launchLiquidity(
             uniV3PoolAddress,
             poolKey,
@@ -145,6 +156,16 @@ contract ILOPoolSale is
     {
         _fillLiquidityForPosition(tokenId);
         return _claim(tokenId);
+    }
+
+    function cancel()
+        external
+        override
+        onlyProjectAdmin
+        whenNotCancelled
+        beforeSale
+    {
+        _cancel();
     }
 
     function claimRefund(

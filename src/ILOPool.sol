@@ -70,6 +70,10 @@ contract ILOPool is ILOPoolBase, IILOPool {
         return _claim(tokenId);
     }
 
+    function cancel() external override onlyManager whenNotCancelled {
+        _cancel();
+    }
+
     function name() public pure override returns (string memory) {
         return 'KRYSTAL ILOPool V3';
     }
