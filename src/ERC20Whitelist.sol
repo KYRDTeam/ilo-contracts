@@ -36,6 +36,7 @@ contract ERC20Whitelist is
         address _whitelistContract
     ) external override onlyOwner {
         whitelistContract = _whitelistContract;
+        emit SetWhitelistContract(whitelistContract);
     }
 
     function approveAndCall(
