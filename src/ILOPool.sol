@@ -70,7 +70,7 @@ contract ILOPool is ILOPoolBase, IILOPool {
         return _claim(tokenId);
     }
 
-    function cancel() external override onlyManager whenNotCancelled {
+    function cancel() external override {
         _cancel();
     }
 

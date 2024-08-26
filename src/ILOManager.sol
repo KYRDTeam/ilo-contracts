@@ -375,18 +375,10 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     function _cancelProject(Project storage _project) internal {
-        // dont need to check if project is canceled or not
-        // because when project is canceled, all of its pools are canceled
-        // and calling pool cancel() below will revert
-        _project.status = ProjectStatus.CANCELLED;
-        uint256 length = EnumerableSet.length(
-            _initializedILOPools[_project.projectId]
-        );
-        for (uint256 i = 0; i < length; i++) {
-            IILOPoolBase(
-                EnumerableSet.at(_initializedILOPools[_project.projectId], i)
-            ).cancel();
+        if (_project.status == ProjectStatus.CANCELLED) {
+            return;
         }
+        _project.status = ProjectStatus.CANCELLED;
         emit ProjectCancelled(_project.projectId);
     }
 

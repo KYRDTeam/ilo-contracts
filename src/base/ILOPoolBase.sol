@@ -66,7 +66,15 @@ abstract contract ILOPoolBase is
     }
 
     modifier whenNotCancelled() {
-        require(!CANCELLED, 'CANCELLED');
+        if (CANCELLED) {
+            revert('CANCELLED');
+        }
+        IILOManager.Project memory _project = IILOManager(MANAGER).project(
+            PROJECT_ID
+        );
+        if (_project.status == IILOManager.ProjectStatus.CANCELLED) {
+            revert('CANCELLED');
+        }
         _;
     }
 
@@ -294,7 +302,7 @@ abstract contract ILOPoolBase is
         emit PoolLaunch(uniV3PoolAddress, liquidity, amount0, amount1);
     }
 
-    function _cancel() internal {
+    function _cancel() internal onlyManager whenNotCancelled {
         CANCELLED = true;
         emit PoolCancelled();
     }
