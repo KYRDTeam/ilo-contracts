@@ -35,13 +35,13 @@ contract ILOPoolSale is
     }
 
     modifier duringSale() {
-        require(SALE_START <= block.timestamp, 'BS');
-        require(SALE_END > block.timestamp, 'ES');
+        require(SALE_START <= block.timestamp, 'ST');
+        require(SALE_END > block.timestamp, 'ST');
         _;
     }
 
     modifier beforeSale() {
-        require(SALE_START > block.timestamp, 'BS');
+        require(SALE_START > block.timestamp, 'ST');
         _;
     }
 
