@@ -2,7 +2,6 @@
 pragma solidity =0.7.6;
 
 import { IOracleWhitelist } from './interfaces/IOracleWhitelist.sol';
-import { IApproveAndCallReceiver } from './interfaces/IApproveAndCallReceiver.sol';
 import { IERC20Whitelist } from './interfaces/IERC20Whitelist.sol';
 import { ERC20, ERC20Burnable } from '@openzeppelin/contracts/token/ERC20/ERC20Burnable.sol';
 import { ERC20Permit } from '@openzeppelin/contracts/drafts/ERC20Permit.sol';
@@ -37,25 +36,6 @@ contract ERC20Whitelist is
     ) external override onlyOwner {
         whitelistContract = _whitelistContract;
         emit SetWhitelistContract(whitelistContract);
-    }
-
-    function approveAndCall(
-        address spender,
-        uint256 amount,
-        bytes calldata extraData
-    ) external returns (bool) {
-        // Approve the spender to spend the tokens
-        _approve(msg.sender, spender, amount);
-
-        // Call the receiveApproval function on the spender contract
-        IApproveAndCallReceiver(spender).receiveApproval(
-            msg.sender,
-            amount,
-            address(this),
-            extraData
-        );
-
-        return true;
     }
 
     /// @notice Before token transfer hook
