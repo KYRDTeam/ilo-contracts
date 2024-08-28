@@ -225,7 +225,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         onlyProjectAdmin(projectId)
         onlyInitializedProject(projectId)
     {
-        Project memory _project = _projects[projectId];
+        Project storage _project = _projects[projectId];
         _project.status = ProjectStatus.LAUNCHED;
         uint160 sqrtPriceX96 = _project.initialPoolPriceX96;
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(
