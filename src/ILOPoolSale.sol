@@ -201,12 +201,19 @@ contract ILOPoolSale is
             return true;
         }
 
-        // not cancelled, but sale end and not reach min raise
-        if (block.timestamp > SALE_END && TOTAL_RAISED < MIN_RAISE) {
+        IILOManager.Project memory _project = IILOManager(MANAGER).project(
+            PROJECT_ID
+        );
+
+        if (
+            // when project is cancelled
+            _project.status == IILOManager.ProjectStatus.CANCELLED ||
+            // when not cancelled yet, but sale end and not reach min raise
+            (block.timestamp > SALE_END && TOTAL_RAISED < MIN_RAISE)
+        ) {
             _cancel();
 
-            // callback is optional, depends on design
-            // this callback cancel all pool of the project
+            // callback to cancel project
             MANAGER.onPoolSaleFail(PROJECT_ID);
             return true;
         }
