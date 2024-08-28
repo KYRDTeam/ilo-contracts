@@ -273,24 +273,22 @@ abstract contract ILOPoolBase is
     ) internal returns (uint128 liquidity) {
         _cachedUniV3PoolAddress = uniV3PoolAddress;
         _cachedPoolKey = poolKey;
-        if (poolKey.token0 == PAIR_TOKEN) {
-            // if token0 is raise token, we need to flip the tick range
+        bool isFlip01 = poolKey.token0 == PAIR_TOKEN;
+        (uint256 amount0, uint256 amount1) = (tokenAmount, type(uint256).max);
+        if (isFlip01) {
             _flipTicks();
-            liquidity = LiquidityAmounts.getLiquidityForAmount1(
-                _sqrtRatioLowerX96(),
-                sqrtPriceX96,
-                tokenAmount
-            );
-        } else {
-            liquidity = LiquidityAmounts.getLiquidityForAmount0(
-                sqrtPriceX96,
-                _sqrtRatioUpperX96(),
-                tokenAmount
-            );
+            (amount0, amount1) = (amount1, amount0);
         }
+        liquidity = LiquidityAmounts.getLiquidityForAmounts(
+            sqrtPriceX96,
+            _sqrtRatioLowerX96(),
+            _sqrtRatioUpperX96(),
+            amount0,
+            amount1
+        );
 
         // actually deploy liquidity to uniswap pool
-        (uint256 amount0, uint256 amount1) = _addLiquidity(
+        (amount0, amount1) = _addLiquidity(
             AddLiquidityParams({
                 pool: IUniswapV3Pool(uniV3PoolAddress),
                 liquidity: liquidity
