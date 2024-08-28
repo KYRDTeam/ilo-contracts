@@ -226,7 +226,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         onlyInitializedProject(projectId)
     {
         Project storage _project = _projects[projectId];
-        _project.status = ProjectStatus.LAUNCHED;
         uint160 sqrtPriceX96 = _project.initialPoolPriceX96;
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(
             token,
@@ -256,6 +255,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
                 sqrtPriceX96
             );
         }
+        _project.status = ProjectStatus.LAUNCHED;
         IUniswapV3Pool(uniV3PoolAddress).increaseObservationCardinalityNext(10);
         emit ProjectLaunch(projectId, uniV3PoolAddress, token);
     }
