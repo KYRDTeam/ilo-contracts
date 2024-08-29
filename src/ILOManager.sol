@@ -15,6 +15,7 @@ import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3
 import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
 import { EnumerableSet } from '@openzeppelin/contracts/utils/EnumerableSet.sol';
+import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 
 contract ILOManager is IILOManager, Ownable, Initializable {
     address public override UNIV3_FACTORY;
@@ -409,7 +410,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         }
 
         require(
-            sqrtPriceX96 <= TickMath.getSqrtRatioAtTick(TICK_UPPER),
+            sqrtPriceX96 <= TickMath.getSqrtRatioAtTick(tickUpper),
             'RANGE'
         );
     }
