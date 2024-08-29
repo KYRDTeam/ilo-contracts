@@ -274,21 +274,35 @@ abstract contract ILOPoolBase is
         _cachedUniV3PoolAddress = uniV3PoolAddress;
         _cachedPoolKey = poolKey;
         bool isFlip01 = poolKey.token0 == PAIR_TOKEN;
-        (uint256 amount0, uint256 amount1) = (tokenAmount, type(uint256).max);
+        uint160 sqrtLower = 0;
+        uint160 sqrtUpper = 0;
         if (isFlip01) {
             _flipTicks();
-            (amount0, amount1) = (amount1, amount0);
+            sqrtLower = _sqrtRatioLowerX96();
+            sqrtUpper = _sqrtRatioUpperX96();
+            if (sqrtPriceX96 > sqrtUpper) {
+                sqrtPriceX96 = sqrtUpper;
+            }
+            liquidity = LiquidityAmounts.getLiquidityForAmount1(
+                sqrtLower,
+                sqrtPriceX96,
+                tokenAmount
+            );
+        } else {
+            sqrtLower = _sqrtRatioLowerX96();
+            sqrtUpper = _sqrtRatioUpperX96();
+            if (sqrtPriceX96 < sqrtLower) {
+                sqrtPriceX96 = sqrtLower;
+            }
+            liquidity = LiquidityAmounts.getLiquidityForAmount0(
+                sqrtPriceX96,
+                sqrtUpper,
+                tokenAmount
+            );
         }
-        liquidity = LiquidityAmounts.getLiquidityForAmounts(
-            sqrtPriceX96,
-            _sqrtRatioLowerX96(),
-            _sqrtRatioUpperX96(),
-            amount0,
-            amount1
-        );
 
         // actually deploy liquidity to uniswap pool
-        (amount0, amount1) = _addLiquidity(
+        (uint256 amount0, uint256 amount1) = _addLiquidity(
             AddLiquidityParams({
                 pool: IUniswapV3Pool(uniV3PoolAddress),
                 liquidity: liquidity
