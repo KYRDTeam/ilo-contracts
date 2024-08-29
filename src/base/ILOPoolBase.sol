@@ -280,26 +280,24 @@ abstract contract ILOPoolBase is
             _flipTicks();
             sqrtLower = _sqrtRatioLowerX96();
             sqrtUpper = _sqrtRatioUpperX96();
-            require(sqrtPriceX96 >= sqrtLower, "RL");
             if (sqrtPriceX96 > sqrtUpper) {
-              sqrtPriceX96 = sqrtUpper;
+                sqrtPriceX96 = sqrtUpper;
             }
             liquidity = LiquidityAmounts.getLiquidityForAmount1(
-              sqrtLower,
-              sqrtPriceX96,
-              tokenAmount
+                sqrtLower,
+                sqrtPriceX96,
+                tokenAmount
             );
         } else {
-            require(sqrtPriceX96 <= sqrtUpper, "RU");
             sqrtLower = _sqrtRatioLowerX96();
             sqrtUpper = _sqrtRatioUpperX96();
             if (sqrtPriceX96 < sqrtLower) {
-              sqrtPriceX96 = sqrtLower;
+                sqrtPriceX96 = sqrtLower;
             }
             liquidity = LiquidityAmounts.getLiquidityForAmount0(
-              sqrtPriceX96,
-              sqrtUpper,
-              tokenAmount
+                sqrtPriceX96,
+                sqrtUpper,
+                tokenAmount
             );
         }
 

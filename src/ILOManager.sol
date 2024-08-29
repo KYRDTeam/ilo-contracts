@@ -336,7 +336,12 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     ) internal returns (address deployedAddress) {
         // dont need to check if project is exist because only project admin can call this function
         Project storage _project = _projects[params.projectId];
-        _checkTicks(params.tickLower, params.tickUpper, _project.fee);
+        _checkTicks(
+            params.tickLower,
+            params.tickUpper,
+            _project.fee,
+            _project.initialPoolPriceX96
+        );
         uint256 projectNonce = ++_project.nonce;
 
         // this salt make sure that pool address can not be represented in any other chains
@@ -385,7 +390,8 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     function _checkTicks(
         int24 tickLower,
         int24 tickUpper,
-        uint256 fee
+        uint256 fee,
+        uint160 sqrtPriceX96
     ) internal pure {
         require(tickLower < tickUpper, 'TLU');
 
@@ -401,5 +407,10 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         } else {
             require(fee == 100, 'FEE');
         }
+
+        require(
+            sqrtPriceX96 <= TickMath.getSqrtRatioAtTick(TICK_UPPER),
+            'RANGE'
+        );
     }
 }
