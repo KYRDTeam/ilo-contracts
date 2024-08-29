@@ -314,7 +314,7 @@ abstract contract ILOPoolBase is
         emit PoolLaunch(uniV3PoolAddress, liquidity, amount0, amount1);
     }
 
-    function _cancel() internal onlyManager whenNotCancelled {
+    function _cancel() internal whenNotCancelled {
         CANCELLED = true;
         emit PoolCancelled();
     }

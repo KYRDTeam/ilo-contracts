@@ -158,7 +158,7 @@ contract ILOPoolSale is
         return _claim(tokenId);
     }
 
-    function cancel() external override beforeSale {
+    function cancel() external override onlyManager beforeSale {
         _cancel();
     }
 
