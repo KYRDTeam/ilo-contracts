@@ -19,7 +19,7 @@ interface ITokenFactory {
         address whitelistContract;
     }
 
-    struct CreateStarndardERC20TokenParams {
+    struct CreateStandardERC20TokenParams {
         string name;
         string symbol;
         uint256 totalSupply;
@@ -57,7 +57,7 @@ interface ITokenFactory {
     ) external returns (address token, address whitelistAddress);
 
     function createStandardERC20Token(
-        CreateStarndardERC20TokenParams calldata params
+        CreateStandardERC20TokenParams calldata params
     ) external returns (address token);
 
     function initialize(address _owner, address _uniswapV3Factory) external;

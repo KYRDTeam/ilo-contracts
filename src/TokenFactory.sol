@@ -89,7 +89,7 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
     }
 
     function createStandardERC20Token(
-        CreateStarndardERC20TokenParams calldata params
+        CreateStandardERC20TokenParams calldata params
     ) external override returns (address token) {
         bytes32 salt = keccak256(
             abi.encodePacked(msg.sender, ChainId.get(), _nonce++)
