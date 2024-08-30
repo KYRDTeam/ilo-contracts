@@ -5,6 +5,7 @@ pragma abicoder v2;
 import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import { IUniswapV3MintCallback } from '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol';
 import { ILOPoolImmutableState } from './ILOPoolImmutableState.sol';
+import { IILOManager } from '../interfaces/IILOManager.sol';
 
 /// @title Liquidity management functions
 /// @notice Internal functions for safely managing liquidity in Uniswap V3
@@ -25,7 +26,7 @@ abstract contract LiquidityManagement is
         bytes calldata data
     ) external override {
         require(msg.sender == _cachedUniV3PoolAddress);
-        MANAGER.iloPoolLaunchCallback(
+        IILOManager(MANAGER).iloPoolLaunchCallback(
             PROJECT_ID,
             _cachedPoolKey.token0,
             amount0Owed,

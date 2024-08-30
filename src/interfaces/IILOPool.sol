@@ -5,7 +5,7 @@ pragma abicoder v2;
 import { IILOVest } from './IILOVest.sol';
 import { IILOPoolBase } from './IILOPoolBase.sol';
 
-interface IILOPool {
+interface IILOPool is IILOPoolBase {
     event ILOPoolInitialized(
         string projectId,
         uint256 tokenAmount,
@@ -14,5 +14,5 @@ interface IILOPool {
         IILOVest.VestingConfig[] vestingConfig
     );
 
-    function initialize(IILOPoolBase.InitPoolParams calldata params) external;
+    function initialize(InitPoolParams calldata params) external;
 }

@@ -182,13 +182,15 @@ contract ILOManager is IILOManager, Ownable, Initializable {
     }
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
-    function setPlatformFee(uint16 _platformFee) external onlyOwner {
+    function setPlatformFee(uint16 _platformFee) external override onlyOwner {
         emit PlatformFeeChanged(PERFORMANCE_FEE, _platformFee);
         PLATFORM_FEE = _platformFee;
     }
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
-    function setPerformanceFee(uint16 _performanceFee) external onlyOwner {
+    function setPerformanceFee(
+        uint16 _performanceFee
+    ) external override onlyOwner {
         emit PerformanceFeeChanged(PERFORMANCE_FEE, _performanceFee);
         PERFORMANCE_FEE = _performanceFee;
     }
@@ -322,14 +324,6 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         string calldata projectId
     ) external view override returns (Project memory) {
         return _projects[projectId];
-    }
-
-    /// @inheritdoc IILOManager
-    function feesForProject(
-        string calldata projectId
-    ) external view override returns (uint16, uint16) {
-        Project storage _project = _projects[projectId];
-        return (_project.platformFee, _project.performanceFee);
     }
 
     function _deployIloPool(

@@ -11,7 +11,7 @@ import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 /// @notice Immutable state used by periphery contracts
 abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
     string public override PROJECT_ID;
-    IILOManager public override MANAGER;
+    address public override MANAGER;
     address public override PAIR_TOKEN;
     int24 public override TICK_LOWER;
     int24 public override TICK_UPPER;
@@ -23,11 +23,13 @@ abstract contract ILOPoolImmutableState is IILOPoolImmutableState {
 
     function _initializeImmutableState(
         string memory projectId,
-        IILOManager manager,
+        address manager,
         int24 tickLower,
         int24 tickUpper
     ) internal {
-        IILOManager.Project memory _project = manager.project(projectId);
+        IILOManager.Project memory _project = IILOManager(manager).project(
+            projectId
+        );
         require(tickLower < tickUpper, 'RANGE');
         PROJECT_ID = projectId;
         MANAGER = manager;

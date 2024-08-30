@@ -132,7 +132,9 @@ contract ILOPoolSale is
         }
 
         // transfer all raised fund to project admin
-        IILOManager.Project memory _project = MANAGER.project(PROJECT_ID);
+        IILOManager.Project memory _project = IILOManager(MANAGER).project(
+            PROJECT_ID
+        );
         TransferHelper.safeTransfer(PAIR_TOKEN, _project.admin, TOTAL_RAISED);
 
         // launch liquidity
@@ -193,7 +195,7 @@ contract ILOPoolSale is
     }
 
     function _initImplementation() internal override {
-        IMPLEMENTATION = MANAGER.ILO_POOL_SALE_IMPLEMENTATION();
+        IMPLEMENTATION = IILOManager(MANAGER).ILO_POOL_SALE_IMPLEMENTATION();
     }
 
     function _refundable() internal returns (bool) {
@@ -214,7 +216,7 @@ contract ILOPoolSale is
             _cancel();
 
             // callback to cancel project
-            MANAGER.onPoolSaleFail(PROJECT_ID);
+            IILOManager(MANAGER).onPoolSaleFail(PROJECT_ID);
             return true;
         }
         return false;

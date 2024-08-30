@@ -2,8 +2,7 @@
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import { IILOPoolBase } from './IILOPoolBase.sol';
-import { IILOPoolSale } from './IILOPoolSale.sol';
+import { IILOPoolSale, IILOPoolBase } from './IILOPoolSale.sol';
 
 interface IILOManager {
     enum ProjectStatus {
@@ -122,6 +121,10 @@ interface IILOManager {
 
     function setInitProjectFee(uint256 fee) external;
 
+    function setPlatformFee(uint16 fee) external;
+
+    function setPerformanceFee(uint16 fee) external;
+
     /// @notice callback when pool sale fail
     /// cancel all pool of project, same as cancel project
     function onPoolSaleFail(string calldata projectId) external;
@@ -141,11 +144,6 @@ interface IILOManager {
         uint256 amount1,
         address uniswapV3Pool
     ) external;
-
-    /// @notice get fees for a project
-    function feesForProject(
-        string calldata projectId
-    ) external view returns (uint16 platformFee, uint16 performanceFee);
 
     function project(
         string memory projectId

@@ -1,11 +1,10 @@
 // SPDX-License-Identifier: GPL-2.0-or-later
 pragma solidity >=0.5.0;
-import { IILOManager } from './IILOManager.sol';
 
 /// @title Immutable state
 /// @notice Functions that return immutable state of the router
 interface IILOPoolImmutableState {
-    function MANAGER() external view returns (IILOManager);
+    function MANAGER() external view returns (address);
     function PAIR_TOKEN() external view returns (address);
     function TICK_LOWER() external view returns (int24);
     function TICK_UPPER() external view returns (int24);

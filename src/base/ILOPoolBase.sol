@@ -256,10 +256,9 @@ abstract contract ILOPoolBase is
         _nextId = 1;
         _tokenAmount = params.tokenAmount;
         // initialize imutable state
-        IILOManager _manager = IILOManager(msg.sender);
         _initializeImmutableState(
             params.projectId,
-            _manager,
+            msg.sender,
             params.tickLower,
             params.tickUpper
         );

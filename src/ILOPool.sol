@@ -4,6 +4,7 @@ pragma abicoder v2;
 
 import { ILOPoolBase, FullMath, IILOPoolBase } from './base/ILOPoolBase.sol';
 import { IILOPool } from './interfaces/IILOPool.sol';
+import { IILOManager } from './interfaces/IILOManager.sol';
 import { PoolAddress } from './libraries/PoolAddress.sol';
 /// @title NFT positions
 /// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
@@ -83,6 +84,6 @@ contract ILOPool is ILOPoolBase, IILOPool {
     }
 
     function _initImplementation() internal override {
-        IMPLEMENTATION = MANAGER.ILO_POOL_IMPLEMENTATION();
+        IMPLEMENTATION = IILOManager(MANAGER).ILO_POOL_IMPLEMENTATION();
     }
 }

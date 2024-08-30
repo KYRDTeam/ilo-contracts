@@ -7,11 +7,17 @@ import { IERC721Enumerable } from '@openzeppelin/contracts/token/ERC721/IERC721E
 
 import { IILOVest } from './IILOVest.sol';
 import { PoolAddress } from '../libraries/PoolAddress.sol';
+import { IILOPoolImmutableState } from './IILOPoolImmutableState.sol';
 
 /// @title Non-fungible token for positions
 /// @notice Wraps Uniswap V3 positions in a non-fungible token interface which allows for them to be transferred
 /// and authorized.
-interface IILOPoolBase is IERC721Metadata, IERC721Enumerable {
+interface IILOPoolBase is
+    IERC721Metadata,
+    IERC721Enumerable,
+    IILOVest,
+    IILOPoolImmutableState
+{
     // details about the uniswap position
     struct Position {
         // the liquidity of the position
