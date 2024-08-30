@@ -21,3 +21,6 @@ node_modules
 # TypeChain files
 /typechain
 /typechain-types
+
+.prettierrc.json
+.solhint.json

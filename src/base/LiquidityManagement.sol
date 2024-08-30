@@ -2,19 +2,22 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
-import '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol';
-
-import '../interfaces/IILOManager.sol';
-import '../libraries/PoolAddress.sol';
-import '../libraries/LiquidityAmounts.sol';
-import '../libraries/TransferHelper.sol';
-import './ILOPoolImmutableState.sol';
+import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
+import { IUniswapV3MintCallback } from '@uniswap/v3-core/contracts/interfaces/callback/IUniswapV3MintCallback.sol';
+import { ILOPoolImmutableState } from './ILOPoolImmutableState.sol';
+import { IILOManager } from '../interfaces/IILOManager.sol';
 
 /// @title Liquidity management functions
 /// @notice Internal functions for safely managing liquidity in Uniswap V3
-abstract contract LiquidityManagement is IUniswapV3MintCallback, ILOPoolImmutableState {
+abstract contract LiquidityManagement is
+    IUniswapV3MintCallback,
+    ILOPoolImmutableState
+{
+    struct AddLiquidityParams {
+        IUniswapV3Pool pool;
+        uint128 liquidity;
+    }
+
     /// @inheritdoc IUniswapV3MintCallback
     /// @dev liqiuidity is allways in range so we don't need to check if amount0 or amount1 is 0
     function uniswapV3MintCallback(
@@ -23,36 +26,26 @@ abstract contract LiquidityManagement is IUniswapV3MintCallback, ILOPoolImmutabl
         bytes calldata data
     ) external override {
         require(msg.sender == _cachedUniV3PoolAddress);
-
-        if (_cachedPoolKey.token1 == RAISE_TOKEN) {
-            MANAGER.ILOPoolLaunchCallback(PROJECT_ID, IMPLEMENTATION, POOL_INDEX, _cachedPoolKey.token0, amount0Owed, msg.sender);
-            TransferHelper.safeTransfer(_cachedPoolKey.token1, msg.sender, amount1Owed);
-        } else {
-            TransferHelper.safeTransfer(_cachedPoolKey.token0, msg.sender, amount0Owed);
-            MANAGER.ILOPoolLaunchCallback(PROJECT_ID, IMPLEMENTATION, POOL_INDEX, _cachedPoolKey.token1, amount1Owed, msg.sender);
-        }
-    }
-
-    struct AddLiquidityParams {
-        IUniswapV3Pool pool;
-        uint128 liquidity;
-        address projectAdmin;
+        IILOManager(MANAGER).iloPoolLaunchCallback(
+            PROJECT_ID,
+            _cachedPoolKey.token0,
+            amount0Owed,
+            _cachedPoolKey.token1,
+            amount1Owed,
+            msg.sender
+        );
     }
 
     /// @notice Add liquidity to an initialized pool
-    function addLiquidity(AddLiquidityParams memory params)
-        internal
-        returns (
-            uint256 amount0,
-            uint256 amount1
-        )
-    {
+    function _addLiquidity(
+        AddLiquidityParams memory params
+    ) internal returns (uint256 amount0, uint256 amount1) {
         (amount0, amount1) = params.pool.mint(
             address(this),
             TICK_LOWER,
             TICK_UPPER,
             params.liquidity,
-            ""
+            ''
         );
     }
 }

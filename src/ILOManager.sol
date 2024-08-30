@@ -2,32 +2,63 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import "./interfaces/IILOManager.sol";
-import "./interfaces/IILOPool.sol";
-import "./libraries/ChainId.sol";
-import './base/Initializable.sol';
-import './libraries/TransferHelper.sol';
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
-import '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
-import '@uniswap/v3-core/contracts/libraries/TickMath.sol';
-import "@openzeppelin/contracts/access/Ownable.sol";
-import '@openzeppelin/contracts/proxy/Clones.sol';
+import { IILOManager } from './interfaces/IILOManager.sol';
+import { IILOPoolBase } from './interfaces/IILOPoolBase.sol';
+import { IILOPool } from './interfaces/IILOPool.sol';
+import { IILOPoolSale } from './interfaces/IILOPoolSale.sol';
+import { ChainId } from './libraries/ChainId.sol';
+import { Initializable } from './base/Initializable.sol';
+import { TransferHelper } from './libraries/TransferHelper.sol';
+import { PoolAddress } from './libraries/PoolAddress.sol';
+
+import { IUniswapV3Factory } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Factory.sol';
+import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
+import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
+import { Clones } from '@openzeppelin/contracts/proxy/Clones.sol';
+import { EnumerableSet } from '@openzeppelin/contracts/utils/EnumerableSet.sol';
+import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 
 contract ILOManager is IILOManager, Ownable, Initializable {
     address public override UNIV3_FACTORY;
 
-    uint64 private DEFAULT_DEADLINE_OFFSET = 7 * 24 * 60 * 60; // 7 days
     uint16 public override PLATFORM_FEE;
     uint16 public override PERFORMANCE_FEE;
     address public override FEE_TAKER;
     address public override ILO_POOL_IMPLEMENTATION;
-    uint256 private _initProjectFee;
+    address public override ILO_POOL_SALE_IMPLEMENTATION;
+    uint256 public override INIT_PROJECT_FEE;
 
     mapping(string => Project) private _projects; // map projectId => project)
-    mapping(string => address[]) private _initializedILOPools; // map projectId => list of initialized ilo pools
+    mapping(string => EnumerableSet.AddressSet) private _initializedILOPools; // map projectId => list of initialized ilo pools
+
+    modifier onlyProjectAdmin(string calldata projectId) {
+        require(_projects[projectId].admin == msg.sender, 'UA');
+        _;
+    }
+
+    modifier onlyInitializedPool(string calldata projectId) {
+        require(
+            EnumerableSet.contains(_initializedILOPools[projectId], msg.sender),
+            'NP'
+        );
+        _;
+    }
+
+    modifier onlyInitializedProject(string calldata projectId) {
+        require(_projects[projectId].status == ProjectStatus.INITIALIZED, 'NA');
+        _;
+    }
+
+    modifier ownerOrProjectAdmin(string calldata projectId) {
+        require(
+            msg.sender == owner() || _projects[projectId].admin == msg.sender,
+            'UA'
+        );
+        _;
+    }
 
     /// @dev since deploy via deployer so we need to claim ownership
-    constructor () {
+    constructor() {
         transferOwnership(tx.origin);
     }
 
@@ -35,109 +66,330 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         address initialOwner,
         address _feeTaker,
         address iloPoolImplementation,
+        address iloPoolSaleImplementation,
         address uniV3Factory,
         uint256 createProjectFee,
         uint16 platformFee,
         uint16 performanceFee
-    ) external override whenNotInitialized() {
-        _initProjectFee = createProjectFee;
+    ) external override whenNotInitialized {
+        INIT_PROJECT_FEE = createProjectFee;
         PLATFORM_FEE = platformFee;
         PERFORMANCE_FEE = performanceFee;
         FEE_TAKER = _feeTaker;
         transferOwnership(initialOwner);
         UNIV3_FACTORY = uniV3Factory;
         ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
-    }
-
-    modifier onlyProjectAdmin(string calldata projectId) {
-        require(_projects[projectId].admin == msg.sender, "UA");
-        _;
+        ILO_POOL_SALE_IMPLEMENTATION = iloPoolSaleImplementation;
     }
 
     /// @inheritdoc IILOManager
-    function initProject(InitProjectParams calldata params) external payable override afterInitialize() {
-        require(msg.value == _initProjectFee, "FEE");
-        require(bytes(params.projectId).length != 0, "ID");
+    function initProject(
+        InitProjectParams calldata params
+    ) external payable override afterInitialize {
+        require(msg.value == INIT_PROJECT_FEE, 'FEE');
+        require(bytes(params.projectId).length != 0, 'ID');
         // transfer fee to fee taker
         payable(FEE_TAKER).transfer(msg.value);
-        
+
         Project storage _project = _projects[params.projectId];
-        require(_project.admin == address(0), "RE");
+        require(_project.admin == address(0), 'RE');
 
         _project.projectId = params.projectId;
         _project.admin = msg.sender;
-        _project.raiseToken = params.raiseToken;
+        _project.pairToken = params.pairToken;
         _project.fee = params.fee;
         _project.initialPoolPriceX96 = params.initialPoolPriceX96;
-        _project.launchTime = params.launchTime;
-        _project.refundDeadline = params.launchTime + DEFAULT_DEADLINE_OFFSET;
         _project.platformFee = PLATFORM_FEE;
         _project.performanceFee = PERFORMANCE_FEE;
+        _project.status = ProjectStatus.INITIALIZED;
 
         emit ProjectCreated(params.projectId, _project);
     }
 
-    function project(string calldata projectId) external override view returns (Project memory) {
-        return _projects[projectId];
+    /// @inheritdoc IILOManager
+    function initILOPool(
+        IILOPoolBase.InitPoolParams calldata params
+    )
+        external
+        override
+        onlyProjectAdmin(params.baseParams.projectId)
+        onlyInitializedProject(params.baseParams.projectId)
+        returns (address poolAddress)
+    {
+        poolAddress = _deployIloPool(
+            params.baseParams,
+            ILO_POOL_IMPLEMENTATION
+        );
+        IILOPool(poolAddress).initialize(params);
+        EnumerableSet.add(
+            _initializedILOPools[params.baseParams.projectId],
+            poolAddress
+        );
     }
 
     /// @inheritdoc IILOManager
-    function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.projectId) returns (address iloPoolAddress) {
-        // dont need to check if project is exist because only project admin can call this function
-        Project storage _project = _projects[params.projectId];
-        _checkTicks(params.tickLower, params.tickUpper, _project.fee);
-        uint256 poolIndex = _initializedILOPools[params.projectId].length;
-        {
-            // validate time for sale start and end compared to launch time
-            require(params.start < params.end && params.end < _project.launchTime, "PT");
-            // this salt make sure that pool address can not be represented in any other chains
-            bytes32 salt = keccak256(abi.encodePacked(
-                ChainId.get(),
-                params.projectId,
-                poolIndex
-            ));
-            iloPoolAddress = Clones.cloneDeterministic(ILO_POOL_IMPLEMENTATION, salt);
-            emit ILOPoolCreated(params.projectId, iloPoolAddress, poolIndex);
+    function initILOPoolSale(
+        IILOPoolSale.InitParams calldata params
+    )
+        external
+        override
+        onlyProjectAdmin(params.baseParams.projectId)
+        onlyInitializedProject(params.baseParams.projectId)
+        returns (address poolAddress)
+    {
+        poolAddress = _deployIloPool(
+            params.baseParams,
+            ILO_POOL_SALE_IMPLEMENTATION
+        );
+
+        IILOPoolSale(poolAddress).initialize(params);
+        EnumerableSet.add(
+            _initializedILOPools[params.baseParams.projectId],
+            poolAddress
+        );
+    }
+
+    function onPoolSaleFail(
+        string calldata projectId
+    ) external override onlyInitializedPool(projectId) {
+        _cancelProject(_projects[projectId]);
+    }
+
+    /// @notice this function takes params from ILOPools
+    /// and transfer token directly to uniswap v3 pool
+    /// without temparory holding in ILOPool
+    function iloPoolLaunchCallback(
+        string calldata projectId,
+        address token0,
+        uint256 amount0,
+        address token1,
+        uint256 amount1,
+        address uniswapV3Pool
+    ) external override onlyInitializedPool(projectId) {
+        Project storage _project = _projects[projectId];
+        TransferHelper.safeTransferFrom(
+            token0,
+            _project.admin,
+            uniswapV3Pool,
+            amount0
+        );
+        TransferHelper.safeTransferFrom(
+            token1,
+            _project.admin,
+            uniswapV3Pool,
+            amount1
+        );
+    }
+
+    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
+    function setPlatformFee(uint16 _platformFee) external override onlyOwner {
+        emit PlatformFeeChanged(PERFORMANCE_FEE, _platformFee);
+        PLATFORM_FEE = _platformFee;
+    }
+
+    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
+    function setPerformanceFee(
+        uint16 _performanceFee
+    ) external override onlyOwner {
+        emit PerformanceFeeChanged(PERFORMANCE_FEE, _performanceFee);
+        PERFORMANCE_FEE = _performanceFee;
+    }
+
+    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
+    function setFeeTaker(address _feeTaker) external override onlyOwner {
+        emit FeeTakerChanged(FEE_TAKER, _feeTaker);
+        FEE_TAKER = _feeTaker;
+    }
+
+    function setILOPoolImplementation(
+        address iloPoolImplementation
+    ) external override onlyOwner {
+        emit PoolImplementationChanged(
+            ILO_POOL_IMPLEMENTATION,
+            iloPoolImplementation
+        );
+        ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
+    }
+
+    function transferAdminProject(
+        address admin,
+        string calldata projectId
+    ) external override onlyProjectAdmin(projectId) {
+        _projects[projectId].admin = admin;
+        emit ProjectAdminChanged(projectId, msg.sender, admin);
+    }
+
+    /// @inheritdoc IILOManager
+    function launch(
+        string calldata projectId,
+        address token
+    )
+        external
+        override
+        onlyProjectAdmin(projectId)
+        onlyInitializedProject(projectId)
+    {
+        Project storage _project = _projects[projectId];
+        uint160 sqrtPriceX96 = _project.initialPoolPriceX96;
+        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(
+            token,
+            _project.pairToken,
+            _project.fee
+        );
+
+        // flip price and tokens
+        if (token > _project.pairToken) {
+            (poolKey.token0, poolKey.token1) = (poolKey.token1, poolKey.token0);
+            sqrtPriceX96 = uint160(2 ** 192 / sqrtPriceX96);
         }
 
-        IILOPool.InitPoolParams memory initParams = IILOPool.InitPoolParams({
-            projectId: params.projectId,
-            implementation: ILO_POOL_IMPLEMENTATION,
-            poolIndex: poolIndex,
-            tickLower: params.tickLower,
-            tickUpper: params.tickUpper,
-            maxRaise: params.maxRaise,
-            minRaise: params.minRaise,
-            start: params.start,
-            end: params.end,
-            vestingConfigs: params.vestingConfigs
-        });
-        IILOPool(iloPoolAddress).initialize(initParams);
-        _initializedILOPools[params.projectId].push(iloPoolAddress);
+        address uniV3PoolAddress = _initUniV3PoolIfNecessary(
+            poolKey,
+            sqrtPriceX96
+        );
+
+        EnumerableSet.AddressSet
+            storage initializedPools = _initializedILOPools[projectId];
+        uint256 length = EnumerableSet.length(initializedPools);
+        require(length > 0, 'NP');
+        for (uint256 i = 0; i < length; i++) {
+            IILOPoolBase(EnumerableSet.at(initializedPools, i)).launch(
+                uniV3PoolAddress,
+                poolKey,
+                sqrtPriceX96
+            );
+        }
+        _project.status = ProjectStatus.LAUNCHED;
+        IUniswapV3Pool(uniV3PoolAddress).increaseObservationCardinalityNext(10);
+        emit ProjectLaunch(projectId, uniV3PoolAddress, token);
     }
 
-    function ILOPoolLaunchCallback(
+    function cancelProject(
+        string calldata projectId
+    )
+        external
+        override
+        ownerOrProjectAdmin(projectId)
+        onlyInitializedProject(projectId)
+    {
+        _cancelProject(_projects[projectId]);
+    }
+
+    function removePool(
         string calldata projectId,
-        address poolImplementation,
-        uint256 poolIndex,
-        address saleToken,
-        uint256 amount,
-        address uniswapV3Pool
-    ) external override {
-        bytes32 salt = keccak256(abi.encodePacked(
-                ChainId.get(),
-                projectId,
-                poolIndex
-            ));
-        require(msg.sender == Clones.predictDeterministicAddress(poolImplementation, salt), "UA");
-        Project storage _project = _projects[projectId];
-        TransferHelper.safeTransferFrom(saleToken, _project.admin, uniswapV3Pool, amount);
+        address pool
+    )
+        external
+        override
+        onlyInitializedProject(projectId)
+        onlyProjectAdmin(projectId)
+    {
+        EnumerableSet.AddressSet
+            storage initializedPools = _initializedILOPools[projectId];
+        require(EnumerableSet.contains(initializedPools, pool), 'NP');
+        IILOPoolBase(pool).cancel();
+        EnumerableSet.remove(initializedPools, pool);
+        emit PoolCancelled(projectId, pool);
     }
 
-    function _checkTicks(int24 tickLower, int24 tickUpper, uint256 fee) internal pure {
+    /// @inheritdoc IILOManager
+    function setInitProjectFee(uint256 fee) external override onlyOwner {
+        emit InitProjectFeeChanged(INIT_PROJECT_FEE, fee);
+        INIT_PROJECT_FEE = fee;
+    }
+
+    /// @inheritdoc IILOManager
+    function setFeesForProject(
+        string calldata projectId,
+        uint16 platformFee,
+        uint16 performanceFee
+    ) external override onlyOwner {
+        Project storage _project = _projects[projectId];
+        _project.platformFee = platformFee;
+        _project.performanceFee = performanceFee;
+        emit FeesForProjectSet(projectId, platformFee, performanceFee);
+    }
+
+    function setILOSalePoolImplementation(
+        address iloSalePoolImplementation
+    ) external override onlyOwner {
+        emit SalePoolImplementationChanged(
+            ILO_POOL_SALE_IMPLEMENTATION,
+            iloSalePoolImplementation
+        );
+        ILO_POOL_SALE_IMPLEMENTATION = iloSalePoolImplementation;
+    }
+
+    function project(
+        string calldata projectId
+    ) external view override returns (Project memory) {
+        return _projects[projectId];
+    }
+
+    function _deployIloPool(
+        IILOPoolBase.InitPoolBaseParams calldata params,
+        address implementation
+    ) internal returns (address deployedAddress) {
+        // dont need to check if project is exist because only project admin can call this function
+        Project storage _project = _projects[params.projectId];
+        _checkTicks(
+            params.tickLower,
+            params.tickUpper,
+            _project.fee,
+            _project.initialPoolPriceX96
+        );
+        uint256 projectNonce = ++_project.nonce;
+
+        // this salt make sure that pool address can not be represented in any other chains
+        bytes32 salt = keccak256(
+            abi.encodePacked(ChainId.get(), params.projectId, projectNonce)
+        );
+        deployedAddress = Clones.cloneDeterministic(implementation, salt);
+        emit ILOPoolCreated(params.projectId, deployedAddress);
+    }
+
+    function _initUniV3PoolIfNecessary(
+        PoolAddress.PoolKey memory poolKey,
+        uint160 sqrtPriceX96
+    ) internal returns (address pool) {
+        pool = IUniswapV3Factory(UNIV3_FACTORY).getPool(
+            poolKey.token0,
+            poolKey.token1,
+            poolKey.fee
+        );
+        if (pool == address(0)) {
+            pool = IUniswapV3Factory(UNIV3_FACTORY).createPool(
+                poolKey.token0,
+                poolKey.token1,
+                poolKey.fee
+            );
+            IUniswapV3Pool(pool).initialize(sqrtPriceX96);
+        } else {
+            (uint160 sqrtPriceX96Existing, , , , , , ) = IUniswapV3Pool(pool)
+                .slot0();
+            if (sqrtPriceX96Existing == 0) {
+                IUniswapV3Pool(pool).initialize(sqrtPriceX96);
+            } else {
+                require(sqrtPriceX96Existing == sqrtPriceX96, 'UV3P');
+            }
+        }
+    }
+
+    function _cancelProject(Project storage _project) internal {
+        if (_project.status == ProjectStatus.CANCELLED) {
+            return;
+        }
+        _project.status = ProjectStatus.CANCELLED;
+        emit ProjectCancelled(_project.projectId);
+    }
+
+    function _checkTicks(
+        int24 tickLower,
+        int24 tickUpper,
+        uint256 fee,
+        uint160 sqrtPriceX96
+    ) internal pure {
         require(tickLower < tickUpper, 'TLU');
-        require(tickLower >= TickMath.MIN_TICK, 'TLM');
-        require(tickUpper <= TickMath.MAX_TICK, 'TUM');
 
         if (fee == 500) {
             require(tickLower % 10 == 0, 'TL5');
@@ -151,104 +403,10 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         } else {
             require(fee == 100, 'FEE');
         }
-    }
 
-    function _initUniV3PoolIfNecessary(PoolAddress.PoolKey memory poolKey, uint160 sqrtPriceX96) internal returns (address pool) {
-        pool = IUniswapV3Factory(UNIV3_FACTORY).getPool(poolKey.token0, poolKey.token1, poolKey.fee);
-        if (pool == address(0)) {
-            pool = IUniswapV3Factory(UNIV3_FACTORY).createPool(poolKey.token0, poolKey.token1, poolKey.fee);
-            IUniswapV3Pool(pool).initialize(sqrtPriceX96);
-        } else {
-            (uint160 sqrtPriceX96Existing, , , , , , ) = IUniswapV3Pool(pool).slot0();
-            if (sqrtPriceX96Existing == 0) {
-                IUniswapV3Pool(pool).initialize(sqrtPriceX96);
-            } else {
-                require(sqrtPriceX96Existing == sqrtPriceX96, "UV3P");
-            }
-        }
-    }
-
-    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
-    function setPlatformFee(uint16 _platformFee) external onlyOwner() {
-        PLATFORM_FEE = _platformFee;
-    }
-
-    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
-    function setPerformanceFee(uint16 _performanceFee) external onlyOwner() {
-        PERFORMANCE_FEE = _performanceFee;
-    }
-
-    /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
-    function setFeeTaker(address _feeTaker) external override onlyOwner() {
-        FEE_TAKER = _feeTaker;
-    }
-
-    function setILOPoolImplementation(address iloPoolImplementation) external override onlyOwner() {
-        emit PoolImplementationChanged(ILO_POOL_IMPLEMENTATION, iloPoolImplementation);
-        ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
-    }
-
-    function transferAdminProject(address admin, string calldata projectId) external override onlyProjectAdmin(projectId) {
-        _projects[projectId].admin = admin;
-        emit ProjectAdminChanged(projectId, msg.sender, admin);
-    }
-
-    function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external override onlyOwner() {
-        emit DefaultDeadlineOffsetChanged(owner(), DEFAULT_DEADLINE_OFFSET, defaultDeadlineOffset);
-        DEFAULT_DEADLINE_OFFSET = defaultDeadlineOffset;
-    }
-
-    function setRefundDeadlineForProject(string calldata projectId, uint64 refundDeadline) external override onlyOwner() {
-        Project storage _project = _projects[projectId];
-        emit RefundDeadlineChanged(projectId, _project.refundDeadline, refundDeadline);
-        _project.refundDeadline = refundDeadline;
-    }
-
-    /// @inheritdoc IILOManager
-    function launch(string calldata projectId, address saleToken) external override onlyProjectAdmin(projectId) {
-        require(block.timestamp > _projects[projectId].launchTime, "LT");
-
-        uint160 sqrtPriceX96 = _projects[projectId].initialPoolPriceX96;
-        PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(saleToken, _projects[projectId].raiseToken, _projects[projectId].fee);
-        
-        // flip price and tokens
-        if (saleToken > _projects[projectId].raiseToken) {
-            (poolKey.token0, poolKey.token1) = (poolKey.token1, poolKey.token0);
-            sqrtPriceX96 = uint160(2**192 / sqrtPriceX96);
-        }
-
-        address uniV3PoolAddress = _initUniV3PoolIfNecessary(poolKey, sqrtPriceX96);
-
-        address[] memory initializedPools = _initializedILOPools[projectId];
-        require(initializedPools.length > 0, "NP");
-        for (uint256 i = 0; i < initializedPools.length; i++) {
-            IILOPool(initializedPools[i]).launch(projectId, uniV3PoolAddress, poolKey);
-        }
-        IUniswapV3Pool(uniV3PoolAddress).increaseObservationCardinalityNext(10);
-        emit ProjectLaunch(projectId, uniV3PoolAddress, saleToken);
-    }
-    
-    /// @inheritdoc IILOManager
-    function initProjectFee() external override view returns (uint256) {
-        return _initProjectFee;
-    }
-    
-    /// @inheritdoc IILOManager
-    function setInitProjectFee(uint256 fee) external override onlyOwner() {
-        _initProjectFee = fee;
-    }
-
-    /// @inheritdoc IILOManager
-    function setFeesForProject(string calldata projectId, uint16 platformFee, uint16 performanceFee) external override onlyOwner() {
-        Project storage _project = _projects[projectId];
-        _project.platformFee = platformFee;
-        _project.performanceFee = performanceFee;
-        emit FeesForProjectSet(projectId, platformFee, performanceFee);
-    }
-
-    /// @inheritdoc IILOManager
-    function feesForProject(string calldata projectId) external override view returns (uint16, uint16) {
-        Project storage _project = _projects[projectId];
-        return (_project.platformFee, _project.performanceFee);
+        require(
+            sqrtPriceX96 <= TickMath.getSqrtRatioAtTick(tickUpper),
+            'RANGE'
+        );
     }
 }

@@ -6,7 +6,7 @@ endif
 DEPLOY_CMD = forge script script/Deploy.s.sol:$(CONTRACT)Script --rpc-url $(RPC_URL) --broadcast
 
 .PHONY: clean test
-all: clean deploy-all-contract verify-all-contract
+all: clean deploy-all-contracts verify-all-contracts
 test:
 	forge test --gas-report
 clean:
@@ -15,13 +15,16 @@ ilo-manager:
 	$(eval CONTRACT=ILOManager)
 ilo-pool:
 	$(eval CONTRACT=ILOPool)
+ilo-pool-sale:
+	$(eval CONTRACT=ILOPoolSale)
 token-factory:
 	$(eval CONTRACT=TokenFactory)
-all-contract:
-	$(eval CONTRACT=AllContract)
-deploy-all-contract:
+all-contracts:
+	$(eval CONTRACT=AllContracts)
+deploy-all-contracts:
 deploy-ilo-manager:
 deploy-ilo-pool:
+deploy-ilo-pool-sale:
 deploy-token-factory:
 deploy-token-factory-legacy:
 deploy-ilo-manager-legacy:
@@ -35,10 +38,11 @@ deploy-%-legacy: %
 deploy-%-with-gas-price: %
 	$(DEPLOY_CMD) --legacy --gas-price $(GAS_PRICE)
 
-verify-all-contract:
+verify--all-contracts:
 verify-ilo-manager:
 verify-token-factory:
 verify-ilo-pool:
+verify-ilo-pool-sale:
 verify-%: %
 	forge script script/Verify.s.sol:Verify$(CONTRACT)Script | awk 'END{print}' | bash
 init-ilo-manager:

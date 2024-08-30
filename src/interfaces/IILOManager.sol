@@ -1,85 +1,95 @@
-// SPDX-License-Identifier: BUSL-1.1 
+// SPDX-License-Identifier: BUSL-1.1
 pragma solidity >=0.7.5;
 pragma abicoder v2;
 
-import '../libraries/PoolAddress.sol';
-import './IILOVest.sol';
+import { IILOPoolSale, IILOPoolBase } from './IILOPoolSale.sol';
 
 interface IILOManager {
-
-    event ProjectCreated(string projectId, Project project);
-    event ILOPoolCreated(string projectId, address indexed iloPoolAddress, uint256 index);
-    event PoolImplementationChanged(address indexed oldPoolImplementation, address indexed newPoolImplementation);
-    event ProjectAdminChanged(string projectId, address oldAdmin, address newAdmin);
-    event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
-    event RefundDeadlineChanged(string projectId, uint64 oldRefundDeadline, uint64 newRefundDeadline);
-    event ProjectLaunch(string projectId, address uniswapV3Pool, address saleToken);
-    event FeesForProjectSet(string projectId, uint16 platformFee, uint16 performanceFee);
+    enum ProjectStatus {
+        INVALID,
+        INITIALIZED,
+        LAUNCHED,
+        CANCELLED
+    }
 
     struct Project {
         string projectId;
         address admin;
-        address raiseToken;
+        address pairToken;
         uint24 fee;
         uint160 initialPoolPriceX96;
-        uint64 launchTime;
-        uint64 refundDeadline;
-
         uint16 platformFee; // BPS 10000
         uint16 performanceFee; // BPS 10000
+        uint16 nonce;
+        ProjectStatus status;
     }
 
     struct InitProjectParams {
         string projectId;
         // the raise token
-        address raiseToken;
+        address pairToken;
         // this assume that sale token is token0 which means 1 sale = p * raise
         // initialPoolPriceX96 = sqrt(p) * 2^96
         uint160 initialPoolPriceX96;
         // uniswap v3 fee tier
         uint24 fee;
-        // time for lauch all liquidity. Only one launch time for all ilo pools
-        uint64 launchTime;
     }
+
+    event ProjectCreated(string projectId, Project project);
+    event ILOPoolCreated(string projectId, address indexed pool);
+    event PoolImplementationChanged(
+        address indexed oldPoolImplementation,
+        address indexed newPoolImplementation
+    );
+    event ProjectAdminChanged(
+        string projectId,
+        address oldAdmin,
+        address newAdmin
+    );
+    event ProjectLaunch(
+        string projectId,
+        address uniswapV3Pool,
+        address saleToken
+    );
+    event FeesForProjectSet(
+        string projectId,
+        uint16 platformFee,
+        uint16 performanceFee
+    );
+    event ProjectCancelled(string projectId);
+    event PoolCancelled(string projectId, address pool);
+    event SalePoolImplementationChanged(
+        address indexed oldSalePoolImplementation,
+        address indexed newSalePoolImplementation
+    );
+    event InitProjectFeeChanged(uint256 oldFee, uint256 newFee);
+    event FeeTakerChanged(address oldFeeTaker, address newFeeTaker);
+    event PlatformFeeChanged(uint16 oldFee, uint16 newFee);
+    event PerformanceFeeChanged(uint16 oldFee, uint16 newFee);
 
     /// @notice init project with details
     /// @param params the parameters to initialize the project
     function initProject(InitProjectParams calldata params) external payable;
 
-    struct InitPoolParams {
-        string projectId;
-        int24 tickLower; 
-        int24 tickUpper;
-        uint256 maxRaise; // total amount of raise tokens
-        uint256 minRaise; // minimum amount of raise token needed for launch pool
-        uint64 start;
-        uint64 end;
-
-        // config for vests and shares. 
-        // First element is allways for investor 
-        // and will mint nft when investor buy ilo
-        IILOVest.VestingConfig[] vestingConfigs;
-    }
     /// @notice this function init an `ILO Pool` which will be used for sale and vest. One project can init many ILO Pool
     /// @notice only project admin can use this function
     /// @param params the parameters for init project
-    function initILOPool(InitPoolParams calldata params) external returns(address iloPoolAddress);
+    function initILOPool(
+        IILOPoolBase.InitPoolParams calldata params
+    ) external returns (address iloPoolAddress);
 
-    function project(string memory projectId) external view returns (Project memory);
+    function initILOPoolSale(
+        IILOPoolSale.InitParams calldata params
+    ) external returns (address iloPoolSaleAddress);
 
     /// @notice set platform fee for decrease liquidity. Platform fee is imutable among all project's pools
     function setFeeTaker(address _feeTaker) external;
-
-    function UNIV3_FACTORY() external returns(address);
-    function PLATFORM_FEE() external returns(uint16);
-    function PERFORMANCE_FEE() external returns(uint16);
-    function FEE_TAKER() external returns(address);
-    function ILO_POOL_IMPLEMENTATION() external returns(address);
 
     function initialize(
         address initialOwner,
         address _feeTaker,
         address iloPoolImplementation,
+        address iloPoolSaleImplementation,
         address uniV3Factory,
         uint256 createProjectFee,
         uint16 platformFee,
@@ -92,20 +102,32 @@ interface IILOManager {
     /// @notice new ilo implementation for clone
     function setILOPoolImplementation(address iloPoolImplementation) external;
 
+    /// @notice new ilo sale implementation for clone
+    function setILOSalePoolImplementation(
+        address iloSalePoolImplementation
+    ) external;
+
     /// @notice transfer admin of project
-    function transferAdminProject(address admin, string calldata projectId) external;
+    function transferAdminProject(
+        address admin,
+        string calldata projectId
+    ) external;
 
-    /// @notice set time offset for refund if project not launch
-    function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external;
-    function setRefundDeadlineForProject(string calldata projectId, uint64 refundDeadline) external;
+    /// @notice cancel project
+    function cancelProject(string calldata projectId) external;
 
-    /// @notice get fee when init project
-    function initProjectFee() external view returns (uint256);
-    /// @notice set fee for init project
+    /// @notice cancel pool
+    function removePool(string calldata projectId, address pool) external;
+
     function setInitProjectFee(uint256 fee) external;
 
-    /// @notice get fees for a project
-    function feesForProject(string calldata projectId) external view returns(uint16 platformFee, uint16 performanceFee);
+    function setPlatformFee(uint16 fee) external;
+
+    function setPerformanceFee(uint16 fee) external;
+
+    /// @notice callback when pool sale fail
+    /// cancel all pool of project, same as cancel project
+    function onPoolSaleFail(string calldata projectId) external;
 
     /// @notice set fees for project
     function setFeesForProject(
@@ -114,12 +136,24 @@ interface IILOManager {
         uint16 performanceFee
     ) external;
 
-    function ILOPoolLaunchCallback(
+    function iloPoolLaunchCallback(
         string calldata projectId,
-        address poolImplementation,
-        uint256 poolIndex,
-        address saleToken,
-        uint256 amount,
+        address token0,
+        uint256 amount0,
+        address token1,
+        uint256 amount1,
         address uniswapV3Pool
     ) external;
+
+    function project(
+        string memory projectId
+    ) external view returns (Project memory);
+
+    function UNIV3_FACTORY() external view returns (address);
+    function PLATFORM_FEE() external view returns (uint16);
+    function PERFORMANCE_FEE() external view returns (uint16);
+    function FEE_TAKER() external view returns (address);
+    function ILO_POOL_IMPLEMENTATION() external view returns (address);
+    function ILO_POOL_SALE_IMPLEMENTATION() external view returns (address);
+    function INIT_PROJECT_FEE() external view returns (uint256);
 }
