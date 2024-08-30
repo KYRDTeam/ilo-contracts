@@ -24,3 +24,5 @@ node_modules
 
 .prettierrc.json
 .solhint.json
+
+lcov.info

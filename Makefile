@@ -26,11 +26,19 @@ deploy-ilo-manager:
 deploy-ilo-pool:
 deploy-ilo-pool-sale:
 deploy-token-factory:
-deploy-token-factory-legacy:
+
+deploy-all-contracts-legacy:
 deploy-ilo-manager-legacy:
 deploy-ilo-pool-legacy:
+deploy-ilo-pool-sale-legacy:
+deploy-token-factory-legacy:
+
+deploy-all-contracts-with-gas-price:
 deploy-ilo-manager-with-gas-price:
 deploy-ilo-pool-with-gas-price:
+deploy-ilo-pool-sale-with-gas-price:
+deploy-token-factory-with-gas-price:
+
 deploy-%: % 
 	$(DEPLOY_CMD)
 deploy-%-legacy: % 
@@ -38,7 +46,7 @@ deploy-%-legacy: %
 deploy-%-with-gas-price: %
 	$(DEPLOY_CMD) --legacy --gas-price $(GAS_PRICE)
 
-verify--all-contracts:
+verify-all-contracts:
 verify-ilo-manager:
 verify-token-factory:
 verify-ilo-pool:
