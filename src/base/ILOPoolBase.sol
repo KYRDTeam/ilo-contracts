@@ -2,22 +2,22 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import { IILOPoolBase } from '../interfaces/IILOPoolBase.sol';
-import { PositionKey } from '../libraries/PositionKey.sol';
-import { ILOVest } from './ILOVest.sol';
-import { LiquidityManagement } from './LiquidityManagement.sol';
-import { ILOPoolImmutableState } from './ILOPoolImmutableState.sol';
-import { Initializable } from './Initializable.sol';
-import { Multicall } from './Multicall.sol';
-import { PoolAddress } from '../libraries/PoolAddress.sol';
-import { IILOManager } from '../interfaces/IILOManager.sol';
-import { TransferHelper } from '../libraries/TransferHelper.sol';
-import { LiquidityAmounts } from '../libraries/LiquidityAmounts.sol';
-
+import { TransferHelper } from '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
+import { Multicall } from '@uniswap/v3-periphery/contracts/base/Multicall.sol';
+import { PositionKey } from '@uniswap/v3-periphery/contracts/libraries/PositionKey.sol';
+import { LiquidityAmounts } from '@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol';
+import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
 import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import { FixedPoint128 } from '@uniswap/v3-core/contracts/libraries/FixedPoint128.sol';
 import { FullMath } from '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 import { ERC721 } from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+
+import { IILOPoolBase } from '../interfaces/IILOPoolBase.sol';
+import { ILOVest } from './ILOVest.sol';
+import { LiquidityManagement } from './LiquidityManagement.sol';
+import { ILOPoolImmutableState } from './ILOPoolImmutableState.sol';
+import { Initializable } from './Initializable.sol';
+import { IILOManager } from '../interfaces/IILOManager.sol';
 
 /// @title NFT positions
 /// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface

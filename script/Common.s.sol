@@ -14,6 +14,10 @@ abstract contract CommonScript is Script {
     bytes32 salt;
     address factory = 0x4e59b44847b379578588920cA78FbF26c0B4956C;
 
+    constructor() {
+        salt = keccak256(bytes(vm.envString('SALT_SEED')));
+    }
+
     function toHexString(
         uint256 value,
         uint256 length
@@ -77,7 +81,6 @@ abstract contract CommonScript is Script {
             );
     }
 
-    constructor() {
-        salt = keccak256(bytes(vm.envString('SALT_SEED')));
-    }
+    // to ignore coverage
+    function test() public view {}
 }

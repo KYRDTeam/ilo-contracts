@@ -5,6 +5,9 @@ import { CommonScript } from './Common.s.sol';
 import { console } from 'forge-std/Script.sol';
 
 contract VerifyAllContractsScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external view {
         address iloManagerDeploymentAddress = getILOManagerDeploymentAddress();
         console.log(
@@ -42,6 +45,9 @@ contract VerifyAllContractsScript is CommonScript {
 }
 
 contract VerifyILOManagerScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external view {
         address deploymentAddress = getILOManagerDeploymentAddress();
         console.log('deployment address: ', deploymentAddress);
@@ -59,6 +65,9 @@ contract VerifyILOManagerScript is CommonScript {
 }
 
 contract VerifyILOPoolScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external view {
         address deploymentAddress = getILOPoolDeploymentAddress();
         console.log('deployment address: ', deploymentAddress);
@@ -76,6 +85,9 @@ contract VerifyILOPoolScript is CommonScript {
 }
 
 contract VerifyILOPoolSaleScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external view {
         address deploymentAddress = getILOPoolSaleDeploymentAddress();
         console.log('deployment address: ', deploymentAddress);
@@ -93,6 +105,9 @@ contract VerifyILOPoolSaleScript is CommonScript {
 }
 
 contract VerifyTokenFactoryScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external view {
         address deploymentAddress = getTokenFactoryDeploymentAddress();
         console.log('deployment address: ', deploymentAddress);

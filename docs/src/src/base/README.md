@@ -9,5 +9,4 @@
 - [ILOWhitelist](ILOWhitelist.sol/abstract.ILOWhitelist.md)
 - [Initializable](Initializable.sol/abstract.Initializable.md)
 - [LiquidityManagement](LiquidityManagement.sol/abstract.LiquidityManagement.md)
-- [Multicall](Multicall.sol/abstract.Multicall.md)
 - [UniswapV3Oracle](UniswapV3Oracle.sol/abstract.UniswapV3Oracle.md)

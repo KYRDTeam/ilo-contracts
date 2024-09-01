@@ -9,6 +9,9 @@ import { ILOPoolSale } from '../src/ILOPoolSale.sol';
 import { TokenFactory } from '../src/TokenFactory.sol';
 
 contract AllContractsScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         address uniV3Factory = vm.envAddress('UNIV3_FACTORY');
@@ -47,6 +50,9 @@ contract AllContractsScript is CommonScript {
 }
 
 contract ILOManagerScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         vm.startBroadcast(deployerPrivateKey);
@@ -58,6 +64,9 @@ contract ILOManagerScript is CommonScript {
 }
 
 contract ILOPoolScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         vm.startBroadcast(deployerPrivateKey);
@@ -69,6 +78,9 @@ contract ILOPoolScript is CommonScript {
 }
 
 contract ILOPoolSaleScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         vm.startBroadcast(deployerPrivateKey);
@@ -80,6 +92,9 @@ contract ILOPoolSaleScript is CommonScript {
 }
 
 contract TokenFactoryScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         vm.startBroadcast(deployerPrivateKey);

@@ -8,16 +8,16 @@ import { stdStorage, StdStorage } from 'forge-std/StdStorage.sol';
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 import { SqrtPriceMath } from '@uniswap/v3-core/contracts/libraries/SqrtPriceMath.sol';
+import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
+import { LiquidityAmounts } from '@uniswap/v3-periphery/contracts/libraries/LiquidityAmounts.sol';
 
 import { ILOManager, IILOManager } from '../src/ILOManager.sol';
 import { ILOPool, IILOPool } from '../src/ILOPool.sol';
 import { ILOPoolSale, IILOPoolSale } from '../src/ILOPoolSale.sol';
 import { Mock } from './Mock.t.sol';
-import { PoolAddress } from '../src/libraries/PoolAddress.sol';
 import { IILOPoolBase } from '../src/interfaces/IILOPoolBase.sol';
 import { IILOPoolSale } from '../src/interfaces/IILOPoolSale.sol';
 import { TokenFactory, ITokenFactory } from '../src/TokenFactory.sol';
-import { LiquidityAmounts } from '../src/libraries/LiquidityAmounts.sol';
 
 abstract contract IntegrationTestBase is Mock, Test {
     using stdStorage for StdStorage;

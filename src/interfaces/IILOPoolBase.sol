@@ -4,9 +4,9 @@ pragma abicoder v2;
 
 import { IERC721Metadata } from '@openzeppelin/contracts/token/ERC721/IERC721Metadata.sol';
 import { IERC721Enumerable } from '@openzeppelin/contracts/token/ERC721/IERC721Enumerable.sol';
+import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
 
 import { IILOVest } from './IILOVest.sol';
-import { PoolAddress } from '../libraries/PoolAddress.sol';
 import { IILOPoolImmutableState } from './IILOPoolImmutableState.sol';
 
 /// @title Non-fungible token for positions
