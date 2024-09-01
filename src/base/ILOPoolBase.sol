@@ -86,6 +86,12 @@ abstract contract ILOPoolBase is
         _burn(tokenId);
     }
 
+    function positions(
+        uint256 tokenId
+    ) external view override returns (Position memory) {
+        return _positions[tokenId];
+    }
+
     function _claim(
         uint256 tokenId
     )

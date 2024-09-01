@@ -7,10 +7,11 @@ import { Test } from 'forge-std/Test.sol';
 import { stdStorage, StdStorage } from 'forge-std/StdStorage.sol';
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
+import { SqrtPriceMath } from '@uniswap/v3-core/contracts/libraries/SqrtPriceMath.sol';
 
 import { ILOManager, IILOManager } from '../src/ILOManager.sol';
-import { ILOPool } from '../src/ILOPool.sol';
-import { ILOPoolSale } from '../src/ILOPoolSale.sol';
+import { ILOPool, IILOPool } from '../src/ILOPool.sol';
+import { ILOPoolSale, IILOPoolSale } from '../src/ILOPoolSale.sol';
 import { Mock } from './Mock.t.sol';
 import { PoolAddress } from '../src/libraries/PoolAddress.sol';
 import { IILOPoolBase } from '../src/interfaces/IILOPoolBase.sol';
@@ -42,10 +43,7 @@ abstract contract IntegrationTestBase is Mock, Test {
     TokenFactory public tokenFactory;
 
     function _setupBase() internal {
-        uint256 mainnetFork = vm.createFork(
-            'https://rpc.ankr.com/eth',
-            20024256
-        );
+        uint256 mainnetFork = vm.createFork('https://rpc.ankr.com/eth');
         vm.selectFork(mainnetFork);
 
         vm.startBroadcast(MANAGER_OWNER);
@@ -74,23 +72,10 @@ abstract contract IntegrationTestBase is Mock, Test {
             ITokenFactory.CreateStandardERC20TokenParams({
                 name: 'Test Token',
                 symbol: 'TTT',
-                totalSupply: 100000000 * 10 ** 18 // 100M
+                totalSupply: 100_000_000 ether // 100M
             })
         );
         vm.stopBroadcast();
-        // poolKey = PoolAddress.getPoolKey(USDC, TOKEN, 500);
-        // UNIV3_POOL_ADDRESS = PoolAddress.computeAddress(UNIV3_FACTORY, poolKey);
-
-        // hoax(PROJECT_OWNER);
-        // iloManager.initProject{ value: 1 ether }(
-        //     IILOManager.InitProjectParams({
-        //         projectId: PROJECT_ID,
-        //         raiseToken: mockProject().raiseToken,
-        //         fee: mockProject().fee,
-        //         initialPoolPriceX96: mockProject().initialPoolPriceX96,
-        //         launchTime: mockProject().launchTime
-        //     })
-        // );
     }
 
     function _initProject(address initializer) internal {
@@ -121,6 +106,16 @@ abstract contract IntegrationTestBase is Mock, Test {
         iloPoolSaleAddress = iloManager.initILOPoolSale(params);
     }
 
+    function _prepareLaunch() internal {
+        _initProject(PROJECT_OWNER);
+        _writeTokenBalance(USDC, PROJECT_OWNER, 1_000_000_000 ether); // 1B USDC
+
+        vm.startPrank(PROJECT_OWNER);
+        IERC20(USDC).approve(address(iloManager), 1_000_000_000 ether);
+        IERC20(TOKEN).approve(address(iloManager), 1_000_000_000 ether);
+        vm.stopPrank();
+    }
+
     function _writeTokenBalance(
         address token,
         address who,
@@ -142,7 +137,7 @@ abstract contract IntegrationTestBase is Mock, Test {
             IILOPoolBase.InitPoolParams({
                 baseParams: IILOPoolBase.InitPoolBaseParams({
                     projectId: PROJECT_ID,
-                    tokenAmount: 100000000 * 10 ** 18,
+                    tokenAmount: 10_000_000 ether,
                     tickLower: MIN_TICK_10000,
                     tickUpper: -MIN_TICK_10000
                 }),
@@ -159,32 +154,31 @@ abstract contract IntegrationTestBase is Mock, Test {
             IILOPoolSale.InitParams({
                 baseParams: IILOPoolBase.InitPoolBaseParams({
                     projectId: PROJECT_ID,
-                    tokenAmount: 10000000 * 10 ** 18, // 10M
+                    tokenAmount: 10_000_000 ether, // 10M
                     tickLower: -10000,
                     tickUpper: -MIN_TICK_10000
                 }),
                 saleParams: IILOPoolSale.SaleParams({
                     start: SALE_START,
                     end: SALE_END, // Tue Jun 04 2024 17:00:00 GMT+0000
-                    minRaise: 100000 * 10 ** 18, // 0.1M
-                    maxRaise: 10000000 * 10 ** 18 // 10M
+                    minRaise: 100_000 ether, // 0.1M
+                    maxRaise: 10_000_000 ether // 10M
                 }),
                 vestingSchedule: _getLinearVesting()
             });
     }
 
-    // function _getPairTokenAmount()
-
-    function _getLiquidity(
+    function _getLiquidityAndPairTokenAmount(
         address token,
         address pairToken,
         uint256 tokenAmount,
         uint160 sqrtPriceX96,
         int24 tickLower,
         int24 tickUpper
-    ) internal pure returns (uint128) {
+    ) internal pure returns (uint128 liquidity, uint256 pairTokenAmount) {
         (uint256 amount0, uint256 amount1) = (tokenAmount, type(uint96).max);
-        if (token < pairToken) {
+        bool isFlip01 = token < pairToken;
+        if (isFlip01) {
             (amount0, amount1) = (amount1, amount0);
             (tickLower, tickUpper) = (-tickUpper, -tickLower);
             sqrtPriceX96 = uint160(2 ** 192 / sqrtPriceX96);
@@ -192,13 +186,45 @@ abstract contract IntegrationTestBase is Mock, Test {
         uint160 sqrtPriceX96Lower = TickMath.getSqrtRatioAtTick(tickLower);
         uint160 sqrtPriceX96Upper = TickMath.getSqrtRatioAtTick(tickUpper);
 
-        return
-            LiquidityAmounts.getLiquidityForAmounts(
-                sqrtPriceX96,
+        liquidity = LiquidityAmounts.getLiquidityForAmounts(
+            sqrtPriceX96,
+            sqrtPriceX96Lower,
+            sqrtPriceX96Upper,
+            amount0,
+            amount1
+        );
+
+        if (sqrtPriceX96 <= sqrtPriceX96Lower) {
+            amount0 = SqrtPriceMath.getAmount0Delta(
                 sqrtPriceX96Lower,
                 sqrtPriceX96Upper,
-                amount0,
-                amount1
+                liquidity,
+                true
             );
+            amount1 = 0;
+        } else if (sqrtPriceX96 < sqrtPriceX96Upper) {
+            amount0 = SqrtPriceMath.getAmount0Delta(
+                sqrtPriceX96,
+                sqrtPriceX96Upper,
+                liquidity,
+                true
+            );
+            amount1 = SqrtPriceMath.getAmount1Delta(
+                sqrtPriceX96Lower,
+                sqrtPriceX96,
+                liquidity,
+                true
+            );
+        } else {
+            amount0 = 0;
+            amount1 = SqrtPriceMath.getAmount1Delta(
+                sqrtPriceX96Lower,
+                sqrtPriceX96Upper,
+                liquidity,
+                true
+            );
+        }
+
+        pairTokenAmount = isFlip01 ? amount0 : amount1;
     }
 }

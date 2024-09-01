@@ -81,8 +81,8 @@ contract ILOManagerTest is IntegrationTestBase {
         IILOPoolSale poolSale = IILOPoolSale(iloPoolSale);
         assertEq(uint256(poolSale.SALE_START()), uint256(SALE_START));
         assertEq(uint256(poolSale.SALE_END()), uint256(SALE_END));
-        assertEq(uint256(poolSale.MIN_RAISE()), uint256(100000 * 10 ** 18));
-        assertEq(uint256(poolSale.MAX_RAISE()), uint256(10000000 * 10 ** 18));
+        assertEq(uint256(poolSale.MIN_RAISE()), uint256(100000 ether));
+        assertEq(uint256(poolSale.MAX_RAISE()), uint256(10000000 ether));
         assertEq(int256(poolSale.TICK_LOWER()), int256(-10000));
         assertEq(int256(poolSale.TICK_UPPER()), int256(-MIN_TICK_10000));
     }
@@ -121,6 +121,39 @@ contract ILOManagerTest is IntegrationTestBase {
         vm.prank(PROJECT_OWNER);
         vm.expectRevert(bytes('NP'));
         iloManager.removePool(PROJECT_ID, pool1);
+    }
+
+    function testRemovePoolSale() external {
+        _initProject(PROJECT_OWNER);
+        address poolSale1 = _initPoolSale(
+            PROJECT_OWNER,
+            _getInitPoolSaleParams()
+        );
+        address poolSale2 = _initPoolSale(
+            PROJECT_OWNER,
+            _getInitPoolSaleParams()
+        );
+        vm.prank(PROJECT_OWNER);
+        vm.warp(SALE_START - 1);
+        iloManager.removePool(PROJECT_ID, poolSale1);
+        assertEq(IILOPoolSale(poolSale1).CANCELLED(), true);
+    }
+
+    function testRemovePoolSaleAfterSaleStart() external {
+        _initProject(PROJECT_OWNER);
+        address poolSale1 = _initPoolSale(
+            PROJECT_OWNER,
+            _getInitPoolSaleParams()
+        );
+        address poolSale2 = _initPoolSale(
+            PROJECT_OWNER,
+            _getInitPoolSaleParams()
+        );
+        vm.prank(PROJECT_OWNER);
+        vm.warp(SALE_START + 1);
+        vm.expectRevert(bytes('SLT'));
+        iloManager.removePool(PROJECT_ID, poolSale1);
+        assertEq(IILOPoolSale(poolSale1).CANCELLED(), false);
     }
 
     function testTransferProject() external {
@@ -225,21 +258,17 @@ contract ILOManagerTest is IntegrationTestBase {
     }
 
     function testLaunchSinglePool() external {
-        _initProject(PROJECT_OWNER);
+        _prepareLaunch();
+
         IILOPoolBase.InitPoolParams memory params = _getInitPoolParams();
         address pool = _initPool(PROJECT_OWNER, params);
         IILOPool iloPool = IILOPool(pool);
 
-        _writeTokenBalance(USDC, PROJECT_OWNER, 10 ** 27); // 1B USDC
-
         uint256 tokenBalanceBefore = IERC20(TOKEN).balanceOf(PROJECT_OWNER);
         uint256 pairTokenBalanceBefore = IERC20(USDC).balanceOf(PROJECT_OWNER);
 
-        vm.startPrank(PROJECT_OWNER);
-        IERC20(USDC).approve(address(iloManager), 10 ** 27);
-        IERC20(TOKEN).approve(address(iloManager), 10 ** 27);
+        vm.prank(PROJECT_OWNER);
         iloManager.launch(PROJECT_ID, TOKEN);
-        vm.stopPrank();
 
         uint256 tokenBalanceAfter = IERC20(TOKEN).balanceOf(PROJECT_OWNER);
         uint256 pairTokenBalanceAfter = IERC20(USDC).balanceOf(PROJECT_OWNER);
@@ -250,10 +279,21 @@ contract ILOManagerTest is IntegrationTestBase {
         );
 
         IILOManager.Project memory _project = iloManager.project(PROJECT_ID);
+        (
+            uint128 liquidity,
+            uint256 pairTokenAmount
+        ) = _getLiquidityAndPairTokenAmount(
+                TOKEN,
+                USDC,
+                params.baseParams.tokenAmount,
+                _project.initialPoolPriceX96,
+                params.baseParams.tickLower,
+                params.baseParams.tickUpper
+            );
 
         assertEq(
             pairTokenBalanceBefore - pairTokenBalanceAfter,
-            params.baseParams.tokenAmount
+            pairTokenAmount
         );
     }
 }

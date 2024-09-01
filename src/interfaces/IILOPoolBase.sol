@@ -116,4 +116,5 @@ interface IILOPoolBase is
     function cancel() external;
 
     function CANCELLED() external view returns (bool);
+    function positions(uint256 tokenId) external view returns (Position memory);
 }

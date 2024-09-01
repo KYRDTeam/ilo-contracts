@@ -22,7 +22,7 @@ contract Mock {
     address public constant INVESTOR =
         0x976EA74026E726554dB657fA54763abd0C3a0aa9; // anvil#7
     address public constant INVESTOR_2 =
-        0x976eA74026E726554Db657fA54763abd0C3a0Aa8; // anvil#7
+        0x976eA74026E726554Db657fA54763abd0C3a0Aa8; // anvil#8
 
     address public USDC = 0xA0b86991c6218b36c1d19D4a2e9Eb0cE3606eB48; // token0
     address public TOKEN; // token1
