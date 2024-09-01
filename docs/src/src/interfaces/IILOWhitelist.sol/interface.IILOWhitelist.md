@@ -1,43 +1,8 @@
 # IILOWhitelist
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/interfaces/IILOWhitelist.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/ae631fe4bfbce302e21cc5e317f651168c939703/src/interfaces/IILOWhitelist.sol)
 
 
 ## Functions
-### setOpenToAll
-
-
-```solidity
-function setOpenToAll(bool openToAll) external;
-```
-
-### isOpenToAll
-
-
-```solidity
-function isOpenToAll() external returns (bool);
-```
-
-### isWhitelisted
-
-
-```solidity
-function isWhitelisted(address user) external returns (bool);
-```
-
-### batchWhitelist
-
-
-```solidity
-function batchWhitelist(address[] calldata users) external;
-```
-
-### batchRemoveWhitelist
-
-
-```solidity
-function batchRemoveWhitelist(address[] calldata users) external;
-```
-
 ### onlyProjectAdmin
 
 
@@ -45,16 +10,44 @@ function batchRemoveWhitelist(address[] calldata users) external;
 modifier onlyProjectAdmin() virtual;
 ```
 
+### setPublicAllocation
+
+
+```solidity
+function setPublicAllocation(uint256 _allocation) external;
+```
+
+### setWhiteList
+
+
+```solidity
+function setWhiteList(address[] calldata users, uint256[] calldata allocations) external;
+```
+
+### allocation
+
+
+```solidity
+function allocation(address user) external view returns (uint256);
+```
+
+### whitelistedCount
+
+
+```solidity
+function whitelistedCount() external view returns (uint256);
+```
+
 ## Events
 ### SetWhitelist
 
 ```solidity
-event SetWhitelist(address indexed user, bool isWhitelist);
+event SetWhitelist(address indexed user, uint256 allocation);
 ```
 
-### SetOpenToAll
+### SetPublicAllocation
 
 ```solidity
-event SetOpenToAll(bool openToAll);
+event SetPublicAllocation(uint256 allocation);
 ```
 

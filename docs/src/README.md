@@ -1,118 +1,72 @@
 # Overview:
 https://docs.liquidpad.io/
 
+# Deployment Address
+
+| | Arbitrum | Base | Ethereum |
+|--- |--- |--- |--- |
+| ILOManager | [0x72839Bd277787E1273A447d7042e40beC33F48f2](https://arbiscan.io/address/0x72839Bd277787E1273A447d7042e40beC33F48f2) | [0x72839Bd277787E1273A447d7042e40beC33F48f2](https://basescan.org/address/0x72839Bd277787E1273A447d7042e40beC33F48f2) | [0x72839Bd277787E1273A447d7042e40beC33F48f2](https://etherscan.io/address/0x72839Bd277787E1273A447d7042e40beC33F48f2) |
+| ILOPool Implementation | [0xc493aD3604a3b4345413F01c3852D116892ee8B3](https://arbiscan.io/address/0xc493aD3604a3b4345413F01c3852D116892ee8B3) | [0xc493aD3604a3b4345413F01c3852D116892ee8B3](https://basescan.org/address/0xc493aD3604a3b4345413F01c3852D116892ee8B3) | [0xc493aD3604a3b4345413F01c3852D116892ee8B3](https://etherscan.io/address/0xc493aD3604a3b4345413F01c3852D116892ee8B3) |
+| ILOPool Sale Implementation | [0x72839Bd277787E1273A447d7042e40beC33F48f2](https://arbiscan.io/address/0x72839Bd277787E1273A447d7042e40beC33F48f2) | [0x72839Bd277787E1273A447d7042e40beC33F48f2](https://basescan.org/address/0x72839Bd277787E1273A447d7042e40beC33F48f2) | [0x72839Bd277787E1273A447d7042e40beC33F48f2](https://etherscan.io/address/0x72839Bd277787E1273A447d7042e40beC33F48f2) |
+| Token Factory | [0x580D693ec4d0131b200CD112D0706D1149a16EA0](https://arbiscan.io/address/0x580D693ec4d0131b200CD112D0706D1149a16EA0) | [0x580D693ec4d0131b200CD112D0706D1149a16EA0](https://basescan.org/address/0x580D693ec4d0131b200CD112D0706D1149a16EA0) | [0x580D693ec4d0131b200CD112D0706D1149a16EA0](https://etherscan.io/address/0x580D693ec4d0131b200CD112D0706D1149a16EA0) |
+| ILOManager(Dev env) | - | [0x4E89E144ac87a51796c03C79FB1B2acFA25117c6](https://basescan.org/address/0x4E89E144ac87a51796c03C79FB1B2acFA25117c6) | - |
+
+# Build and deploy:
+
+TL;DR: `make all`. this command require all env below. (see `sample.env` file)
+
+env can store in `.env` file or export before run command.
+
+## Build:
+```bash
+    forge build
+```
+## Test:
+```bash
+    make test
+```
+
+## Deploy:
+
+TL;DR: `make deploy-all-contract` . This command require all env below
+
+All deploy script require `SALT_SEED`, `PRIVATE_KEY`, `RPC_URL`, `CHAIN_ID` env
+
+- Deploy ilo-manager: 
+```bash
+make deploy-ilo-manager
+```
+
+Initialize ilo-manager:
+require env: `FEE_TAKER`, `OWNER`, `PLATFORM_FEE`, `PERFORMANCE_FEE`, `UNIV3_FACTORY`, `WETH9`
+```bash
+make init-ilo-manager
+```
+
+- Deploy ilo-pool: 
+```bash
+make deploy-ilo-pool
+```
+
+## Verify contract:
+
+TL;DR: `make verify-all-contract` . This command require all env below
+
+All verify script require `SALT_SEED`, `ETHERSCAN_API_KEY`, `VERIFIER_URL`, `CHAIN_ID` env.
+
+- Verify ilo-manager contract:
+```bash
+make verify-ilo-manager
+```
+- Verify ilo-pool contract:
+```bash
+make verify-ilo-pool
+```
+
+
+
 # Detail contract docs([See here](docs/src/SUMMARY.md)):
 
 # Contract Integration
 
 ## For project owner:
-
-[Init project](docs/src/src/ILOManager.sol/contract.ILOManager.md#initProject):
-```solidity
-struct LinearVest {
-    uint16 percentage; // vesting percentage in total liquidity (in BPS)
-    uint64 start;
-    uint64 end;
-}
-
-struct ProjectVestConfig {
-    uint16 shares; // BPS shares
-    string name;
-    address recipient;
-    LinearVest[] vestSchedule;
-}
-
-struct InitProjectParams {
-    // the sale token
-    address saleToken;
-    // the raise token
-    address raiseToken;
-    // uniswap v3 fee tier
-    uint24 fee;
-    // uniswap sqrtPriceX96 for initialize pool
-    uint160 initialPoolPriceX96;
-    // time for lauch all liquidity. Only one launch time for all ilo pools
-    uint64 launchTime;
-    // number of liquidity shares after investor invest into ilo pool interm of BPS = 10000
-    uint16 investorShares;  // BPS shares
-    // config for all other shares and vest
-    ProjectVestConfig[] projectVestConfigs;
-}
-
-/// @notice init project with details
-/// @param params the parameters to initialize the project
-/// @return uniV3PoolAddress address of uniswap v3 pool. We use this address as project id
-function initProject(InitProjectParams calldata params) external returns(address uniV3PoolAddress);
-```
-
-[Init ILO Pool](docs/src/src/ILOManager.sol/contract.ILOManager.md#initILOPool):
-```solidity
-struct LinearVest {
-    uint16 percentage; // vesting percentage in total liquidity (in BPS)
-    uint64 start;
-    uint64 end;
-}
-
-struct InitPoolParams {
-    address uniV3Pool;
-    int24 tickLower; int24 tickUpper;
-    uint256 hardCap; // total amount of raise tokens
-    uint256 softCap; // minimum amount of raise token needed for launch pool
-    uint256 maxCapPerUser; // TODO: user tiers
-    uint64 start;
-    uint64 end;
-    LinearVest[] investorVestConfigs;
-}
-
-function initILOPool(InitPoolParams calldata params) external override onlyProjectAdmin(params.uniV3Pool) returns (address iloPoolAddress);
-```
-
-## For investors:
-[Buy ILO](docs/src/src/ILOPool.sol/contract.ILOPool.md#buy)
-```solidity
-function buy(uint256 raiseAmount, address recipient)
-    external override 
-    duringSale()
-    onlyWhitelisted(params.recipient)
-    returns (
-        uint256 tokenId,
-        uint128 liquidityDelta,
-        uint256 amountAdded0,
-        uint256 amountAdded1
-    );
-```
-
-[Claim vesting ILO](docs/src/src/ILOPool.sol/contract.ILOPool.md#claim)
-```solidity
-function claim(uint256 tokenId) external payable returns (uint256 amount0, uint256 amount1);
-```
-
-## For everybody:
-[Launch All Liquidity](docs/src/src/ILOManager.sol/contract.ILOManager.md#launch):
-```solidity
-function launch(address uniV3PoolAddress);
-```
-
-# ERROR:
-|  Code	|   Description	           |
-|---	|---	                   |
-|   UA	| Unauthorized             |
-|   NI	| Not initialized          |
-|   RE	| Re-initialize            |
-|   PT	| Invalid Pool Time        |
-|   VT	| Invalid Vest Time        |
-|   LT	| Invalid Launch Time      |
-|   ST	| Invalid Sale Time        |
-|  RFT	| Invalid Refund Time      |
-|   TS	| Invalid Total Shares     |
-|   VS	| Invalid Vest Shares      |
-|   NP	| No Pools                 |
-|  UV3P	| Invalid Uni V3 Pool      |
-|   HC	| Over Hard Cap            |
-|   UC	| Over User Cap            |
-|   SC	| Soft cap not met         |
-|   SA	| Over Sale Amount         |
-|   ZA	| Zero Buy Amount          |
-|  PNL	| Pool Not Launched        |
-|   PL	| Pool Launched            |
-|  IRF	| Pool In Refund state     |

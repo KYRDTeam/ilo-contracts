@@ -1,5 +1,5 @@
 # ILOPoolImmutableState
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/base/ILOPoolImmutableState.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/ae631fe4bfbce302e21cc5e317f651168c939703/src/base/ILOPoolImmutableState.sol)
 
 **Inherits:**
 [IILOPoolImmutableState](/src/interfaces/IILOPoolImmutableState.sol/interface.IILOPoolImmutableState.md)
@@ -8,17 +8,10 @@ Immutable state used by periphery contracts
 
 
 ## State Variables
-### WETH9
+### PROJECT_ID
 
 ```solidity
-address public override WETH9;
-```
-
-
-### BPS
-
-```solidity
-uint16 constant BPS = 10000;
+string public override PROJECT_ID;
 ```
 
 
@@ -29,17 +22,10 @@ address public override MANAGER;
 ```
 
 
-### RAISE_TOKEN
+### PAIR_TOKEN
 
 ```solidity
-address public override RAISE_TOKEN;
-```
-
-
-### SALE_TOKEN
-
-```solidity
-address public override SALE_TOKEN;
+address public override PAIR_TOKEN;
 ```
 
 
@@ -57,24 +43,24 @@ int24 public override TICK_UPPER;
 ```
 
 
-### SQRT_RATIO_X96
+### IMPLEMENTATION
 
 ```solidity
-uint160 public override SQRT_RATIO_X96;
+address public override IMPLEMENTATION;
 ```
 
 
-### SQRT_RATIO_LOWER_X96
+### PROJECT_NONCE
 
 ```solidity
-uint160 internal SQRT_RATIO_LOWER_X96;
+uint256 public override PROJECT_NONCE;
 ```
 
 
-### SQRT_RATIO_UPPER_X96
+### _cachedUniV3PoolAddress
 
 ```solidity
-uint160 internal SQRT_RATIO_UPPER_X96;
+address internal _cachedUniV3PoolAddress;
 ```
 
 
@@ -85,10 +71,43 @@ PoolAddress.PoolKey internal _cachedPoolKey;
 ```
 
 
-### _cachedUniV3PoolAddress
+## Functions
+### _initializeImmutableState
+
 
 ```solidity
-address internal _cachedUniV3PoolAddress;
+function _initializeImmutableState(string memory projectId, address manager, int24 tickLower, int24 tickUpper)
+    internal;
 ```
 
+### _initImplementation
+
+this function to be implemented in the ilo pool and ilo pool sale
+each contract will have its own implementation
+
+
+```solidity
+function _initImplementation() internal virtual;
+```
+
+### _flipTicks
+
+
+```solidity
+function _flipTicks() internal;
+```
+
+### _sqrtRatioLowerX96
+
+
+```solidity
+function _sqrtRatioLowerX96() internal view returns (uint160 sqrtRatioLowerX96);
+```
+
+### _sqrtRatioUpperX96
+
+
+```solidity
+function _sqrtRatioUpperX96() internal view returns (uint160 sqrtRatioUpperX96);
+```
 

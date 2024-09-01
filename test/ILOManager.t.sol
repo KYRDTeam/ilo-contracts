@@ -295,5 +295,9 @@ contract ILOManagerTest is IntegrationTestBase {
             pairTokenBalanceBefore - pairTokenBalanceAfter,
             pairTokenAmount
         );
+
+        assertEq(iloPool.balanceOf(TREASURY_RECIPIENT), 1);
+        assertEq(iloPool.balanceOf(DEV_RECIPIENT), 1);
+        assertEq(iloPool.balanceOf(LIQUIDITY_RECIPIENT), 1);
     }
 }

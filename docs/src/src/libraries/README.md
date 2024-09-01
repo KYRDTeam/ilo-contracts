@@ -3,6 +3,7 @@
 # Contents
 - [ChainId](ChainId.sol/library.ChainId.md)
 - [LiquidityAmounts](LiquidityAmounts.sol/library.LiquidityAmounts.md)
+- [OracleLibrary](OracleLibrary.sol/library.OracleLibrary.md)
 - [PoolAddress](PoolAddress.sol/library.PoolAddress.md)
 - [PositionKey](PositionKey.sol/library.PositionKey.md)
 - [SqrtPriceMathPartial](SqrtPriceMathPartial.sol/library.SqrtPriceMathPartial.md)

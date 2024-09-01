@@ -1,23 +1,10 @@
 # IILOPoolImmutableState
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/interfaces/IILOPoolImmutableState.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/ae631fe4bfbce302e21cc5e317f651168c939703/src/interfaces/IILOPoolImmutableState.sol)
 
 Functions that return immutable state of the router
 
 
 ## Functions
-### WETH9
-
-
-```solidity
-function WETH9() external view returns (address);
-```
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`<none>`|`address`|Returns the address of WETH9|
-
-
 ### MANAGER
 
 
@@ -25,18 +12,11 @@ function WETH9() external view returns (address);
 function MANAGER() external view returns (address);
 ```
 
-### RAISE_TOKEN
+### PAIR_TOKEN
 
 
 ```solidity
-function RAISE_TOKEN() external view returns (address);
-```
-
-### SALE_TOKEN
-
-
-```solidity
-function SALE_TOKEN() external view returns (address);
+function PAIR_TOKEN() external view returns (address);
 ```
 
 ### TICK_LOWER
@@ -53,10 +33,24 @@ function TICK_LOWER() external view returns (int24);
 function TICK_UPPER() external view returns (int24);
 ```
 
-### SQRT_RATIO_X96
+### PROJECT_ID
 
 
 ```solidity
-function SQRT_RATIO_X96() external view returns (uint160);
+function PROJECT_ID() external view returns (string memory);
+```
+
+### IMPLEMENTATION
+
+
+```solidity
+function IMPLEMENTATION() external view returns (address);
+```
+
+### PROJECT_NONCE
+
+
+```solidity
+function PROJECT_NONCE() external view returns (uint256);
 ```
 

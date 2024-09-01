@@ -43,7 +43,9 @@ abstract contract IntegrationTestBase is Mock, Test {
     TokenFactory public tokenFactory;
 
     function _setupBase() internal {
-        uint256 mainnetFork = vm.createFork('https://rpc.ankr.com/eth');
+        uint256 mainnetFork = vm.createFork(
+            'https://ethereum-rpc.publicnode.com'
+        );
         vm.selectFork(mainnetFork);
 
         vm.startBroadcast(MANAGER_OWNER);

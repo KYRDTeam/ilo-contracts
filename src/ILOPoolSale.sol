@@ -137,7 +137,7 @@ contract ILOPoolSale is
         afterSale
     {
         if (TOTAL_RAISED < MIN_RAISE) {
-            revert('MR');
+            revert('MIN_RAISE');
         }
 
         // transfer all raised fund to project admin

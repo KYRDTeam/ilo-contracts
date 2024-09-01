@@ -66,15 +66,7 @@ abstract contract ILOPoolBase is
     }
 
     modifier whenNotCancelled() {
-        if (CANCELLED) {
-            revert('CANCELLED');
-        }
-        IILOManager.Project memory _project = IILOManager(MANAGER).project(
-            PROJECT_ID
-        );
-        if (_project.status == IILOManager.ProjectStatus.CANCELLED) {
-            revert('CANCELLED');
-        }
+        require(!CANCELLED, 'CANCELLED');
         _;
     }
 
@@ -90,6 +82,15 @@ abstract contract ILOPoolBase is
         uint256 tokenId
     ) external view override returns (Position memory) {
         return _positions[tokenId];
+    }
+
+    function totalInititalLiquidity()
+        external
+        view
+        override
+        returns (uint128 liquidity)
+    {
+        return _totalInitialLiquidity;
     }
 
     function _claim(
