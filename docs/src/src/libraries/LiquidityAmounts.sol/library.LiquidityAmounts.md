@@ -1,5 +1,5 @@
 # LiquidityAmounts
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/libraries/LiquidityAmounts.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/ae631fe4bfbce302e21cc5e317f651168c939703/src/libraries/LiquidityAmounts.sol)
 
 Provides functions for computing liquidity amounts from token amounts and prices
 
@@ -82,6 +82,38 @@ function getLiquidityForAmount1(uint160 sqrtRatioAX96, uint160 sqrtRatioBX96, ui
 |`liquidity`|`uint128`|The amount of returned liquidity|
 
 
+### getLiquidityForAmounts
+
+Computes the maximum amount of liquidity received for a given amount of token0, token1, the current
+pool prices and the prices at the tick boundaries
+
+
+```solidity
+function getLiquidityForAmounts(
+    uint160 sqrtRatioX96,
+    uint160 sqrtRatioAX96,
+    uint160 sqrtRatioBX96,
+    uint256 amount0,
+    uint256 amount1
+) internal pure returns (uint128 liquidity);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`sqrtRatioX96`|`uint160`|A sqrt price representing the current pool prices|
+|`sqrtRatioAX96`|`uint160`|A sqrt price representing the first tick boundary|
+|`sqrtRatioBX96`|`uint160`|A sqrt price representing the second tick boundary|
+|`amount0`|`uint256`|The amount of token0 being sent in|
+|`amount1`|`uint256`|The amount of token1 being sent in|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`liquidity`|`uint128`|The maximum amount of liquidity received|
+
+
 ### getAmount0ForLiquidity
 
 Computes the amount of token0 for a given amount of liquidity and a price range
@@ -131,6 +163,35 @@ function getAmount1ForLiquidity(uint160 sqrtRatioAX96, uint160 sqrtRatioBX96, ui
 
 |Name|Type|Description|
 |----|----|-----------|
+|`amount1`|`uint256`|The amount of token1|
+
+
+### getAmountsForLiquidity
+
+Computes the token0 and token1 value for a given amount of liquidity, the current
+pool prices and the prices at the tick boundaries
+
+
+```solidity
+function getAmountsForLiquidity(uint160 sqrtRatioX96, uint160 sqrtRatioAX96, uint160 sqrtRatioBX96, uint128 liquidity)
+    internal
+    pure
+    returns (uint256 amount0, uint256 amount1);
+```
+**Parameters**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`sqrtRatioX96`|`uint160`|A sqrt price representing the current pool prices|
+|`sqrtRatioAX96`|`uint160`|A sqrt price representing the first tick boundary|
+|`sqrtRatioBX96`|`uint160`|A sqrt price representing the second tick boundary|
+|`liquidity`|`uint128`|The liquidity being valued|
+
+**Returns**
+
+|Name|Type|Description|
+|----|----|-----------|
+|`amount0`|`uint256`|The amount of token0|
 |`amount1`|`uint256`|The amount of token1|
 
 

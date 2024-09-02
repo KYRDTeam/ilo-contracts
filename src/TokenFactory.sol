@@ -3,14 +3,15 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
+import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
+import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
+import { ChainId } from '@uniswap/v3-periphery/contracts/libraries/ChainId.sol';
+
 import { ITokenFactory } from './interfaces/ITokenFactory.sol';
-import { ChainId } from './libraries/ChainId.sol';
-import { PoolAddress } from './libraries/PoolAddress.sol';
 import { Initializable } from './base/Initializable.sol';
 import { ERC20Standard } from './base/ERC20Standard.sol';
 import { ERC20Whitelist } from './ERC20Whitelist.sol';
 import { OracleWhitelist } from './OracleWhitelist.sol';
-import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
 contract TokenFactory is Ownable, ITokenFactory, Initializable {
     uint256 private _nonce = 1;

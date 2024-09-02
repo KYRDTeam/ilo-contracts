@@ -1,5 +1,5 @@
 # Initializable
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/base/Initializable.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/base/Initializable.sol)
 
 
 ## State Variables
@@ -11,13 +11,6 @@ bool private _initialized;
 
 
 ## Functions
-### _disableInitialize
-
-
-```solidity
-function _disableInitialize() internal;
-```
-
 ### whenNotInitialized
 
 
@@ -30,5 +23,12 @@ modifier whenNotInitialized();
 
 ```solidity
 modifier afterInitialize();
+```
+
+### _disableInitialize
+
+
+```solidity
+function _disableInitialize() internal;
 ```
 

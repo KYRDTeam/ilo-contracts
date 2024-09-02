@@ -1,5 +1,5 @@
 # ILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/ILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/ILOManager.sol)
 
 **Inherits:**
 [IILOManager](/src/interfaces/IILOManager.sol/interface.IILOManager.md), Ownable, [Initializable](/src/base/Initializable.sol/abstract.Initializable.md)
@@ -10,20 +10,6 @@
 
 ```solidity
 address public override UNIV3_FACTORY;
-```
-
-
-### WETH9
-
-```solidity
-address public override WETH9;
-```
-
-
-### DEFAULT_DEADLINE_OFFSET
-
-```solidity
-uint64 private DEFAULT_DEADLINE_OFFSET = 7 * 24 * 60 * 60;
 ```
 
 
@@ -55,21 +41,63 @@ address public override ILO_POOL_IMPLEMENTATION;
 ```
 
 
-### _cachedProject
+### ILO_POOL_SALE_IMPLEMENTATION
 
 ```solidity
-mapping(address => Project) private _cachedProject;
+address public override ILO_POOL_SALE_IMPLEMENTATION;
+```
+
+
+### INIT_PROJECT_FEE
+
+```solidity
+uint256 public override INIT_PROJECT_FEE;
+```
+
+
+### _projects
+
+```solidity
+mapping(string => Project) private _projects;
 ```
 
 
 ### _initializedILOPools
 
 ```solidity
-mapping(address => address[]) private _initializedILOPools;
+mapping(string => EnumerableSet.AddressSet) private _initializedILOPools;
 ```
 
 
 ## Functions
+### onlyProjectAdmin
+
+
+```solidity
+modifier onlyProjectAdmin(string calldata projectId);
+```
+
+### onlyInitializedPool
+
+
+```solidity
+modifier onlyInitializedPool(string calldata projectId);
+```
+
+### onlyInitializedProject
+
+
+```solidity
+modifier onlyInitializedProject(string calldata projectId);
+```
+
+### ownerOrProjectAdmin
+
+
+```solidity
+modifier ownerOrProjectAdmin(string calldata projectId);
+```
+
 ### constructor
 
 *since deploy via deployer so we need to claim ownership*
@@ -87,18 +115,12 @@ function initialize(
     address initialOwner,
     address _feeTaker,
     address iloPoolImplementation,
+    address iloPoolSaleImplementation,
     address uniV3Factory,
-    address weth9,
+    uint256 createProjectFee,
     uint16 platformFee,
     uint16 performanceFee
 ) external override whenNotInitialized;
-```
-
-### onlyProjectAdmin
-
-
-```solidity
-modifier onlyProjectAdmin(address uniV3Pool);
 ```
 
 ### initProject
@@ -107,11 +129,7 @@ init project with details
 
 
 ```solidity
-function initProject(InitProjectParams calldata params)
-    external
-    override
-    afterInitialize
-    returns (address uniV3PoolAddress);
+function initProject(InitProjectParams calldata params) external payable override afterInitialize;
 ```
 **Parameters**
 
@@ -119,19 +137,6 @@ function initProject(InitProjectParams calldata params)
 |----|----|-----------|
 |`params`|`InitProjectParams`|the parameters to initialize the project|
 
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`uniV3PoolAddress`|`address`|address of uniswap v3 pool. We use this address as project id|
-
-
-### project
-
-
-```solidity
-function project(address uniV3PoolAddress) external view override returns (Project memory);
-```
 
 ### initILOPool
 
@@ -139,41 +144,55 @@ this function init an `ILO Pool` which will be used for sale and vest. One proje
 
 
 ```solidity
-function initILOPool(InitPoolParams calldata params)
+function initILOPool(IILOPoolBase.InitPoolParams calldata params)
     external
     override
-    onlyProjectAdmin(params.uniV3Pool)
-    returns (address iloPoolAddress);
+    onlyProjectAdmin(params.baseParams.projectId)
+    onlyInitializedProject(params.baseParams.projectId)
+    returns (address poolAddress);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`params`|`InitPoolParams`|the parameters for init project|
+|`params`|`IILOPoolBase.InitPoolParams`|the parameters for init project|
 
 
-### _initUniV3PoolIfNecessary
+### initILOPoolSale
 
 
 ```solidity
-function _initUniV3PoolIfNecessary(PoolAddress.PoolKey memory poolKey, uint160 sqrtPriceX96)
-    internal
-    returns (address pool);
+function initILOPoolSale(IILOPoolSale.InitParams calldata params)
+    external
+    override
+    onlyProjectAdmin(params.baseParams.projectId)
+    onlyInitializedProject(params.baseParams.projectId)
+    returns (address poolAddress);
 ```
 
-### _cacheProject
+### onPoolSaleFail
 
 
 ```solidity
-function _cacheProject(
-    address uniV3PoolAddress,
-    address saleToken,
-    address raiseToken,
-    uint24 fee,
-    uint160 initialPoolPriceX96,
-    uint64 launchTime,
-    uint64 refundDeadline
-) internal;
+function onPoolSaleFail(string calldata projectId) external override onlyInitializedPool(projectId);
+```
+
+### iloPoolLaunchCallback
+
+this function takes params from ILOPools
+and transfer token directly to uniswap v3 pool
+without temparory holding in ILOPool
+
+
+```solidity
+function iloPoolLaunchCallback(
+    string calldata projectId,
+    address token0,
+    uint256 amount0,
+    address token1,
+    uint256 amount1,
+    address uniswapV3Pool
+) external override onlyInitializedPool(projectId);
 ```
 
 ### setPlatformFee
@@ -182,7 +201,7 @@ set platform fee for decrease liquidity. Platform fee is imutable among all proj
 
 
 ```solidity
-function setPlatformFee(uint16 _platformFee) external onlyOwner;
+function setPlatformFee(uint16 _platformFee) external override onlyOwner;
 ```
 
 ### setPerformanceFee
@@ -191,7 +210,7 @@ set platform fee for decrease liquidity. Platform fee is imutable among all proj
 
 
 ```solidity
-function setPerformanceFee(uint16 _performanceFee) external onlyOwner;
+function setPerformanceFee(uint16 _performanceFee) external override onlyOwner;
 ```
 
 ### setFeeTaker
@@ -214,21 +233,7 @@ function setILOPoolImplementation(address iloPoolImplementation) external overri
 
 
 ```solidity
-function transferAdminProject(address admin, address uniV3Pool) external override onlyProjectAdmin(uniV3Pool);
-```
-
-### setDefaultDeadlineOffset
-
-
-```solidity
-function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external override onlyOwner;
-```
-
-### setRefundDeadlineForProject
-
-
-```solidity
-function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external override onlyOwner;
+function transferAdminProject(address admin, string calldata projectId) external override onlyProjectAdmin(projectId);
 ```
 
 ### launch
@@ -237,19 +242,97 @@ launch all projects
 
 
 ```solidity
-function launch(address uniV3PoolAddress) external override;
+function launch(string calldata projectId, address token)
+    external
+    override
+    onlyProjectAdmin(projectId)
+    onlyInitializedProject(projectId);
 ```
 
-### claimRefund
-
-claim all projects refund
+### cancelProject
 
 
 ```solidity
-function claimRefund(address uniV3PoolAddress)
+function cancelProject(string calldata projectId)
     external
     override
-    onlyProjectAdmin(uniV3PoolAddress)
-    returns (uint256 totalRefundAmount);
+    ownerOrProjectAdmin(projectId)
+    onlyInitializedProject(projectId);
+```
+
+### removePool
+
+
+```solidity
+function removePool(string calldata projectId, address pool)
+    external
+    override
+    onlyInitializedProject(projectId)
+    onlyProjectAdmin(projectId);
+```
+
+### setInitProjectFee
+
+
+```solidity
+function setInitProjectFee(uint256 fee) external override onlyOwner;
+```
+
+### setFeesForProject
+
+set fees for project
+
+
+```solidity
+function setFeesForProject(string calldata projectId, uint16 platformFee, uint16 performanceFee)
+    external
+    override
+    onlyOwner;
+```
+
+### setILOSalePoolImplementation
+
+
+```solidity
+function setILOSalePoolImplementation(address iloSalePoolImplementation) external override onlyOwner;
+```
+
+### project
+
+
+```solidity
+function project(string calldata projectId) external view override returns (Project memory);
+```
+
+### _deployIloPool
+
+
+```solidity
+function _deployIloPool(IILOPoolBase.InitPoolBaseParams calldata params, address implementation)
+    internal
+    returns (address deployedAddress);
+```
+
+### _initUniV3PoolIfNecessary
+
+
+```solidity
+function _initUniV3PoolIfNecessary(PoolAddress.PoolKey memory poolKey, uint160 sqrtPriceX96)
+    internal
+    returns (address pool);
+```
+
+### _cancelProject
+
+
+```solidity
+function _cancelProject(Project storage _project) internal;
+```
+
+### _checkTicks
+
+
+```solidity
+function _checkTicks(int24 tickLower, int24 tickUpper, uint256 fee, uint160 sqrtPriceX96) internal pure;
 ```
 

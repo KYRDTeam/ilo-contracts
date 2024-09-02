@@ -1,5 +1,5 @@
 # IILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/interfaces/IILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/interfaces/IILOManager.sol)
 
 
 ## Functions
@@ -9,19 +9,13 @@ init project with details
 
 
 ```solidity
-function initProject(InitProjectParams calldata params) external returns (address uniV3PoolAddress);
+function initProject(InitProjectParams calldata params) external payable;
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
 |`params`|`InitProjectParams`|the parameters to initialize the project|
-
-**Returns**
-
-|Name|Type|Description|
-|----|----|-----------|
-|`uniV3PoolAddress`|`address`|address of uniswap v3 pool. We use this address as project id|
 
 
 ### initILOPool
@@ -32,20 +26,20 @@ only project admin can use this function
 
 
 ```solidity
-function initILOPool(InitPoolParams calldata params) external returns (address iloPoolAddress);
+function initILOPool(IILOPoolBase.InitPoolParams calldata params) external returns (address iloPoolAddress);
 ```
 **Parameters**
 
 |Name|Type|Description|
 |----|----|-----------|
-|`params`|`InitPoolParams`|the parameters for init project|
+|`params`|`IILOPoolBase.InitPoolParams`|the parameters for init project|
 
 
-### project
+### initILOPoolSale
 
 
 ```solidity
-function project(address uniV3PoolAddress) external view returns (Project memory);
+function initILOPoolSale(IILOPoolSale.InitParams calldata params) external returns (address iloPoolSaleAddress);
 ```
 
 ### setFeeTaker
@@ -57,48 +51,6 @@ set platform fee for decrease liquidity. Platform fee is imutable among all proj
 function setFeeTaker(address _feeTaker) external;
 ```
 
-### UNIV3_FACTORY
-
-
-```solidity
-function UNIV3_FACTORY() external returns (address);
-```
-
-### WETH9
-
-
-```solidity
-function WETH9() external returns (address);
-```
-
-### PLATFORM_FEE
-
-
-```solidity
-function PLATFORM_FEE() external returns (uint16);
-```
-
-### PERFORMANCE_FEE
-
-
-```solidity
-function PERFORMANCE_FEE() external returns (uint16);
-```
-
-### FEE_TAKER
-
-
-```solidity
-function FEE_TAKER() external returns (address);
-```
-
-### ILO_POOL_IMPLEMENTATION
-
-
-```solidity
-function ILO_POOL_IMPLEMENTATION() external returns (address);
-```
-
 ### initialize
 
 
@@ -107,8 +59,9 @@ function initialize(
     address initialOwner,
     address _feeTaker,
     address iloPoolImplementation,
+    address iloPoolSaleImplementation,
     address uniV3Factory,
-    address weth9,
+    uint256 createProjectFee,
     uint16 platformFee,
     uint16 performanceFee
 ) external;
@@ -120,7 +73,7 @@ launch all projects
 
 
 ```solidity
-function launch(address uniV3PoolAddress) external;
+function launch(string calldata projectId, address saleToken) external;
 ```
 
 ### setILOPoolImplementation
@@ -132,51 +85,163 @@ new ilo implementation for clone
 function setILOPoolImplementation(address iloPoolImplementation) external;
 ```
 
+### setILOSalePoolImplementation
+
+new ilo sale implementation for clone
+
+
+```solidity
+function setILOSalePoolImplementation(address iloSalePoolImplementation) external;
+```
+
 ### transferAdminProject
 
 transfer admin of project
 
 
 ```solidity
-function transferAdminProject(address admin, address uniV3Pool) external;
+function transferAdminProject(address admin, string calldata projectId) external;
 ```
 
-### setDefaultDeadlineOffset
+### cancelProject
 
-set time offset for refund if project not launch
+cancel project
 
 
 ```solidity
-function setDefaultDeadlineOffset(uint64 defaultDeadlineOffset) external;
+function cancelProject(string calldata projectId) external;
 ```
 
-### setRefundDeadlineForProject
+### removePool
+
+cancel pool
 
 
 ```solidity
-function setRefundDeadlineForProject(address uniV3Pool, uint64 refundDeadline) external;
+function removePool(string calldata projectId, address pool) external;
 ```
 
-### claimRefund
-
-claim all projects refund
+### setInitProjectFee
 
 
 ```solidity
-function claimRefund(address uniV3PoolAddress) external returns (uint256 totalRefundAmount);
+function setInitProjectFee(uint256 fee) external;
+```
+
+### setPlatformFee
+
+
+```solidity
+function setPlatformFee(uint16 fee) external;
+```
+
+### setPerformanceFee
+
+
+```solidity
+function setPerformanceFee(uint16 fee) external;
+```
+
+### onPoolSaleFail
+
+callback when pool sale fail
+cancel all pool of project, same as cancel project
+
+
+```solidity
+function onPoolSaleFail(string calldata projectId) external;
+```
+
+### setFeesForProject
+
+set fees for project
+
+
+```solidity
+function setFeesForProject(string calldata projectId, uint16 platformFee, uint16 performanceFee) external;
+```
+
+### iloPoolLaunchCallback
+
+
+```solidity
+function iloPoolLaunchCallback(
+    string calldata projectId,
+    address token0,
+    uint256 amount0,
+    address token1,
+    uint256 amount1,
+    address uniswapV3Pool
+) external;
+```
+
+### project
+
+
+```solidity
+function project(string memory projectId) external view returns (Project memory);
+```
+
+### UNIV3_FACTORY
+
+
+```solidity
+function UNIV3_FACTORY() external view returns (address);
+```
+
+### PLATFORM_FEE
+
+
+```solidity
+function PLATFORM_FEE() external view returns (uint16);
+```
+
+### PERFORMANCE_FEE
+
+
+```solidity
+function PERFORMANCE_FEE() external view returns (uint16);
+```
+
+### FEE_TAKER
+
+
+```solidity
+function FEE_TAKER() external view returns (address);
+```
+
+### ILO_POOL_IMPLEMENTATION
+
+
+```solidity
+function ILO_POOL_IMPLEMENTATION() external view returns (address);
+```
+
+### ILO_POOL_SALE_IMPLEMENTATION
+
+
+```solidity
+function ILO_POOL_SALE_IMPLEMENTATION() external view returns (address);
+```
+
+### INIT_PROJECT_FEE
+
+
+```solidity
+function INIT_PROJECT_FEE() external view returns (uint256);
 ```
 
 ## Events
 ### ProjectCreated
 
 ```solidity
-event ProjectCreated(address indexed uniV3PoolAddress, Project project);
+event ProjectCreated(string projectId, Project project);
 ```
 
 ### ILOPoolCreated
 
 ```solidity
-event ILOPoolCreated(address indexed uniV3PoolAddress, address indexed iloPoolAddress, uint256 index);
+event ILOPoolCreated(string projectId, address indexed pool);
 ```
 
 ### PoolImplementationChanged
@@ -188,31 +253,63 @@ event PoolImplementationChanged(address indexed oldPoolImplementation, address i
 ### ProjectAdminChanged
 
 ```solidity
-event ProjectAdminChanged(address indexed uniV3PoolAddress, address oldAdmin, address newAdmin);
-```
-
-### DefaultDeadlineOffsetChanged
-
-```solidity
-event DefaultDeadlineOffsetChanged(address indexed owner, uint64 oldDeadlineOffset, uint64 newDeadlineOffset);
-```
-
-### RefundDeadlineChanged
-
-```solidity
-event RefundDeadlineChanged(address indexed project, uint64 oldRefundDeadline, uint64 newRefundDeadline);
+event ProjectAdminChanged(string projectId, address oldAdmin, address newAdmin);
 ```
 
 ### ProjectLaunch
 
 ```solidity
-event ProjectLaunch(address indexed uniV3PoolAddress);
+event ProjectLaunch(string projectId, address uniswapV3Pool, address saleToken);
 ```
 
-### ProjectRefund
+### FeesForProjectSet
 
 ```solidity
-event ProjectRefund(address indexed project, uint256 refundAmount);
+event FeesForProjectSet(string projectId, uint16 platformFee, uint16 performanceFee);
+```
+
+### ProjectCancelled
+
+```solidity
+event ProjectCancelled(string projectId);
+```
+
+### PoolCancelled
+
+```solidity
+event PoolCancelled(string projectId, address pool);
+```
+
+### SalePoolImplementationChanged
+
+```solidity
+event SalePoolImplementationChanged(
+    address indexed oldSalePoolImplementation, address indexed newSalePoolImplementation
+);
+```
+
+### InitProjectFeeChanged
+
+```solidity
+event InitProjectFeeChanged(uint256 oldFee, uint256 newFee);
+```
+
+### FeeTakerChanged
+
+```solidity
+event FeeTakerChanged(address oldFeeTaker, address newFeeTaker);
+```
+
+### PlatformFeeChanged
+
+```solidity
+event PlatformFeeChanged(uint16 oldFee, uint16 newFee);
+```
+
+### PerformanceFeeChanged
+
+```solidity
+event PerformanceFeeChanged(uint16 oldFee, uint16 newFee);
 ```
 
 ## Structs
@@ -220,18 +317,15 @@ event ProjectRefund(address indexed project, uint256 refundAmount);
 
 ```solidity
 struct Project {
+    string projectId;
     address admin;
-    address saleToken;
-    address raiseToken;
+    address pairToken;
     uint24 fee;
     uint160 initialPoolPriceX96;
-    uint64 launchTime;
-    uint64 refundDeadline;
-    uint16 investorShares;
-    address uniV3PoolAddress;
-    PoolAddress.PoolKey _cachedPoolKey;
     uint16 platformFee;
     uint16 performanceFee;
+    uint16 nonce;
+    ProjectStatus status;
 }
 ```
 
@@ -239,27 +333,22 @@ struct Project {
 
 ```solidity
 struct InitProjectParams {
-    address saleToken;
-    address raiseToken;
-    uint24 fee;
+    string projectId;
+    address pairToken;
     uint160 initialPoolPriceX96;
-    uint64 launchTime;
+    uint24 fee;
 }
 ```
 
-### InitPoolParams
+## Enums
+### ProjectStatus
 
 ```solidity
-struct InitPoolParams {
-    address uniV3Pool;
-    int24 tickLower;
-    int24 tickUpper;
-    uint256 hardCap;
-    uint256 softCap;
-    uint256 maxCapPerUser;
-    uint64 start;
-    uint64 end;
-    IILOVest.VestingConfig[] vestingConfigs;
+enum ProjectStatus {
+    INVALID,
+    INITIALIZED,
+    LAUNCHED,
+    CANCELLED
 }
 ```
 

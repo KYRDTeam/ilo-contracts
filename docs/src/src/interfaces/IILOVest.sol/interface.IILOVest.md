@@ -1,16 +1,6 @@
 # IILOVest
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/interfaces/IILOVest.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/interfaces/IILOVest.sol)
 
-
-## Functions
-### vestingStatus
-
-return vesting status of position
-
-
-```solidity
-function vestingStatus(uint256 tokenId) external returns (uint128 unlockedLiquidity, uint128 claimedLiquidity);
-```
 
 ## Structs
 ### VestingConfig

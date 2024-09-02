@@ -3,8 +3,9 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import { IILOPoolBase } from './IILOPoolBase.sol';
+import { IILOWhitelist } from './IILOWhitelist.sol';
 
-interface IILOPoolSale is IILOPoolBase {
+interface IILOPoolSale is IILOPoolBase, IILOWhitelist {
     struct SaleParams {
         uint64 start;
         uint64 end;

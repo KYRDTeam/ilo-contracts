@@ -1,66 +1,66 @@
 # ILOWhitelist
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/0939257443ab7b868ff7f798a9104a43c7166792/src/base/ILOWhitelist.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/base/ILOWhitelist.sol)
 
 **Inherits:**
 [IILOWhitelist](/src/interfaces/IILOWhitelist.sol/interface.IILOWhitelist.md)
 
 
 ## State Variables
-### _openToAll
+### _whitelistCount
 
 ```solidity
-bool private _openToAll;
+uint256 private _whitelistCount;
 ```
 
 
-### _whitelisted
+### PUBLIC_ALLOCATION
 
 ```solidity
-EnumerableSet.AddressSet private _whitelisted;
+uint256 public PUBLIC_ALLOCATION;
+```
+
+
+### _userAllocation
+
+```solidity
+mapping(address => uint256) private _userAllocation;
 ```
 
 
 ## Functions
-### setOpenToAll
+### setPublicAllocation
 
 
 ```solidity
-function setOpenToAll(bool openToAll) external override onlyProjectAdmin;
+function setPublicAllocation(uint256 _allocation) external override onlyProjectAdmin;
 ```
 
-### isOpenToAll
+### setWhiteList
 
 
 ```solidity
-function isOpenToAll() external view override returns (bool);
+function setWhiteList(address[] calldata users, uint256[] calldata allocations) external override onlyProjectAdmin;
 ```
 
-### isWhitelisted
+### whitelistedCount
 
 
 ```solidity
-function isWhitelisted(address user) external view override returns (bool);
+function whitelistedCount() external view override returns (uint256);
 ```
 
-### batchWhitelist
+### allocation
 
 
 ```solidity
-function batchWhitelist(address[] calldata users) external override onlyProjectAdmin;
+function allocation(address user) public view override returns (uint256);
 ```
 
-### batchRemoveWhitelist
+### _setWhitelist
 
 
 ```solidity
-function batchRemoveWhitelist(address[] calldata users) external override onlyProjectAdmin;
-```
-
-### _setOpenToAll
-
-
-```solidity
-function _setOpenToAll(bool openToAll) internal;
+function _setWhitelist(address user, uint256 _allocation) internal;
 ```
 
 ### _removeWhitelist
@@ -68,19 +68,5 @@ function _setOpenToAll(bool openToAll) internal;
 
 ```solidity
 function _removeWhitelist(address user) internal;
-```
-
-### _setWhitelist
-
-
-```solidity
-function _setWhitelist(address user) internal;
-```
-
-### _isWhitelisted
-
-
-```solidity
-function _isWhitelisted(address user) internal view returns (bool);
 ```
 

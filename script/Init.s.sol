@@ -6,6 +6,9 @@ import '../src/interfaces/IILOManager.sol';
 import '../src/interfaces/ITokenFactory.sol';
 
 contract ILOManagerInitializeScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         address deploymentAddress = getILOManagerDeploymentAddress();
@@ -35,6 +38,9 @@ contract ILOManagerInitializeScript is CommonScript {
 }
 
 contract TokenFactoryInitializeScript is CommonScript {
+    // to ignore coverage
+    function testA() public view {}
+
     function run() external {
         uint256 deployerPrivateKey = vm.envUint('PRIVATE_KEY');
         address deploymentAddress = getTokenFactoryDeploymentAddress();

@@ -2,10 +2,12 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
+import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
+
 import { ILOPoolBase, FullMath, IILOPoolBase } from './base/ILOPoolBase.sol';
 import { IILOPool } from './interfaces/IILOPool.sol';
 import { IILOManager } from './interfaces/IILOManager.sol';
-import { PoolAddress } from './libraries/PoolAddress.sol';
+
 /// @title NFT positions
 /// @notice Wraps Uniswap V3 positions in the ERC721 non-fungible token interface
 contract ILOPool is ILOPoolBase, IILOPool {

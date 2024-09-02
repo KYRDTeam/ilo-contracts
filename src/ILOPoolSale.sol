@@ -3,14 +3,15 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import { ILOPoolBase, IILOPoolBase } from './base/ILOPoolBase.sol';
+import { TransferHelper } from '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
+import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
+import { FullMath } from '@uniswap/v3-core/contracts/libraries/FullMath.sol';
+import { ReentrancyGuard } from '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
+
+import { ILOPoolBase, IILOPoolBase, ERC721 } from './base/ILOPoolBase.sol';
 import { ILOWhitelist } from './base/ILOWhitelist.sol';
 import { IILOPoolSale } from './interfaces/IILOPoolSale.sol';
 import { IILOManager } from './interfaces/IILOManager.sol';
-import { TransferHelper } from './libraries/TransferHelper.sol';
-import { PoolAddress } from './libraries/PoolAddress.sol';
-import { FullMath } from '@uniswap/v3-core/contracts/libraries/FullMath.sol';
-import { ReentrancyGuard } from '@openzeppelin/contracts/utils/ReentrancyGuard.sol';
 
 contract ILOPoolSale is
     ILOPoolBase,
@@ -35,13 +36,18 @@ contract ILOPoolSale is
     }
 
     modifier duringSale() {
-        require(SALE_START <= block.timestamp, 'ST');
-        require(SALE_END > block.timestamp, 'ST');
+        require(SALE_START <= block.timestamp, 'SLT');
+        require(block.timestamp <= SALE_END, 'SLT');
         _;
     }
 
     modifier beforeSale() {
-        require(SALE_START > block.timestamp, 'ST');
+        require(block.timestamp < SALE_START, 'SLT');
+        _;
+    }
+
+    modifier afterSale() {
+        require(SALE_END < block.timestamp, 'SLT');
         _;
     }
 
@@ -89,7 +95,7 @@ contract ILOPoolSale is
         );
 
         // check if raise amount over capacity
-        require(MAX_RAISE - TOTAL_RAISED >= raiseAmount, 'MR');
+        require(MAX_RAISE - TOTAL_RAISED >= raiseAmount, 'MAX_RAISE');
         TOTAL_RAISED += raiseAmount;
 
         // if investor already have a position, just increase raise amount and liquidity
@@ -123,12 +129,16 @@ contract ILOPoolSale is
         address uniV3PoolAddress,
         PoolAddress.PoolKey calldata poolKey,
         uint160 sqrtPriceX96
-    ) external override onlyManager onlyInitializedProject whenNotCancelled {
-        if (block.timestamp < SALE_END) {
-            revert('ST');
-        }
+    )
+        external
+        override
+        onlyManager
+        onlyInitializedProject
+        whenNotCancelled
+        afterSale
+    {
         if (TOTAL_RAISED < MIN_RAISE) {
-            revert('MR');
+            revert('MIN_RAISE');
         }
 
         // transfer all raised fund to project admin
@@ -173,7 +183,7 @@ contract ILOPoolSale is
         nonReentrant
         returns (uint256 refundAmount)
     {
-        require(_refundable(), 'NR');
+        require(_refundable(), 'NRF');
         Position storage _position = _positions[tokenId];
         refundAmount = _position.raiseAmount;
         require(refundAmount > 0, 'ZA');
@@ -220,6 +230,15 @@ contract ILOPoolSale is
             return true;
         }
         return false;
+    }
+
+    /// @inheritdoc ERC721
+    function _beforeTokenTransfer(
+        address from,
+        address,
+        uint256
+    ) internal view override {
+        require(from == address(0) || SALE_END < block.timestamp, 'SLT');
     }
 
     function _fillLiquidityForPosition(uint256 tokenId) private {

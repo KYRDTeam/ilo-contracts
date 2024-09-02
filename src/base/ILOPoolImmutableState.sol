@@ -2,10 +2,11 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
+import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
+import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
+
 import { IILOManager } from '../interfaces/IILOManager.sol';
 import { IILOPoolImmutableState } from '../interfaces/IILOPoolImmutableState.sol';
-import { PoolAddress } from '../libraries/PoolAddress.sol';
-import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 
 /// @title Immutable state
 /// @notice Immutable state used by periphery contracts
