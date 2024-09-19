@@ -252,6 +252,46 @@ contract ILOPoolSaleTest is IntegrationTestBase {
         assertEq(refundAmount, 2_000_000 ether);
     }
 
+    function testClaimRefundBeforeSaleEnd() external {
+        _initProject(PROJECT_OWNER);
+        address iloPool = _initPoolSale(
+            PROJECT_OWNER,
+            _getInitPoolSaleParams()
+        );
+
+        IILOPoolSale.InitParams memory params2 = _getInitPoolSaleParams();
+        params2.saleParams.end = SALE_END + 1000; // sale 2 end after sale 1 1000 seconds
+        address iloPool2 = _initPoolSale(PROJECT_OWNER, params2);
+
+        _prepareBuyFor(INVESTOR, iloPool);
+        vm.prank(INVESTOR);
+        vm.warp(SALE_START + 1);
+        uint256 tokenId = IILOPoolSale(iloPool).buy(1000 ether, INVESTOR);
+
+        _prepareBuyFor(INVESTOR_2, iloPool2);
+        vm.prank(INVESTOR_2);
+        vm.warp(SALE_START + 1);
+        uint256 tokenId2 = IILOPoolSale(iloPool2).buy(
+            2_000_000 ether,
+            INVESTOR_2
+        );
+
+        vm.prank(INVESTOR);
+        vm.warp(SALE_END + 1);
+        uint256 refundAmount = IILOPoolSale(iloPool).claimRefund(tokenId);
+
+        assertEq(refundAmount, 1000 ether);
+        assertEq(
+            uint256(iloManager.project(PROJECT_ID).status),
+            uint256(IILOManager.ProjectStatus.CANCELLED)
+        );
+
+        vm.prank(INVESTOR_2);
+        vm.warp(SALE_END + 1); // sale 1 ended, sale 2 not yet
+        refundAmount = IILOPoolSale(iloPool2).claimRefund(tokenId2);
+        assertEq(refundAmount, 2_000_000 ether);
+    }
+
     function _prepareBuyFor(address investor, address iloPoolSale) internal {
         vm.prank(PROJECT_OWNER);
         IILOPoolSale(iloPoolSale).setWhiteList(
