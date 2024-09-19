@@ -47,4 +47,5 @@ interface IILOPoolSale is IILOPoolBase, IILOWhitelist {
     function MAX_RAISE() external view returns (uint256);
     function TOTAL_RAISED() external view returns (uint256);
     function tokenSoldAmount() external view returns (uint256);
+    function refundable() external view returns (bool);
 }
