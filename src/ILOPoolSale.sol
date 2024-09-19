@@ -184,6 +184,12 @@ contract ILOPoolSale is
         returns (uint256 refundAmount)
     {
         require(_refundable(), 'NRF');
+
+        // if refundable and not cancelled yet, cancel it
+        if (!CANCELLED) {
+            _onPoolSaleFail();
+        }
+
         Position storage _position = _positions[tokenId];
         refundAmount = _position.raiseAmount;
         require(refundAmount > 0, 'ZA');
@@ -191,6 +197,10 @@ contract ILOPoolSale is
         _burn(tokenId);
         TransferHelper.safeTransfer(PAIR_TOKEN, recipient, refundAmount);
         emit Refund(recipient, tokenId, refundAmount);
+    }
+
+    function refundable() external view override returns (bool) {
+        return _refundable();
     }
 
     function tokenSoldAmount() public view override returns (uint256) {
@@ -208,7 +218,14 @@ contract ILOPoolSale is
         IMPLEMENTATION = IILOManager(MANAGER).ILO_POOL_SALE_IMPLEMENTATION();
     }
 
-    function _refundable() internal returns (bool) {
+    function _onPoolSaleFail() internal {
+        _cancel();
+
+        // callback to cancel project
+        IILOManager(MANAGER).onPoolSaleFail(PROJECT_ID);
+    }
+
+    function _refundable() internal view returns (bool) {
         if (CANCELLED) {
             return true;
         }
@@ -223,10 +240,6 @@ contract ILOPoolSale is
             // when not cancelled yet, but sale end and not reach min raise
             (block.timestamp > SALE_END && TOTAL_RAISED < MIN_RAISE)
         ) {
-            _cancel();
-
-            // callback to cancel project
-            IILOManager(MANAGER).onPoolSaleFail(PROJECT_ID);
             return true;
         }
         return false;
@@ -238,7 +251,10 @@ contract ILOPoolSale is
         address,
         uint256
     ) internal view override {
-        require(from == address(0) || SALE_END < block.timestamp, 'SLT');
+        require(
+            from == address(0) || _refundable() || SALE_END < block.timestamp,
+            'SLT'
+        );
     }
 
     function _fillLiquidityForPosition(uint256 tokenId) private {
