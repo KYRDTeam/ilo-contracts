@@ -36,6 +36,7 @@ contract ILOManagerTest is IntegrationTestBase {
                 fee: FEE,
                 useTokenFactory: true,
                 totalSupply: 100_000_000 ether, // 100M
+                tokenSymbol: 'TTT',
                 initialPoolPriceX96: INIT_SQRT_PRICE_X96
             })
         );
@@ -51,6 +52,7 @@ contract ILOManagerTest is IntegrationTestBase {
                 fee: FEE,
                 useTokenFactory: true,
                 totalSupply: 100_000_000 ether, // 100M
+                tokenSymbol: 'TTT',
                 initialPoolPriceX96: INIT_SQRT_PRICE_X96
             })
         );
@@ -225,23 +227,6 @@ contract ILOManagerTest is IntegrationTestBase {
         iloManager.setILOSalePoolImplementation(DUMMY_ADDRESS_2);
         assertEq(iloManager.ILO_POOL_SALE_IMPLEMENTATION(), DUMMY_ADDRESS_2);
     }
-
-    // function testInitPoolSaleStartAfterEnd() external {
-    //     _initProject(PROJECT_OWNER);
-    //     IILOPoolBase.InitPoolParams memory params = _getInitPoolParams();
-    //     params.start = params.end + 1;
-    //     vm.expectRevert(bytes('PT'));
-    //     _initPool(PROJECT_OWNER, params);
-    // }
-
-    // function testInitPoolVestOverlap() external {
-    //     IILOPoolBase.InitPoolParams memory params = _getInitPoolParams();
-    //     params.vestingConfigs[0].schedule[1].start =
-    //         params.vestingConfigs[0].schedule[0].end -
-    //         1;
-    //     vm.expectRevert(bytes('VT'));
-    //     _initPool(PROJECT_OWNER, params);
-    // }
 
     function testSetStorage() external {
         vm.startPrank(MANAGER_OWNER);

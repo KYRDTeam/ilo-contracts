@@ -8,8 +8,8 @@ import { IILOPool } from './interfaces/IILOPool.sol';
 import { IILOPoolSale } from './interfaces/IILOPoolSale.sol';
 import { Initializable } from './base/Initializable.sol';
 import { ITokenFactory } from './interfaces/ITokenFactory.sol';
+import { IERC20 } from './interfaces/external/IERC20.sol';
 
-import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { ChainId } from '@uniswap/v3-periphery/contracts/libraries/ChainId.sol';
 import { TransferHelper } from '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
@@ -108,6 +108,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         _project.performanceFee = PERFORMANCE_FEE;
         _project.status = ProjectStatus.INITIALIZED;
         _project.useTokenFactory = params.useTokenFactory;
+        _project.tokenSymbol = params.tokenSymbol;
         _project.totalSupply = params.totalSupply;
 
         emit ProjectCreated(params.projectId, _project);
@@ -218,6 +219,14 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
     }
 
+    /// @inheritdoc IILOManager
+    function setTokenFactory(
+        address _tokenFactory
+    ) external override onlyOwner {
+        emit TokenFactoryChanged(TOKEN_FACTORY, _tokenFactory);
+        TOKEN_FACTORY = _tokenFactory;
+    }
+
     function transferAdminProject(
         address admin,
         string calldata projectId
@@ -245,6 +254,11 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         require(
             _project.totalSupply == IERC20(token).totalSupply(),
             'invalid supply'
+        );
+        require(
+            keccak256(abi.encodePacked(_project.tokenSymbol)) ==
+                keccak256(abi.encodePacked(IERC20(token).symbol())),
+            'invalid symbol'
         );
 
         uint160 sqrtPriceX96 = _project.initialPoolPriceX96;

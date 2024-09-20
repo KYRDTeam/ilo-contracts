@@ -90,6 +90,7 @@ abstract contract IntegrationTestBase is Mock, Test {
                 fee: FEE,
                 useTokenFactory: true,
                 totalSupply: 100_000_000 ether, // 100M
+                tokenSymbol: 'TTT',
                 initialPoolPriceX96: INIT_SQRT_PRICE_X96
             })
         );

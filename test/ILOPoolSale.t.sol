@@ -54,7 +54,7 @@ contract ILOPoolSaleTest is IntegrationTestBase {
         iloManager.launch(PROJECT_ID, DUMMY_ADDRESS);
     }
 
-    function testLaunchInvalidSupply() external {
+    function testLaunchInvalidSupplyOrSymbol() external {
         _prepareLaunch();
         address iloPool = _initPoolSale(
             PROJECT_OWNER,
@@ -70,7 +70,7 @@ contract ILOPoolSaleTest is IntegrationTestBase {
         address TOKEN2 = tokenFactory.createStandardERC20Token(
             ITokenFactory.CreateStandardERC20TokenParams({
                 name: 'Test Token',
-                symbol: 'TTT',
+                symbol: 'TTT 2',
                 totalSupply: 1_000_000 ether // 1M
             })
         );
@@ -78,6 +78,19 @@ contract ILOPoolSaleTest is IntegrationTestBase {
         vm.prank(PROJECT_OWNER);
         vm.warp(SALE_END + 1);
         vm.expectRevert('invalid supply');
+        iloManager.launch(PROJECT_ID, TOKEN2);
+
+        vm.prank(PROJECT_OWNER);
+        TOKEN2 = tokenFactory.createStandardERC20Token(
+            ITokenFactory.CreateStandardERC20TokenParams({
+                name: 'Test Token',
+                symbol: 'TTT 2',
+                totalSupply: 100_000_000 ether // 100M
+            })
+        );
+        vm.prank(PROJECT_OWNER);
+        vm.warp(SALE_END + 1);
+        vm.expectRevert('invalid symbol');
         iloManager.launch(PROJECT_ID, TOKEN2);
     }
 

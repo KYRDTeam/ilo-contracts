@@ -22,6 +22,7 @@ interface IILOManager {
         uint16 performanceFee; // BPS 10000
         uint16 nonce;
         bool useTokenFactory;
+        string tokenSymbol;
         uint256 totalSupply;
         ProjectStatus status;
     }
@@ -37,6 +38,8 @@ interface IILOManager {
         uint24 fee;
         // token deploy using factory or not
         bool useTokenFactory;
+        // token symbol
+        string tokenSymbol;
         // token total supply
         uint256 totalSupply;
     }
@@ -72,6 +75,7 @@ interface IILOManager {
     event FeeTakerChanged(address oldFeeTaker, address newFeeTaker);
     event PlatformFeeChanged(uint16 oldFee, uint16 newFee);
     event PerformanceFeeChanged(uint16 oldFee, uint16 newFee);
+    event TokenFactoryChanged(address oldTokenFactory, address newTokenFactory);
 
     /// @notice init project with details
     /// @param params the parameters to initialize the project
@@ -131,6 +135,8 @@ interface IILOManager {
     function setPlatformFee(uint16 fee) external;
 
     function setPerformanceFee(uint16 fee) external;
+
+    function setTokenFactory(address _tokenFactory) external;
 
     /// @notice callback when pool sale fail
     /// cancel all pool of project, same as cancel project
