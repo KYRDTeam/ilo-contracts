@@ -12,18 +12,14 @@ contract ILOPoolTest is IntegrationTestBase {
         _setupBase();
     }
 
-    function testName() external {
-        ILOPool iloPool = new ILOPool();
-        string memory expectedName = 'KRYSTAL ILOPool V3';
-        string memory actualName = iloPool.name();
-        assertEq(actualName, expectedName);
-    }
+    function testNameAndSymbol() external {
+        _initProject(PROJECT_OWNER);
+        address iloPool = _initPool(PROJECT_OWNER, _getInitPoolParams());
+        string memory name = ILOPool(iloPool).name();
+        string memory symbol = ILOPool(iloPool).symbol();
 
-    function testSymbol() external {
-        ILOPool iloPool = new ILOPool();
-        string memory expectedSymbol = 'KRYSTAL-ILO-V3';
-        string memory actualSymbol = iloPool.symbol();
-        assertEq(actualSymbol, expectedSymbol);
+        assertEq(name, 'KRYSTAL ILO TTT');
+        assertEq(symbol, 'KRYSTAL_ILO_TTT');
     }
 
     function testClaim() external {

@@ -10,7 +10,7 @@ import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddre
 import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
 import { FixedPoint128 } from '@uniswap/v3-core/contracts/libraries/FixedPoint128.sol';
 import { FullMath } from '@uniswap/v3-core/contracts/libraries/FullMath.sol';
-import { ERC721 } from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
+import { ERC721, IERC721Metadata } from '@openzeppelin/contracts/token/ERC721/ERC721.sol';
 
 import { IILOPoolBase } from '../interfaces/IILOPoolBase.sol';
 import { ILOVest } from './ILOVest.sol';
@@ -91,6 +91,36 @@ abstract contract ILOPoolBase is
         returns (uint128 liquidity)
     {
         return _totalInitialLiquidity;
+    }
+
+    function name()
+        public
+        view
+        override(ERC721, IERC721Metadata)
+        returns (string memory)
+    {
+        return
+            string(
+                abi.encodePacked(
+                    'KRYSTAL ILO ',
+                    IILOManager(MANAGER).project(PROJECT_ID).tokenSymbol
+                )
+            );
+    }
+
+    function symbol()
+        public
+        view
+        override(ERC721, IERC721Metadata)
+        returns (string memory)
+    {
+        return
+            string(
+                abi.encodePacked(
+                    'KRYSTAL_ILO_',
+                    IILOManager(MANAGER).project(PROJECT_ID).tokenSymbol
+                )
+            );
     }
 
     function _claim(
