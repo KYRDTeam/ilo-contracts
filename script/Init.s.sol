@@ -28,6 +28,7 @@ contract ILOManagerInitializeScript is CommonScript {
             getILOPoolDeploymentAddress(),
             getILOPoolSaleDeploymentAddress(),
             uniV3Factory,
+            getTokenFactoryDeploymentAddress(),
             initProjectFee,
             platformFee,
             performanceFee

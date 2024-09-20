@@ -5,7 +5,7 @@ pragma abicoder v2;
 
 import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 
-import { IntegrationTestBase, IILOManager } from './IntegrationTestBase.sol';
+import { IntegrationTestBase, IILOManager, ITokenFactory } from './IntegrationTestBase.sol';
 import { ILOPoolSale, IILOPoolSale } from '../src/ILOPoolSale.sol';
 import { console } from 'forge-std/console.sol';
 
@@ -38,7 +38,47 @@ contract ILOPoolSaleTest is IntegrationTestBase {
         vm.prank(PROJECT_OWNER);
         vm.warp(SALE_END - 1);
         vm.expectRevert(bytes('SLT'));
-        iloManager.launch(PROJECT_ID, iloPoolSale);
+        iloManager.launch(PROJECT_ID, TOKEN);
+    }
+
+    function testLaunchInvalidToken() external {
+        _prepareLaunch();
+        address iloPoolSale = _initPoolSale(
+            PROJECT_OWNER,
+            _getInitPoolSaleParams()
+        );
+
+        vm.prank(PROJECT_OWNER);
+        vm.warp(SALE_END - 1);
+        vm.expectRevert(bytes('invalid token'));
+        iloManager.launch(PROJECT_ID, DUMMY_ADDRESS);
+    }
+
+    function testLaunchInvalidSupply() external {
+        _prepareLaunch();
+        address iloPool = _initPoolSale(
+            PROJECT_OWNER,
+            _getInitPoolSaleParams()
+        );
+        _prepareBuyFor(INVESTOR, iloPool);
+        vm.prank(INVESTOR);
+        vm.warp(SALE_START + 1);
+        IILOPoolSale(iloPool).buy(2_000_000 ether, INVESTOR);
+
+        // create same token with different supply
+        vm.prank(PROJECT_OWNER);
+        address TOKEN2 = tokenFactory.createStandardERC20Token(
+            ITokenFactory.CreateStandardERC20TokenParams({
+                name: 'Test Token',
+                symbol: 'TTT',
+                totalSupply: 1_000_000 ether // 1M
+            })
+        );
+
+        vm.prank(PROJECT_OWNER);
+        vm.warp(SALE_END + 1);
+        vm.expectRevert('invalid supply');
+        iloManager.launch(PROJECT_ID, TOKEN2);
     }
 
     function testBuy() external {

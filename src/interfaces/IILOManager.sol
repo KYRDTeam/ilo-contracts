@@ -21,6 +21,8 @@ interface IILOManager {
         uint16 platformFee; // BPS 10000
         uint16 performanceFee; // BPS 10000
         uint16 nonce;
+        bool useTokenFactory;
+        uint256 totalSupply;
         ProjectStatus status;
     }
 
@@ -33,6 +35,10 @@ interface IILOManager {
         uint160 initialPoolPriceX96;
         // uniswap v3 fee tier
         uint24 fee;
+        // token deploy using factory or not
+        bool useTokenFactory;
+        // token total supply
+        uint256 totalSupply;
     }
 
     event ProjectCreated(string projectId, Project project);
@@ -91,6 +97,7 @@ interface IILOManager {
         address iloPoolImplementation,
         address iloPoolSaleImplementation,
         address uniV3Factory,
+        address tokenFactory,
         uint256 createProjectFee,
         uint16 platformFee,
         uint16 performanceFee
@@ -150,6 +157,7 @@ interface IILOManager {
     ) external view returns (Project memory);
 
     function UNIV3_FACTORY() external view returns (address);
+    function TOKEN_FACTORY() external view returns (address);
     function PLATFORM_FEE() external view returns (uint16);
     function PERFORMANCE_FEE() external view returns (uint16);
     function FEE_TAKER() external view returns (address);

@@ -7,7 +7,9 @@ import { IILOPoolBase } from './interfaces/IILOPoolBase.sol';
 import { IILOPool } from './interfaces/IILOPool.sol';
 import { IILOPoolSale } from './interfaces/IILOPoolSale.sol';
 import { Initializable } from './base/Initializable.sol';
+import { ITokenFactory } from './interfaces/ITokenFactory.sol';
 
+import { IERC20 } from '@openzeppelin/contracts/token/ERC20/IERC20.sol';
 import { ChainId } from '@uniswap/v3-periphery/contracts/libraries/ChainId.sol';
 import { TransferHelper } from '@uniswap/v3-periphery/contracts/libraries/TransferHelper.sol';
 import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
@@ -20,6 +22,7 @@ import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 
 contract ILOManager is IILOManager, Ownable, Initializable {
     address public override UNIV3_FACTORY;
+    address public override TOKEN_FACTORY;
 
     uint16 public override PLATFORM_FEE;
     uint16 public override PERFORMANCE_FEE;
@@ -68,6 +71,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         address iloPoolImplementation,
         address iloPoolSaleImplementation,
         address uniV3Factory,
+        address tokenFactory,
         uint256 createProjectFee,
         uint16 platformFee,
         uint16 performanceFee
@@ -80,6 +84,7 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         UNIV3_FACTORY = uniV3Factory;
         ILO_POOL_IMPLEMENTATION = iloPoolImplementation;
         ILO_POOL_SALE_IMPLEMENTATION = iloPoolSaleImplementation;
+        TOKEN_FACTORY = tokenFactory;
     }
 
     /// @inheritdoc IILOManager
@@ -102,6 +107,8 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         _project.platformFee = PLATFORM_FEE;
         _project.performanceFee = PERFORMANCE_FEE;
         _project.status = ProjectStatus.INITIALIZED;
+        _project.useTokenFactory = params.useTokenFactory;
+        _project.totalSupply = params.totalSupply;
 
         emit ProjectCreated(params.projectId, _project);
     }
@@ -230,6 +237,16 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         onlyInitializedProject(projectId)
     {
         Project storage _project = _projects[projectId];
+        require(
+            !_project.useTokenFactory ||
+                ITokenFactory(TOKEN_FACTORY).deployedTokens(token),
+            'invalid token'
+        );
+        require(
+            _project.totalSupply == IERC20(token).totalSupply(),
+            'invalid supply'
+        );
+
         uint160 sqrtPriceX96 = _project.initialPoolPriceX96;
         PoolAddress.PoolKey memory poolKey = PoolAddress.PoolKey(
             token,

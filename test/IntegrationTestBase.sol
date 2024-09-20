@@ -53,6 +53,8 @@ abstract contract IntegrationTestBase is Mock, Test {
         ILOPoolSale iloPoolSaleImplementation = new ILOPoolSale{
             salt: 'salt_salt_salt'
         }();
+        tokenFactory = new TokenFactory();
+        tokenFactory.initialize(MANAGER_OWNER, UNIV3_FACTORY);
 
         iloManager = IILOManager(new ILOManager{ salt: 'salt_salt_salt' }());
         iloManager.initialize(
@@ -61,12 +63,11 @@ abstract contract IntegrationTestBase is Mock, Test {
             address(iloPoolImplementation),
             address(iloPoolSaleImplementation),
             UNIV3_FACTORY,
+            address(tokenFactory),
             1 ether,
             PLATFORM_FEE,
             PERFORMANCE_FEE
         );
-        tokenFactory = new TokenFactory();
-        tokenFactory.initialize(MANAGER_OWNER, UNIV3_FACTORY);
         vm.stopBroadcast();
 
         vm.startBroadcast(PROJECT_OWNER);
@@ -87,6 +88,8 @@ abstract contract IntegrationTestBase is Mock, Test {
                 projectId: PROJECT_ID,
                 pairToken: USDC,
                 fee: FEE,
+                useTokenFactory: true,
+                totalSupply: 100_000_000 ether, // 100M
                 initialPoolPriceX96: INIT_SQRT_PRICE_X96
             })
         );

@@ -34,6 +34,8 @@ contract ILOManagerTest is IntegrationTestBase {
                 projectId: PROJECT_ID,
                 pairToken: USDC,
                 fee: FEE,
+                useTokenFactory: true,
+                totalSupply: 100_000_000 ether, // 100M
                 initialPoolPriceX96: INIT_SQRT_PRICE_X96
             })
         );
@@ -47,6 +49,8 @@ contract ILOManagerTest is IntegrationTestBase {
                 projectId: PROJECT_ID,
                 pairToken: USDC,
                 fee: FEE,
+                useTokenFactory: true,
+                totalSupply: 100_000_000 ether, // 100M
                 initialPoolPriceX96: INIT_SQRT_PRICE_X96
             })
         );

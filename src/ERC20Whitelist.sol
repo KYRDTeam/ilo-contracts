@@ -25,17 +25,17 @@ contract ERC20Whitelist is
         address owner,
         string memory name,
         string memory symbol,
-        uint256 _totalSupply
+        uint256 _totalSupply,
+        address _whitelistContract
     ) ERC20(name, symbol) ERC20Permit(name) {
         transferOwnership(owner);
+        whitelistContract = _whitelistContract;
         _mint(owner, _totalSupply);
     }
 
-    function setWhitelistContract(
-        address _whitelistContract
-    ) external override onlyOwner {
-        whitelistContract = _whitelistContract;
-        emit SetWhitelistContract(whitelistContract);
+    function removeWhitelistContract() external override onlyOwner {
+        whitelistContract = address(0);
+        emit WhitelistContractRemoved();
     }
 
     /// @notice Before token transfer hook

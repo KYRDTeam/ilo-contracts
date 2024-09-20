@@ -14,9 +14,9 @@ import { ERC20Whitelist } from './ERC20Whitelist.sol';
 import { OracleWhitelist } from './OracleWhitelist.sol';
 
 contract TokenFactory is Ownable, ITokenFactory, Initializable {
-    uint256 private _nonce = 1;
     address public override uniswapV3Factory;
-
+    mapping(address => bool) public override deployedTokens;
+    uint256 private _nonce = 1;
     constructor() {
         transferOwnership(tx.origin);
     }
@@ -37,15 +37,6 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
             abi.encodePacked(msg.sender, ChainId.get(), _nonce++)
         );
 
-        // deploy token
-        ERC20Whitelist _token = new ERC20Whitelist{ salt: salt }(
-            address(this),
-            params.name,
-            params.symbol,
-            params.totalSupply
-        );
-        token = address(_token);
-
         // deploy whitelist
         address pool = PoolAddress.computeAddress(
             uniswapV3Factory,
@@ -60,13 +51,23 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
         );
         whitelistAddress = address(_whitelist);
 
-        _token.setWhitelistContract(whitelistAddress);
+        // deploy token
+        ERC20Whitelist _token = new ERC20Whitelist{ salt: salt }(
+            address(this),
+            params.name,
+            params.symbol,
+            params.totalSupply,
+            whitelistAddress
+        );
+        token = address(_token);
+
         _whitelist.setToken(token);
 
         _token.transferOwnership(msg.sender);
         _token.transfer(msg.sender, params.totalSupply);
         _whitelist.transferOwnership(msg.sender);
 
+        deployedTokens[token] = true;
         emit TokenCreated(
             token,
             CreateERC20WhitelistTokenParams({
@@ -103,6 +104,7 @@ contract TokenFactory is Ownable, ITokenFactory, Initializable {
                 params.totalSupply
             )
         );
+        deployedTokens[token] = true;
         emit TokenCreated(
             token,
             CreateERC20WhitelistTokenParams({
