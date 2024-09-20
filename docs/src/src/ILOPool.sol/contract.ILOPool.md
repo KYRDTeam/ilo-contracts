@@ -1,5 +1,5 @@
 # ILOPool
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/ILOPool.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/af88dd9b3e8283ab97b6c9511aeb7bb607e3649d/src/ILOPool.sol)
 
 **Inherits:**
 [ILOPoolBase](/src/base/ILOPoolBase.sol/abstract.ILOPoolBase.md), [IILOPool](/src/interfaces/IILOPool.sol/interface.IILOPool.md)
@@ -48,20 +48,6 @@ function claim(uint256 tokenId) external override returns (uint256 amount0, uint
 
 ```solidity
 function cancel() external override onlyManager;
-```
-
-### name
-
-
-```solidity
-function name() public pure override returns (string memory);
-```
-
-### symbol
-
-
-```solidity
-function symbol() public pure override returns (string memory);
 ```
 
 ### _initImplementation

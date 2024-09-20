@@ -1,5 +1,5 @@
 # ILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/ILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/af88dd9b3e8283ab97b6c9511aeb7bb607e3649d/src/ILOManager.sol)
 
 **Inherits:**
 [IILOManager](/src/interfaces/IILOManager.sol/interface.IILOManager.md), Ownable, [Initializable](/src/base/Initializable.sol/abstract.Initializable.md)
@@ -10,6 +10,13 @@
 
 ```solidity
 address public override UNIV3_FACTORY;
+```
+
+
+### TOKEN_FACTORY
+
+```solidity
+address public override TOKEN_FACTORY;
 ```
 
 
@@ -117,6 +124,7 @@ function initialize(
     address iloPoolImplementation,
     address iloPoolSaleImplementation,
     address uniV3Factory,
+    address tokenFactory,
     uint256 createProjectFee,
     uint16 platformFee,
     uint16 performanceFee
@@ -229,6 +237,13 @@ function setFeeTaker(address _feeTaker) external override onlyOwner;
 function setILOPoolImplementation(address iloPoolImplementation) external override onlyOwner;
 ```
 
+### setTokenFactory
+
+
+```solidity
+function setTokenFactory(address _tokenFactory) external override onlyOwner;
+```
+
 ### transferAdminProject
 
 
@@ -290,11 +305,11 @@ function setFeesForProject(string calldata projectId, uint16 platformFee, uint16
     onlyOwner;
 ```
 
-### setILOSalePoolImplementation
+### setILOPoolSaleImplementation
 
 
 ```solidity
-function setILOSalePoolImplementation(address iloSalePoolImplementation) external override onlyOwner;
+function setILOPoolSaleImplementation(address iloPoolSaleImplementation) external override onlyOwner;
 ```
 
 ### project

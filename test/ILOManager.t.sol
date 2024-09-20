@@ -222,7 +222,7 @@ contract ILOManagerTest is IntegrationTestBase {
         assertEq(iloManager.ILO_POOL_IMPLEMENTATION(), DUMMY_ADDRESS);
 
         vm.prank(MANAGER_OWNER);
-        iloManager.setILOSalePoolImplementation(DUMMY_ADDRESS_2);
+        iloManager.setILOPoolSaleImplementation(DUMMY_ADDRESS_2);
         assertEq(iloManager.ILO_POOL_SALE_IMPLEMENTATION(), DUMMY_ADDRESS_2);
     }
 

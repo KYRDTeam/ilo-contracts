@@ -341,14 +341,14 @@ contract ILOManager is IILOManager, Ownable, Initializable {
         emit FeesForProjectSet(projectId, platformFee, performanceFee);
     }
 
-    function setILOSalePoolImplementation(
-        address iloSalePoolImplementation
+    function setILOPoolSaleImplementation(
+        address iloPoolSaleImplementation
     ) external override onlyOwner {
-        emit SalePoolImplementationChanged(
+        emit PoolSaleImplementationChanged(
             ILO_POOL_SALE_IMPLEMENTATION,
-            iloSalePoolImplementation
+            iloPoolSaleImplementation
         );
-        ILO_POOL_SALE_IMPLEMENTATION = iloSalePoolImplementation;
+        ILO_POOL_SALE_IMPLEMENTATION = iloPoolSaleImplementation;
     }
 
     function project(

@@ -1,5 +1,5 @@
 # ERC20Whitelist
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/ERC20Whitelist.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/af88dd9b3e8283ab97b6c9511aeb7bb607e3649d/src/ERC20Whitelist.sol)
 
 **Inherits:**
 [IERC20Whitelist](/src/interfaces/IERC20Whitelist.sol/interface.IERC20Whitelist.md), ERC20Burnable, ERC20Permit, Ownable
@@ -24,16 +24,16 @@ address public override whitelistContract;
 
 
 ```solidity
-constructor(address owner, string memory name, string memory symbol, uint256 _totalSupply)
+constructor(address owner, string memory name, string memory symbol, uint256 _totalSupply, address _whitelistContract)
     ERC20(name, symbol)
     ERC20Permit(name);
 ```
 
-### setWhitelistContract
+### removeWhitelistContract
 
 
 ```solidity
-function setWhitelistContract(address _whitelistContract) external override onlyOwner;
+function removeWhitelistContract() external override onlyOwner;
 ```
 
 ### _beforeTokenTransfer

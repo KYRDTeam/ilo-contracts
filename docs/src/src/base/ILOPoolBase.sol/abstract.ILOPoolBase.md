@@ -1,5 +1,5 @@
 # ILOPoolBase
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/base/ILOPoolBase.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/af88dd9b3e8283ab97b6c9511aeb7bb607e3649d/src/base/ILOPoolBase.sol)
 
 **Inherits:**
 [IILOPoolBase](/src/interfaces/IILOPoolBase.sol/interface.IILOPoolBase.md), ERC721, [ILOVest](/src/base/ILOVest.sol/abstract.ILOVest.md), [ILOPoolImmutableState](/src/base/ILOPoolImmutableState.sol/abstract.ILOPoolImmutableState.md), [Initializable](/src/base/Initializable.sol/abstract.Initializable.md), Multicall, [LiquidityManagement](/src/base/LiquidityManagement.sol/abstract.LiquidityManagement.md)
@@ -109,6 +109,20 @@ function positions(uint256 tokenId) external view override returns (Position mem
 
 ```solidity
 function totalInititalLiquidity() external view override returns (uint128 liquidity);
+```
+
+### name
+
+
+```solidity
+function name() public view override(ERC721, IERC721Metadata) returns (string memory);
+```
+
+### symbol
+
+
+```solidity
+function symbol() public view override(ERC721, IERC721Metadata) returns (string memory);
 ```
 
 ### _claim
