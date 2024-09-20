@@ -67,9 +67,9 @@ interface IILOManager {
     );
     event ProjectCancelled(string projectId);
     event PoolCancelled(string projectId, address pool);
-    event SalePoolImplementationChanged(
-        address indexed oldSalePoolImplementation,
-        address indexed newSalePoolImplementation
+    event PoolSaleImplementationChanged(
+        address indexed oldPoolSaleImplementation,
+        address indexed newPoolSaleImplementation
     );
     event InitProjectFeeChanged(uint256 oldFee, uint256 newFee);
     event FeeTakerChanged(address oldFeeTaker, address newFeeTaker);
@@ -114,8 +114,8 @@ interface IILOManager {
     function setILOPoolImplementation(address iloPoolImplementation) external;
 
     /// @notice new ilo sale implementation for clone
-    function setILOSalePoolImplementation(
-        address iloSalePoolImplementation
+    function setILOPoolSaleImplementation(
+        address iloPoolSaleImplementation
     ) external;
 
     /// @notice transfer admin of project

@@ -1,5 +1,5 @@
 # ILOPoolSale
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/ILOPoolSale.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/af88dd9b3e8283ab97b6c9511aeb7bb607e3649d/src/ILOPoolSale.sol)
 
 **Inherits:**
 [ILOPoolBase](/src/base/ILOPoolBase.sol/abstract.ILOPoolBase.md), [IILOPoolSale](/src/interfaces/IILOPoolSale.sol/interface.IILOPoolSale.md), [ILOWhitelist](/src/base/ILOWhitelist.sol/abstract.ILOWhitelist.md), ReentrancyGuard
@@ -136,25 +136,18 @@ function claimRefund(uint256 tokenId)
     returns (uint256 refundAmount);
 ```
 
+### refundable
+
+
+```solidity
+function refundable() external view override returns (bool);
+```
+
 ### tokenSoldAmount
 
 
 ```solidity
 function tokenSoldAmount() public view override returns (uint256);
-```
-
-### name
-
-
-```solidity
-function name() public pure override returns (string memory);
-```
-
-### symbol
-
-
-```solidity
-function symbol() public pure override returns (string memory);
 ```
 
 ### _initImplementation
@@ -164,11 +157,18 @@ function symbol() public pure override returns (string memory);
 function _initImplementation() internal override;
 ```
 
+### _onPoolSaleFail
+
+
+```solidity
+function _onPoolSaleFail() internal;
+```
+
 ### _refundable
 
 
 ```solidity
-function _refundable() internal returns (bool);
+function _refundable() internal view returns (bool);
 ```
 
 ### _beforeTokenTransfer

@@ -1,5 +1,5 @@
 # IILOManager
-[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/e40a6cd6fab3cc84638afa793f4d9e791b183158/src/interfaces/IILOManager.sol)
+[Git Source](https://github.com/KYRDTeam/ilo-contracts/blob/af88dd9b3e8283ab97b6c9511aeb7bb607e3649d/src/interfaces/IILOManager.sol)
 
 
 ## Functions
@@ -61,6 +61,7 @@ function initialize(
     address iloPoolImplementation,
     address iloPoolSaleImplementation,
     address uniV3Factory,
+    address tokenFactory,
     uint256 createProjectFee,
     uint16 platformFee,
     uint16 performanceFee
@@ -85,13 +86,13 @@ new ilo implementation for clone
 function setILOPoolImplementation(address iloPoolImplementation) external;
 ```
 
-### setILOSalePoolImplementation
+### setILOPoolSaleImplementation
 
 new ilo sale implementation for clone
 
 
 ```solidity
-function setILOSalePoolImplementation(address iloSalePoolImplementation) external;
+function setILOPoolSaleImplementation(address iloPoolSaleImplementation) external;
 ```
 
 ### transferAdminProject
@@ -142,6 +143,13 @@ function setPlatformFee(uint16 fee) external;
 function setPerformanceFee(uint16 fee) external;
 ```
 
+### setTokenFactory
+
+
+```solidity
+function setTokenFactory(address _tokenFactory) external;
+```
+
 ### onPoolSaleFail
 
 callback when pool sale fail
@@ -187,6 +195,13 @@ function project(string memory projectId) external view returns (Project memory)
 
 ```solidity
 function UNIV3_FACTORY() external view returns (address);
+```
+
+### TOKEN_FACTORY
+
+
+```solidity
+function TOKEN_FACTORY() external view returns (address);
 ```
 
 ### PLATFORM_FEE
@@ -280,11 +295,11 @@ event ProjectCancelled(string projectId);
 event PoolCancelled(string projectId, address pool);
 ```
 
-### SalePoolImplementationChanged
+### PoolSaleImplementationChanged
 
 ```solidity
-event SalePoolImplementationChanged(
-    address indexed oldSalePoolImplementation, address indexed newSalePoolImplementation
+event PoolSaleImplementationChanged(
+    address indexed oldPoolSaleImplementation, address indexed newPoolSaleImplementation
 );
 ```
 
@@ -312,6 +327,12 @@ event PlatformFeeChanged(uint16 oldFee, uint16 newFee);
 event PerformanceFeeChanged(uint16 oldFee, uint16 newFee);
 ```
 
+### TokenFactoryChanged
+
+```solidity
+event TokenFactoryChanged(address oldTokenFactory, address newTokenFactory);
+```
+
 ## Structs
 ### Project
 
@@ -325,6 +346,9 @@ struct Project {
     uint16 platformFee;
     uint16 performanceFee;
     uint16 nonce;
+    bool useTokenFactory;
+    string tokenSymbol;
+    uint256 totalSupply;
     ProjectStatus status;
 }
 ```
@@ -337,6 +361,9 @@ struct InitProjectParams {
     address pairToken;
     uint160 initialPoolPriceX96;
     uint24 fee;
+    bool useTokenFactory;
+    string tokenSymbol;
+    uint256 totalSupply;
 }
 ```
 

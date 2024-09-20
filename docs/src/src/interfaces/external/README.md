@@ -2,4 +2,4 @@
 
 # Contents
 - [IERC1271](IERC1271.sol/interface.IERC1271.md)
-- [IERC20PermitAllowed](IERC20PermitAllowed.sol/interface.IERC20PermitAllowed.md)
+- [IERC20](IERC20.sol/interface.IERC20.md)

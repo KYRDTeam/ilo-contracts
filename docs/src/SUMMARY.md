@@ -14,7 +14,7 @@
   - [❱ interfaces](src/interfaces/README.md)
     - [❱ external](src/interfaces/external/README.md)
       - [IERC1271](src/interfaces/external/IERC1271.sol/interface.IERC1271.md)
-      - [IERC20PermitAllowed](src/interfaces/external/IERC20PermitAllowed.sol/interface.IERC20PermitAllowed.md)
+      - [IERC20](src/interfaces/external/IERC20.sol/interface.IERC20.md)
     - [IERC20Whitelist](src/interfaces/IERC20Whitelist.sol/interface.IERC20Whitelist.md)
     - [IILOManager](src/interfaces/IILOManager.sol/interface.IILOManager.md)
     - [IILOPool](src/interfaces/IILOPool.sol/interface.IILOPool.md)
