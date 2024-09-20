@@ -66,8 +66,6 @@ contract ILOManagerTest is IntegrationTestBase {
         assertEq(iloPool.PAIR_TOKEN(), USDC);
         assertEq(iloPool.TICK_LOWER(), MIN_TICK_10000);
         assertEq(iloPool.TICK_UPPER(), -MIN_TICK_10000);
-        assertEq(iloPool.name(), 'KRYSTAL ILOPool V3');
-        assertEq(iloPool.symbol(), 'KRYSTAL-ILO-V3');
     }
 
     function testInitPoolInvalidVestingRecipient() external {

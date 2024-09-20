@@ -206,13 +206,6 @@ contract ILOPoolSale is
     function tokenSoldAmount() public view override returns (uint256) {
         return (_tokenAmount * TOTAL_RAISED) / MAX_RAISE;
     }
-    function name() public pure override returns (string memory) {
-        return 'KRYSTAL ILOPoolSale V3';
-    }
-
-    function symbol() public pure override returns (string memory) {
-        return 'KRYSTAL-ILO-SALE-V3';
-    }
 
     function _initImplementation() internal override {
         IMPLEMENTATION = IILOManager(MANAGER).ILO_POOL_SALE_IMPLEMENTATION();

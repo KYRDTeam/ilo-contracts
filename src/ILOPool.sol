@@ -77,14 +77,6 @@ contract ILOPool is ILOPoolBase, IILOPool {
         _cancel();
     }
 
-    function name() public pure override returns (string memory) {
-        return 'KRYSTAL ILOPool V3';
-    }
-
-    function symbol() public pure override returns (string memory) {
-        return 'KRYSTAL-ILO-V3';
-    }
-
     function _initImplementation() internal override {
         IMPLEMENTATION = IILOManager(MANAGER).ILO_POOL_IMPLEMENTATION();
     }
