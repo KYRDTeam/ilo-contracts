@@ -21,6 +21,9 @@ interface IILOManager {
         uint16 platformFee; // BPS 10000
         uint16 performanceFee; // BPS 10000
         uint16 nonce;
+        bool useTokenFactory;
+        string tokenSymbol;
+        uint256 totalSupply;
         ProjectStatus status;
     }
 
@@ -33,6 +36,12 @@ interface IILOManager {
         uint160 initialPoolPriceX96;
         // uniswap v3 fee tier
         uint24 fee;
+        // token deploy using factory or not
+        bool useTokenFactory;
+        // token symbol
+        string tokenSymbol;
+        // token total supply
+        uint256 totalSupply;
     }
 
     event ProjectCreated(string projectId, Project project);
@@ -66,6 +75,7 @@ interface IILOManager {
     event FeeTakerChanged(address oldFeeTaker, address newFeeTaker);
     event PlatformFeeChanged(uint16 oldFee, uint16 newFee);
     event PerformanceFeeChanged(uint16 oldFee, uint16 newFee);
+    event TokenFactoryChanged(address oldTokenFactory, address newTokenFactory);
 
     /// @notice init project with details
     /// @param params the parameters to initialize the project
@@ -91,6 +101,7 @@ interface IILOManager {
         address iloPoolImplementation,
         address iloPoolSaleImplementation,
         address uniV3Factory,
+        address tokenFactory,
         uint256 createProjectFee,
         uint16 platformFee,
         uint16 performanceFee
@@ -125,6 +136,8 @@ interface IILOManager {
 
     function setPerformanceFee(uint16 fee) external;
 
+    function setTokenFactory(address _tokenFactory) external;
+
     /// @notice callback when pool sale fail
     /// cancel all pool of project, same as cancel project
     function onPoolSaleFail(string calldata projectId) external;
@@ -150,6 +163,7 @@ interface IILOManager {
     ) external view returns (Project memory);
 
     function UNIV3_FACTORY() external view returns (address);
+    function TOKEN_FACTORY() external view returns (address);
     function PLATFORM_FEE() external view returns (uint16);
     function PERFORMANCE_FEE() external view returns (uint16);
     function FEE_TAKER() external view returns (address);

@@ -63,4 +63,5 @@ interface ITokenFactory {
     function initialize(address _owner, address _uniswapV3Factory) external;
 
     function uniswapV3Factory() external view returns (address);
+    function deployedTokens(address) external view returns (bool);
 }

@@ -3,8 +3,8 @@
 pragma solidity =0.7.6;
 
 interface IERC20Whitelist {
-    event SetWhitelistContract(address _whitelistContract);
+    event WhitelistContractRemoved();
 
-    function setWhitelistContract(address _whitelistContract) external;
+    function removeWhitelistContract() external;
     function whitelistContract() external view returns (address);
 }

@@ -40,6 +40,7 @@ contract AllContractsScript is CommonScript {
                 getILOPoolDeploymentAddress(),
                 getILOPoolSaleDeploymentAddress(),
                 uniV3Factory,
+                getTokenFactoryDeploymentAddress(),
                 initProjectFee,
                 platformFee,
                 performanceFee
