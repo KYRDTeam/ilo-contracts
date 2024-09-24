@@ -3,12 +3,14 @@ https://docs.liquidpad.io/
 
 # Deployment Address
 
+NOTE: Token factory on arbitrum and ethereum is an old version containing a bug that lead to unable to create whitelist contracts. New version deployed on arbitrum but not yet set on ilo manager. ONLY base has updated address with the fix
+
 | | Arbitrum | Base | Ethereum |
 |--- |--- |--- |--- |
 | ILOManager | [0x10e6662269C3A6255E59c3E55c2f5624c7B983c5](https://arbiscan.io/address/0x10e6662269C3A6255E59c3E55c2f5624c7B983c5) | [0x10e6662269C3A6255E59c3E55c2f5624c7B983c5](https://basescan.org/address/0x10e6662269C3A6255E59c3E55c2f5624c7B983c5) | [0x10e6662269C3A6255E59c3E55c2f5624c7B983c5](https://etherscan.io/address/0x10e6662269C3A6255E59c3E55c2f5624c7B983c5) |
 | ILOPool Implementation | [0x3e1BA54880460186A5D4004fA318D024Df116709](https://arbiscan.io/address/0x3e1BA54880460186A5D4004fA318D024Df116709) | [0x3e1BA54880460186A5D4004fA318D024Df116709](https://basescan.org/address/0x3e1BA54880460186A5D4004fA318D024Df116709) | [0x3e1BA54880460186A5D4004fA318D024Df116709](https://etherscan.io/address/0x3e1BA54880460186A5D4004fA318D024Df116709) |
 | ILOPool Sale Implementation | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://arbiscan.io/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://basescan.org/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://etherscan.io/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) |
-| Token Factory | [0x3149576D12B7C97fdD1670D3E559115e35561C25](https://arbiscan.io/address/0x3149576D12B7C97fdD1670D3E559115e35561C25) | [0x3149576D12B7C97fdD1670D3E559115e35561C25](https://basescan.org/address/0x3149576D12B7C97fdD1670D3E559115e35561C25) | [0x3149576D12B7C97fdD1670D3E559115e35561C25](https://etherscan.io/address/0x3149576D12B7C97fdD1670D3E559115e35561C25) |
+| Token Factory | [0x3149576D12B7C97fdD1670D3E559115e35561C25](https://arbiscan.io/address/0x3149576D12B7C97fdD1670D3E559115e35561C25) | [0x934C3B1Db75131630C42eb53fB8f450ea9423603](https://basescan.org/address/0x934C3B1Db75131630C42eb53fB8f450ea9423603) | [0x3149576D12B7C97fdD1670D3E559115e35561C25](https://etherscan.io/address/0x3149576D12B7C97fdD1670D3E559115e35561C25) |
 | ILOManager(Dev env) | - | [0x53D7AfC47A7DdA30605EA3907201f19f851a660D](https://basescan.org/address/0x53D7AfC47A7DdA30605EA3907201f19f851a660D) | - |
 | Token Factory(Dev env) | - | [0x743fb0414B0862c501dDB4c559432C3FA7593281](https://basescan.org/address/0x743fb0414B0862c501dDB4c559432C3FA7593281) | - |
 
