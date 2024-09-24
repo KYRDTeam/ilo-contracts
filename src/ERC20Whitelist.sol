@@ -46,7 +46,7 @@ contract ERC20Whitelist is
         uint256 amount
     ) internal override {
         require(to != address(this));
-        if (whitelistContract != address(0)) {
+        if (whitelistContract != address(0) && from != address(0)) {
             IOracleWhitelist(whitelistContract).checkWhitelist(
                 from,
                 to,

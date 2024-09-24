@@ -10,7 +10,7 @@ https://docs.liquidpad.io/
 | ILOPool Sale Implementation | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://arbiscan.io/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://basescan.org/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://etherscan.io/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) |
 | Token Factory | [0x3149576D12B7C97fdD1670D3E559115e35561C25](https://arbiscan.io/address/0x3149576D12B7C97fdD1670D3E559115e35561C25) | [0x3149576D12B7C97fdD1670D3E559115e35561C25](https://basescan.org/address/0x3149576D12B7C97fdD1670D3E559115e35561C25) | [0x3149576D12B7C97fdD1670D3E559115e35561C25](https://etherscan.io/address/0x3149576D12B7C97fdD1670D3E559115e35561C25) |
 | ILOManager(Dev env) | - | [0x53D7AfC47A7DdA30605EA3907201f19f851a660D](https://basescan.org/address/0x53D7AfC47A7DdA30605EA3907201f19f851a660D) | - |
-| Token Factory(Dev env) | - | [0xD9BaBeb0F38e6dfE3C1a34FECC3617ec7e956922](https://basescan.org/address/0xD9BaBeb0F38e6dfE3C1a34FECC3617ec7e956922) | - |
+| Token Factory(Dev env) | - | [0x743fb0414B0862c501dDB4c559432C3FA7593281](https://basescan.org/address/0x743fb0414B0862c501dDB4c559432C3FA7593281) | - |
 
 # Build and deploy:
 
