@@ -33,13 +33,11 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
 
     constructor(
         address owner,
-        address _pool,
         address _quoteToken,
         bool _lockBuy,
         uint256 _maxCap
     ) {
         transferOwnership(owner);
-        pool = _pool;
         quoteToken = _quoteToken;
         _locked = _lockBuy; // Initially, liquidity will be locked
         _maxAddressCap = _maxCap;
@@ -97,7 +95,7 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
 
     /// @notice Setter for Univ3 pool
     /// @param newPool New pool address
-    function setPool(address newPool) external onlyOwner {
+    function setPool(address newPool) external override onlyOwner {
         pool = newPool;
     }
 
