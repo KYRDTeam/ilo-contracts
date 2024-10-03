@@ -12,7 +12,7 @@ NOTE: Token factory on arbitrum and ethereum is an old version containing a bug 
 | ILOPool Sale Implementation | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://arbiscan.io/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://basescan.org/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://etherscan.io/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) |
 | Token Factory | - | [0xcc5FC66BD5d04cdE582449104acd91B904B0ee79](https://basescan.org/address/0xcc5FC66BD5d04cdE582449104acd91B904B0ee79) | - |
 | ILOManager(Dev env) | - | [0x53D7AfC47A7DdA30605EA3907201f19f851a660D](https://basescan.org/address/0x53D7AfC47A7DdA30605EA3907201f19f851a660D) | - |
-| Token Factory(Dev env) | - | [0x743fb0414B0862c501dDB4c559432C3FA7593281](https://basescan.org/address/0x743fb0414B0862c501dDB4c559432C3FA7593281) | - |
+| Token Factory(Dev env) | - | [0x3A84fD3c3d10F8F447656E27000cF82230333260](https://basescan.org/address/0x3A84fD3c3d10F8F447656E27000cF82230333260) | - |
 
 # Build and deploy:
 
