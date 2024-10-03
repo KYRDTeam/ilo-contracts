@@ -6,6 +6,7 @@ pragma abicoder v2;
 import { IntegrationTestBase, ITokenFactory, IERC20 } from './IntegrationTestBase.sol';
 import { IUniswapV3Oracle } from '../src/interfaces/IUniswapV3Oracle.sol';
 import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
+import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
 interface IToken is IERC20 {
     function name() external view returns (string memory);
@@ -56,12 +57,14 @@ contract TokenFactoryTest is IntegrationTestBase {
         );
 
         assert(tokenFactory.deployedTokens(token));
+        assertEq(Ownable(token).owner(), DUMMY_ADDRESS);
         assertEq(IToken(token).balanceOf(DUMMY_ADDRESS), 1000000);
         assertEq(IToken(token).totalSupply(), 1000000);
         assertEq(IToken(token).name(), 'TestToken');
         assertEq(IToken(token).symbol(), 'TT');
         assertEq(IWhitelistToken(token).whitelistContract(), whitelist);
 
+        assertEq(Ownable(whitelist).owner(), DUMMY_ADDRESS);
         assertEq(IUniswapV3Oracle(whitelist).quoteToken(), USDC);
         assertEq(
             IUniswapV3Oracle(whitelist).pool(),
