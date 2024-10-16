@@ -29,6 +29,7 @@ contract ILOPoolTest is IntegrationTestBase {
 
         vm.prank(PROJECT_OWNER);
         iloManager.launch(PROJECT_ID, TOKEN);
+        iloPool.distribute(100);
 
         uint256 tokenBalanceBefore = IERC20(TOKEN).balanceOf(DEV_RECIPIENT);
         uint256 pairTokenBalanceBefore = IERC20(USDC).balanceOf(DEV_RECIPIENT);

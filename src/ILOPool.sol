@@ -41,9 +41,19 @@ contract ILOPool is ILOPoolBase, IILOPool {
             sqrtPriceX96,
             _tokenAmount
         );
+    }
+
+    /// @inheritdoc IILOPool
+    function distribute(uint256 num) external override afterLaunch {
+        uint256 start = _nextId - 1;
+        uint256 end = start + num;
+        if (end > _vestingConfigs.length) {
+            end = _vestingConfigs.length;
+        }
+        uint128 liquidity = _totalInitialLiquidity;
 
         // assigning vests for the project configuration
-        for (uint256 index = 0; index < _vestingConfigs.length; index++) {
+        for (uint256 index = start; index < end; index++) {
             uint256 tokenId = _nextId++;
             VestingConfig memory projectConfig = _vestingConfigs[index];
             // mint nft for recipient

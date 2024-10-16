@@ -15,4 +15,5 @@ interface IILOPool is IILOPoolBase {
     );
 
     function initialize(InitPoolParams calldata params) external;
+    function distribute(uint256 num) external;
 }
