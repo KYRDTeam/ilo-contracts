@@ -12,7 +12,7 @@ import { IUniswapV3Oracle } from '../interfaces/IUniswapV3Oracle.sol';
  */
 abstract contract UniswapV3Oracle is IUniswapV3Oracle {
     /// @inheritdoc IUniswapV3Oracle
-    uint32 public constant override PERIOD = 30 minutes;
+    uint32 public constant override PERIOD = 0;
     /// @inheritdoc IUniswapV3Oracle
     uint128 public constant override BASE_AMOUNT = 1e18; // TK has 18 decimals
 
@@ -25,11 +25,7 @@ abstract contract UniswapV3Oracle is IUniswapV3Oracle {
 
     /// @notice Returns TWAP price for 1 TK for the last 30 mins
     function _peek(uint256 baseAmount) internal view returns (uint256) {
-        uint32 longestPeriod = OracleLibrary.getOldestObservationSecondsAgo(
-            pool
-        );
-        uint32 period = PERIOD < longestPeriod ? PERIOD : longestPeriod;
-        int24 tick = OracleLibrary.consult(pool, period);
+        int24 tick = OracleLibrary.consult(pool);
         uint256 quotedAmount = OracleLibrary.getQuoteAtTick(
             tick,
             BASE_AMOUNT,

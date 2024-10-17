@@ -9,32 +9,17 @@ import { TickMath } from '@uniswap/v3-core/contracts/libraries/TickMath.sol';
 library OracleLibrary {
     /// @notice Fetches time-weighted average tick using Uniswap V3 oracle
     /// @param pool Address of Uniswap V3 pool that we want to observe
-    /// @param period Number of seconds in the past to start calculating time-weighted average
-    /// @return timeWeightedAverageTick The time-weighted average tick from (block.timestamp - period) to block.timestamp
+    /// @return lastObservationTick The last observation tick value
     function consult(
-        address pool,
-        uint32 period
-    ) internal view returns (int24 timeWeightedAverageTick) {
-        require(period != 0, 'BP');
-
-        uint32[] memory secondAgos = new uint32[](2);
-        secondAgos[0] = period;
-        secondAgos[1] = 0;
+        address pool
+    ) internal view returns (int24 lastObservationTick) {
+        uint32[] memory secondAgos = new uint32[](1);
+        secondAgos[0] = 0;
 
         (int56[] memory tickCumulatives, ) = IUniswapV3Pool(pool).observe(
             secondAgos
         );
-        int56 tickCumulativesDelta = tickCumulatives[1] - tickCumulatives[0];
-
-        timeWeightedAverageTick = int24(
-            tickCumulativesDelta / int56(uint56(period))
-        );
-
-        // Always round to negative infinity
-        if (
-            tickCumulativesDelta < 0 &&
-            (tickCumulativesDelta % int56(uint56(period)) != 0)
-        ) timeWeightedAverageTick--;
+        lastObservationTick = int24(tickCumulatives[0]);
     }
 
     /// @notice Given a tick and a token amount, calculates the amount of token received in exchange
