@@ -154,7 +154,7 @@ contract OracleWhitelist is IOracleWhitelist, Ownable {
 
     /// @notice Returns amount of quote token for given amount of base token
     function _peek(uint256 tokenAmount) internal view returns (uint256) {
-        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(pool).slot0();
+        (uint256 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(pool).slot0();
         return
             token < quoteToken // if token is token 0
                 ? FullMath.mulDiv(
