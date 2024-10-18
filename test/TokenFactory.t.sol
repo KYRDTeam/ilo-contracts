@@ -4,7 +4,7 @@ pragma solidity =0.7.6;
 pragma abicoder v2;
 
 import { IntegrationTestBase, ITokenFactory, IERC20 } from './IntegrationTestBase.sol';
-import { IUniswapV3Oracle } from '../src/interfaces/IUniswapV3Oracle.sol';
+import { IOracleWhitelist } from '../src/interfaces/IOracleWhitelist.sol';
 import { PoolAddress } from '@uniswap/v3-periphery/contracts/libraries/PoolAddress.sol';
 import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 
@@ -65,9 +65,9 @@ contract TokenFactoryTest is IntegrationTestBase {
         assertEq(IWhitelistToken(token).whitelistContract(), whitelist);
 
         assertEq(Ownable(whitelist).owner(), DUMMY_ADDRESS);
-        assertEq(IUniswapV3Oracle(whitelist).quoteToken(), USDC);
+        assertEq(IOracleWhitelist(whitelist).quoteToken(), USDC);
         assertEq(
-            IUniswapV3Oracle(whitelist).pool(),
+            IOracleWhitelist(whitelist).pool(),
             PoolAddress.computeAddress(
                 UNIV3_FACTORY,
                 PoolAddress.getPoolKey(USDC, token, 10000)

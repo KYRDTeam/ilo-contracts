@@ -2,10 +2,13 @@
 pragma solidity =0.7.6;
 pragma abicoder v2;
 
-import { UniswapV3Oracle } from './base/UniswapV3Oracle.sol';
-import { IOracleWhitelist } from './interfaces/IOracleWhitelist.sol';
 import { Ownable } from '@openzeppelin/contracts/access/Ownable.sol';
 import { EnumerableSet } from '@openzeppelin/contracts/utils/EnumerableSet.sol';
+
+import { IOracleWhitelist } from './interfaces/IOracleWhitelist.sol';
+
+import { IUniswapV3Pool } from '@uniswap/v3-core/contracts/interfaces/IUniswapV3Pool.sol';
+import { FullMath } from '@uniswap/v3-core/contracts/libraries/FullMath.sol';
 
 /**
  * @title The contract handles whitelist related features
@@ -15,7 +18,10 @@ import { EnumerableSet } from '@openzeppelin/contracts/utils/EnumerableSet.sol';
  * - Ownable: Set univ3 TWAP oracle
  * - Token contract `_beforeTokenTransfer` hook will call `checkWhitelist` function and this function will check if buyer is eligible
  */
-contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
+contract OracleWhitelist is IOracleWhitelist, Ownable {
+    address public override token;
+    address public override pool;
+    address public override quoteToken;
     /// @dev Maximum quote token amount to contribute
     uint256 private _maxAddressCap;
     /// @dev Flag for locked period
@@ -144,5 +150,22 @@ contract OracleWhitelist is IOracleWhitelist, UniswapV3Oracle, Ownable {
     /// @param whitelisted Address to be checked
     function isWhitelisted(address whitelisted) external view returns (bool) {
         return EnumerableSet.contains(_whitelistedAddresses, whitelisted);
+    }
+
+    /// @notice Returns amount of quote token for given amount of base token
+    function _peek(uint256 amountIn) internal view returns (uint256) {
+        (uint160 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(pool).slot0();
+        return
+            token > quoteToken
+                ? FullMath.mulDiv(
+                    sqrtPriceX96 * sqrtPriceX96,
+                    amountIn,
+                    1 << 192
+                )
+                : FullMath.mulDiv(
+                    1 << 192,
+                    amountIn,
+                    sqrtPriceX96 * sqrtPriceX96
+                );
     }
 }
