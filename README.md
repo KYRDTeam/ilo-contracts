@@ -10,7 +10,7 @@ NOTE: Token factory on arbitrum and ethereum is an old version containing a bug 
 | ILOManager | [0x10e6662269C3A6255E59c3E55c2f5624c7B983c5](https://arbiscan.io/address/0x10e6662269C3A6255E59c3E55c2f5624c7B983c5) | [0x10e6662269C3A6255E59c3E55c2f5624c7B983c5](https://basescan.org/address/0x10e6662269C3A6255E59c3E55c2f5624c7B983c5) | [0x10e6662269C3A6255E59c3E55c2f5624c7B983c5](https://etherscan.io/address/0x10e6662269C3A6255E59c3E55c2f5624c7B983c5) |
 | ILOPool Implementation | - | [0x1516fb2f49e6a47dd4721c64e4403b436296f421](https://basescan.org/address/0x1516fb2f49e6a47dd4721c64e4403b436296f421) | - |
 | ILOPool Sale Implementation | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://arbiscan.io/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://basescan.org/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) | [0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A](https://etherscan.io/address/0x7cd0F25A2d133F5e869ccF6a8A2dda693BecF15A) |
-| Token Factory | - | [0xcc5FC66BD5d04cdE582449104acd91B904B0ee79](https://basescan.org/address/0xcc5FC66BD5d04cdE582449104acd91B904B0ee79) | - |
+| Token Factory | - | [0xeF8dF4e9bD71f57e6DFE1fa25104F40ebCEd5949](https://basescan.org/address/0xeF8dF4e9bD71f57e6DFE1fa25104F40ebCEd5949) | - |
 | ILOManager(Dev env) | - | [0x53D7AfC47A7DdA30605EA3907201f19f851a660D](https://basescan.org/address/0x53D7AfC47A7DdA30605EA3907201f19f851a660D) | - |
 | Token Factory(Dev env) | - | [0x3A84fD3c3d10F8F447656E27000cF82230333260](https://basescan.org/address/0x3A84fD3c3d10F8F447656E27000cF82230333260) | - |
 
