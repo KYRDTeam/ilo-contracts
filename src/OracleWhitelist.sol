@@ -157,15 +157,15 @@ contract OracleWhitelist is IOracleWhitelist, Ownable {
         (uint256 sqrtPriceX96, , , , , , ) = IUniswapV3Pool(pool).slot0();
         return
             token < quoteToken // if token is token 0
-                ? FullMath.mulDiv(
-                    sqrtPriceX96 * sqrtPriceX96,
-                    tokenAmount,
-                    1 << 192
-                )
-                : FullMath.mulDiv(
-                    1 << 192,
-                    tokenAmount,
-                    sqrtPriceX96 * sqrtPriceX96
-                );
+                ? FullMath.mulDiv( // tokenAmount * sqrtPriceX96**2   / 2**192
+                        tokenAmount,
+                        FullMath.mulDiv(sqrtPriceX96, sqrtPriceX96, 1 << 64),
+                        1 << 128
+                    )
+                : FullMath.mulDiv( //  tokenAmount * 2**192 / sqrtPriceX96**2
+                        tokenAmount,
+                        1 << 200,
+                        FullMath.mulDiv(sqrtPriceX96, sqrtPriceX96, 1 << 56)
+                    );
     }
 }
